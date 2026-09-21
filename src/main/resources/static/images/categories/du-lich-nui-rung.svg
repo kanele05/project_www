@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Nui rung">
+  <!-- Minh hoa danh muc "Du lich nui rung" - xem chu thich o du-lich-bien-dao.svg -->
+  <defs>
+    <linearGradient id="skyM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A3833"/>
+      <stop offset="60%" stop-color="#2A6E5E"/>
+      <stop offset="100%" stop-color="#E0A458"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#skyM)"/>
+
+  <!-- Mat troi thap sau day nui -->
+  <circle cx="420" cy="392" r="78" fill="#F0C07A" opacity=".85"/>
+
+  <!-- Bien may -->
+  <g fill="#F6EFE4" opacity=".22">
+    <ellipse cx="180" cy="366" rx="180" ry="26"/>
+    <ellipse cx="560" cy="392" rx="220" ry="30"/>
+    <ellipse cx="330" cy="418" rx="260" ry="26"/>
+  </g>
+
+  <!-- Day nui xa -->
+  <path d="M0 420l150-140 110 96 130-130 140 120 120-84 150 138v180H0z"
+        fill="#12655B" opacity=".85"/>
+  <!-- Day nui gan -->
+  <path d="M0 486l128-108 116 88 122-102 148 122 136-92 150 92v114H0z" fill="#0A3833"/>
+  <!-- Tuyet / da tren dinh -->
+  <path d="M128 378l40 30-24 8-30-14zM366 364l42 34-28 10-34-18z" fill="#DCEFEA" opacity=".65"/>
+
+  <!-- Rung thong tien canh -->
+  <g fill="#06251F">
+    <path d="M60 600V520l-26 6 26-42-20 4 30-44 30 44-20-4 26 42-26-6v80z"/>
+    <path d="M150 600V540l-20 5 20-34-16 3 24-36 24 36-16-3 20 34-20-5v60z"/>
+    <path d="M690 600V512l-28 7 28-46-22 5 32-48 32 48-22-5 28 46-28-7v88z"/>
+    <path d="M600 600V546l-18 4 18-30-14 3 22-32 22 32-14-3 18 30-18-4v54z"/>
+  </g>
+
+  <rect y="586" width="800" height="14" fill="#06251F"/>
+</svg>

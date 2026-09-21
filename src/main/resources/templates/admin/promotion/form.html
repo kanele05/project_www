@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(${promotionForm.id} != null
+                    ? #{admin.promotion.formTitleEdit} : #{admin.promotion.formTitleNew})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('promotions')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3"
+                th:text="${promotionForm.id} != null
+                         ? #{admin.promotion.formTitleEdit} : #{admin.promotion.formTitleNew}">
+                Thêm mã khuyến mãi
+            </h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form th:action="@{/admin/promotions/save}" th:object="${promotionForm}" method="post">
+
+                                <input type="hidden" th:field="*{id}">
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="code"
+                                               th:text="#{admin.promotion.code}">Mã</label>
+                                        <input class="form-control text-uppercase" type="text" id="code"
+                                               th:field="*{code}" th:errorclass="is-invalid"
+                                               maxlength="30" placeholder="HELLO2026">
+                                        <div class="invalid-feedback" th:errors="*{code}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="name"
+                                               th:text="#{admin.promotion.name}">Tên chương trình</label>
+                                        <input class="form-control" type="text" id="name"
+                                               th:field="*{name}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{name}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label" for="description"
+                                               th:text="#{admin.promotion.description}">Mô tả</label>
+                                        <textarea class="form-control" id="description" rows="2"
+                                                  th:field="*{description}" th:errorclass="is-invalid"></textarea>
+                                        <div class="invalid-feedback" th:errors="*{description}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="discountType"
+                                               th:text="#{admin.promotion.discountType}">Loại giảm giá</label>
+                                        <select class="form-select" id="discountType" th:field="*{discountType}">
+                                            <option th:each="t : ${discountTypes}"
+                                                    th:value="${t}" th:text="#{${t.messageKey}}">Loại</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="discountValue"
+                                               th:text="#{admin.promotion.discountValue}">Giá trị giảm</label>
+                                        <input class="form-control" type="number" id="discountValue"
+                                               min="0" step="0.01"
+                                               th:field="*{discountValue}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{discountValue}">Lỗi</div>
+                                        <div class="form-text" th:text="#{admin.promotion.discountValue.hint}">Gợi ý</div>
+                                        <!--/* @AssertTrue isPercentValueValid gắn lỗi vào "percentValueValid" -
+                                             cùng khuôn với periodValid bên dưới: lỗi ở mức biểu mẫu (không gắn
+                                             riêng vào một trường input nào) nên #fields.hasErrors thay vì th:field. */-->
+                                        <div class="text-danger small mt-1" th:if="${#fields.hasErrors('percentValueValid')}"
+                                             th:errors="*{percentValueValid}">Lỗi giá trị phần trăm</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="maxDiscount"
+                                               th:text="#{admin.promotion.maxDiscount}">Trần giảm giá</label>
+                                        <input class="form-control" type="number" id="maxDiscount"
+                                               min="0" step="1000"
+                                               th:field="*{maxDiscount}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{maxDiscount}">Lỗi</div>
+                                        <div class="form-text" th:text="#{admin.promotion.maxDiscount.hint}">Gợi ý</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="minOrderAmount"
+                                               th:text="#{admin.promotion.minOrderAmount}">Đơn tối thiểu</label>
+                                        <input class="form-control" type="number" id="minOrderAmount"
+                                               min="0" step="1000"
+                                               th:field="*{minOrderAmount}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{minOrderAmount}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="usageLimit"
+                                               th:text="#{admin.promotion.usageLimit}">Tổng số lượt</label>
+                                        <input class="form-control" type="number" id="usageLimit" min="1"
+                                               th:field="*{usageLimit}" th:errorclass="is-invalid"
+                                               placeholder="∞">
+                                        <div class="invalid-feedback" th:errors="*{usageLimit}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="usageLimitPerUser"
+                                               th:text="#{admin.promotion.usageLimitPerUser}">Lượt / tài khoản</label>
+                                        <input class="form-control" type="number" id="usageLimitPerUser" min="1"
+                                               th:field="*{usageLimitPerUser}" th:errorclass="is-invalid"
+                                               placeholder="∞">
+                                        <div class="invalid-feedback" th:errors="*{usageLimitPerUser}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="startAt"
+                                               th:text="#{admin.promotion.startAt}">Bắt đầu</label>
+                                        <input class="form-control" type="datetime-local" id="startAt"
+                                               th:field="*{startAt}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{startAt}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="endAt"
+                                               th:text="#{admin.promotion.endAt}">Kết thúc</label>
+                                        <input class="form-control" type="datetime-local" id="endAt"
+                                               th:field="*{endAt}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{endAt}">Lỗi</div>
+                                        <!--/* @AssertTrue isPeriodValid gắn lỗi vào "periodValid" - Thymeleaf tự map
+                                               tên thuộc tính suy ra từ tên phương thức is*(). */-->
+                                        <div class="text-danger small mt-1" th:if="${#fields.hasErrors('periodValid')}"
+                                             th:errors="*{periodValid}">Lỗi khoảng thời gian</div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="active"
+                                                   th:field="*{active}">
+                                            <label class="form-check-label" for="active"
+                                                   th:text="#{admin.category.active}">Đang hiển thị</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bi bi-check-lg"></i>
+                                        <span th:text="#{admin.action.save}">Lưu</span>
+                                    </button>
+                                    <a class="btn btn-link text-decoration-none"
+                                       th:href="@{/admin/promotions}" th:text="#{admin.action.cancel}">Huỷ</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

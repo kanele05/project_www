@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   TRANG CHỦ
+
+   Thứ tự các khối là một câu chuyện có chủ đích, không phải xếp đại:
+     1. Hero        - trả lời "đây là gì" trong hai giây đầu. Bên trái là câu
+                      chuyện và ô tìm kiếm, bên phải là một băng ảnh tour trôi
+                      từ trên xuống - hàng hoá xuất hiện ngay dòng đầu.
+     2. Số liệu     - bốn con số đếm từ CSDL, kẻ bằng đường mảnh ở chân hero.
+     3. Cam kết     - bốn lý do nên tin, đặt ngay dưới hero vì đây là lúc khách
+                      còn phân vân nhất.
+     4. Danh mục    - lối đi cho khách chưa biết mình muốn gì.
+     5. Tour nổi bật- hàng hoá thật, có giá, có nút đặt.
+     6. Điểm đến    - hai dải địa danh chạy ngược chiều nhau, lối đi thứ ba cho
+                      khách nghĩ theo tên đất.
+     7. Bốn bước    - gỡ nỗi lo "đặt trực tuyến có phức tạp không".
+     8. Cảm nhận    - bằng chứng xã hội.
+     9. Kêu gọi     - chốt lại bằng đúng một hành động.
+
+   BA ĐIỀU CỐ Ý, ĐỪNG "DỌN LẠI CHO GỌN":
+
+   (1) Cả trang MỘT TÔNG SÁNG. Chỉ hai khối tối - "bốn bước" và dải kêu gọi cuối
+       - đặt xa nhau để đọc ra như hai dấu chấm câu. Trang nhảy qua lại giữa nền
+       sáng và nền tối làm người đọc tưởng mình lạc sang website khác.
+
+   (2) KHÔNG còn nhãn nhỏ in hoa (eyebrow) trên đầu mỗi khối. Nhãn nào cũng có
+       thì mọi khối có cùng một nhịp mở đầu, và cái nhịp lặp đều tăm tắp ấy chính
+       là dấu hiệu của một trang do máy sinh ra. Tiêu đề tự đứng được.
+
+   (3) MỘT nhãn cho MỘT ý định. Ba chỗ dẫn tới /tours (hero, khối tour nổi bật,
+       dải kêu gọi) đều dùng chung câu #{home.hero.cta}. Ba câu khác nhau cho
+       cùng một đích đến chỉ làm người đọc phải cân nhắc một chuyện không có thật.
+
+   Mọi con số trên trang đều đọc từ CSDL (xem HomeController), không viết cứng.
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{nav.home})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(true)}"></header>
+
+<main class="flex-grow-1">
+
+    <!-- ===================== 1. HERO ===================== -->
+    <section class="home-hero">
+        <div class="container">
+            <div class="home-hero__grid">
+
+                <!-- ----------- Cột trái: câu chuyện + ô tìm kiếm ----------- -->
+                <div>
+                    <!--/*
+                      Huy hiệu mở đầu mang một con số THẬT (số tour đang bán) chứ
+                      không phải một nhãn "BETA" hay "V2" trang trí. Bấm vào là
+                      sang đúng danh sách ấy - một huy hiệu không bấm được thì chỉ
+                      là chữ trang trí.
+                    */-->
+                    <a class="home-badge" th:href="@{/tours}">
+                        <span th:text="#{home.hero.badge(${stats.tourCount()})}">
+                            20 hành trình đang mở đặt chỗ
+                        </span>
+                        <span class="home-badge__go" aria-hidden="true">
+                            <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </a>
+
+                    <!--/*
+                      Tiêu đề tách làm ba mảnh để tô nền cam đúng một cụm từ khoá.
+                      Dùng th:text cho từng mảnh chứ không th:utext cả câu: câu chữ
+                      vẫn nằm trong messages.properties và không mở đường cho HTML lạ.
+                    */-->
+                    <h1 class="home-hero__title">
+                        <span th:text="#{home.hero.title.part1}">Đi để trở về với</span>
+                        <span class="mark-stroke" th:text="#{home.hero.title.mark}">những câu chuyện</span>
+                        <span th:text="#{home.hero.title.part2}">của riêng bạn</span>
+                    </h1>
+
+                    <p class="home-hero__accent" th:text="#{home.hero.subtitle}">Câu nhấn</p>
+
+                    <!--/*
+                      Ô tìm kiếm ngay trong hero. Đây là cùng một biểu mẫu GET /tours
+                      mà thanh điều hướng đang dùng, nên kết quả và bộ lọc hoàn toàn
+                      giống nhau - không có "hai đường tìm kiếm" lệch nhau.
+                    */-->
+                    <form class="home-search" th:action="@{/tours}" method="get" role="search">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control" type="search" name="q"
+                               th:placeholder="#{tour.search.placeholder}"
+                               th:aria-label="#{nav.search}">
+                        <button class="btn btn-accent flex-shrink-0" type="submit"
+                                th:text="#{common.search}">Tìm</button>
+                    </form>
+
+                    <div class="home-actions">
+                        <a class="btn btn-ink" th:href="@{/tours}">
+                            <span th:text="#{home.hero.cta}">Xem tất cả tour</span>
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        <!--/* Neo tới khối "bốn bước" - một ý định khác hẳn nút bên
+                               cạnh, nên được phép có nhãn riêng. */-->
+                        <a class="btn btn-paper" href="#cach-dat">
+                            <span th:text="#{home.hero.cta2}">Cách đặt tour</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ----------- Cột phải: băng ảnh chạy dọc ----------- -->
+                <!--/*
+                  Một cột ảnh trôi từ trên xuống dưới không ngừng.
+
+                  aria-hidden="true" là CÓ CHỦ ĐÍCH: đây thuần tuý là trang trí.
+                  Không có liên kết nào ở đây và cũng không nên có - đúng những
+                  tour này được liệt kê đầy đủ ở khối "Tour nổi bật" phía dưới,
+                  kèm giá và nút đặt. Bắt người dùng bấm trúng một tấm ảnh đang
+                  trôi là chuyện không tử tế; còn bắt trình đọc màn hình đọc lại
+                  danh sách tour lần thứ hai thì càng không.
+
+                  data-reel bảo app.js nhân bản nội dung cho vòng lặp khép kín.
+                  Danh sách rỗng (CSDL mới dựng) thì cả khối biến mất chứ không
+                  để lộ một khung trống.
+                */-->
+                <div class="home-reel" data-reel aria-hidden="true"
+                     th:if="${not #lists.isEmpty(featuredTours)}">
+                    <div class="home-reel__track">
+                        <!--/*
+                          So le trái phải gắn bằng lớp ngay tại đây chứ không nhờ
+                          :nth-child bên CSS - xem chú thích ở mục 14.3 của app.css
+                          về chuyện chẵn lẻ bị đảo sau khi nhân bản.
+                        */-->
+                        <th:block th:each="t, s : ${featuredTours}">
+                            <!--/*
+                              ⚠️ Hai lớp so le KHÔNG được đặt tên kiểu BEM hai gạch
+                              dưới. Thymeleaf coi __...__ là cú pháp TIỀN XỬ LÝ, nên
+                              biểu thức `${s.even} ? 'home-reel__item--left'
+                              : 'home-reel__item--right'` có đúng hai cụm __ khép
+                              thành một cặp, và nó đem `item--left' : 'home-reel` đi
+                              phân tích như một biểu thức rồi gãy giữa chừng. Trang
+                              vẫn trả 200 nhưng HTML cụt ngay tại đây - đã vấp thật.
+                              Một cụm __ lẻ (như ở dải địa danh) thì vô hại vì không
+                              có cụm đóng.
+                            */-->
+                            <div class="home-reel__item"
+                                 th:classappend="${s.even} ? 'is-left' : 'is-right'">
+
+                                <!--/* Ảnh seed tĩnh bắt đầu bằng "/", ảnh tải lên thì tương đối
+                                       trong uploads/tours/ - xem admin/tour/list.html. */-->
+                                <img th:if="${t.thumbnail != null}"
+                                     th:src="${t.thumbnail.startsWith('/')} ? ${t.thumbnail} : @{'/uploads/' + ${t.thumbnail}}"
+                                     alt="" loading="lazy">
+                                <!--/* ⚠️ th:replace chạy TRƯỚC th:if trên cùng thẻ (gotcha #10) -
+                                       bọc th:block để th:if đứng riêng, xem chú thích đầy đủ ở
+                                       fragments/components.html :: tourCard. */-->
+                                <th:block th:if="${t.thumbnail == null}">
+                                    <div th:replace="~{fragments/components :: tourArt(${t})}"></div>
+                                </th:block>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 2. SỐ LIỆU ===================== -->
+    <!--/*
+      Bốn con số đếm thẳng từ CSDL. data-countup bảo app.js chạy số từ 0 lên khi
+      dải này lọt vào khung nhìn; máy không chạy JavaScript thì con số thật đã
+      nằm sẵn trong HTML do máy chủ dựng, không mất gì.
+    */-->
+    <div class="home-metrics">
+        <div class="container">
+            <div class="home-metrics__grid">
+                <div class="home-metric">
+                    <div class="home-metric__value" data-countup
+                         th:text="${stats.tourCount()}">20</div>
+                    <div class="home-metric__label" th:text="#{home.stat.tours}">Hành trình</div>
+                </div>
+                <div class="home-metric">
+                    <div class="home-metric__value" data-countup
+                         th:text="${stats.destinationCount()}">20</div>
+                    <div class="home-metric__label" th:text="#{home.stat.destinations}">Điểm đến</div>
+                </div>
+                <div class="home-metric">
+                    <div class="home-metric__value" data-countup
+                         th:text="${stats.departureCount()}">60</div>
+                    <div class="home-metric__label" th:text="#{home.stat.departures}">Đợt khởi hành</div>
+                </div>
+                <div class="home-metric">
+                    <div class="home-metric__value" data-countup
+                         th:text="${stats.categoryCount()}">6</div>
+                    <div class="home-metric__label" th:text="#{home.stat.categories}">Dòng tour</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 3. DẢI CAM KẾT ===================== -->
+    <div class="container mt-4 mt-lg-5">
+        <div class="assurance reveal">
+            <div class="assurance__item">
+                <span class="assurance__icon"><i class="bi bi-shield-check"></i></span>
+                <div>
+                    <div class="assurance__title" th:text="#{home.assurance.1.title}">Giá đúng niêm yết</div>
+                    <p class="assurance__text" th:text="#{home.assurance.1.text}">Mô tả</p>
+                </div>
+            </div>
+            <div class="assurance__item">
+                <span class="assurance__icon"><i class="bi bi-calendar2-check"></i></span>
+                <div>
+                    <div class="assurance__title" th:text="#{home.assurance.2.title}">Chỗ trống theo thời gian thực</div>
+                    <p class="assurance__text" th:text="#{home.assurance.2.text}">Mô tả</p>
+                </div>
+            </div>
+            <div class="assurance__item">
+                <span class="assurance__icon"><i class="bi bi-people"></i></span>
+                <div>
+                    <div class="assurance__title" th:text="#{home.assurance.3.title}">Đoàn nhỏ</div>
+                    <p class="assurance__text" th:text="#{home.assurance.3.text}">Mô tả</p>
+                </div>
+            </div>
+            <div class="assurance__item">
+                <span class="assurance__icon"><i class="bi bi-envelope-check"></i></span>
+                <div>
+                    <div class="assurance__title" th:text="#{home.assurance.4.title}">Xác nhận trong 24 giờ</div>
+                    <p class="assurance__text" th:text="#{home.assurance.4.text}">Mô tả</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4" th:replace="~{fragments/components :: alerts}"></div>
+    </div>
+
+    <!-- ===================== 4. DANH MỤC ===================== -->
+    <section class="section">
+        <div class="container">
+            <div th:replace="~{fragments/components :: sectionHead(
+                    '', #{home.categories.title}, #{home.categories.lead})}"></div>
+
+            <!--/*
+              Ô đầu tiên chiếm gấp bốn diện tích - CategoryService đã xếp danh mục
+              nhiều tour nhất lên đầu nên ô lớn luôn là ô đáng xem nhất.
+            */-->
+            <div class="cat-grid reveal">
+                <a th:each="card, stat : ${categoryCards}"
+                   class="cat-tile"
+                   th:classappend="${stat.first} ? 'cat-tile--wide'"
+                   th:href="@{/categories/{slug}(slug=${card.category().slug})}">
+
+                    <img class="cat-tile__img"
+                         th:src="${card.category().imageUrl != null}
+                                 ? @{${card.category().imageUrl}}
+                                 : @{/images/no-image.svg}"
+                         th:alt="${card.category().name}" loading="lazy">
+
+                    <span class="cat-tile__veil"></span>
+                    <span class="cat-tile__go"><i class="bi bi-arrow-up-right"></i></span>
+
+                    <div class="cat-tile__body">
+                        <div class="cat-tile__name" th:text="${card.category().name}">Danh mục</div>
+                        <div class="cat-tile__count"
+                             th:text="#{home.categories.count(${card.tourCount()})}">0 hành trình</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 5. TOUR NỔI BẬT ===================== -->
+    <section class="section bg-sand">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4 mb-lg-5">
+                <div class="reveal">
+                    <h2 class="section-title mb-2" th:text="#{home.featured.title}">Tour nổi bật</h2>
+                    <p class="section-lead mb-0" th:text="#{home.featured.lead}">Câu dẫn</p>
+                </div>
+                <a class="btn btn-outline-primary reveal" th:href="@{/tours}">
+                    <span th:text="#{home.hero.cta}">Xem tất cả tour</span>
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            <p th:if="${#lists.isEmpty(featuredTours)}" class="text-muted"
+               th:text="#{home.featured.empty}">Chưa có tour nổi bật.</p>
+
+            <!--/*
+              th:each phải ở thẻ NGOÀI th:replace. Thymeleaf xử lý th:replace (ưu
+              tiên 100) trước th:each (ưu tiên 200), viết chung một thẻ thì mảnh
+              được chèn khi biến lặp còn chưa tồn tại.
+            */-->
+            <div class="row g-4">
+                <th:block th:each="t : ${featuredTours}">
+                    <div th:replace="~{fragments/components :: tourCard(${t})}"></div>
+                </th:block>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 6. ĐIỂM ĐẾN ===================== -->
+    <!--/*
+      Hai dải địa danh chạy ngược chiều nhau. Mỗi tên là một liên kết tới /tours
+      đã điền sẵn bộ lọc destination - dùng lại đúng bộ lọc của trang danh sách,
+      không đẻ ra đường tìm kiếm thứ hai.
+
+      Danh sách bị cắt làm đôi theo chỉ số: hai hàng lặp lại y hệt nhau thì mắt
+      nhận ra ngay là một danh sách được chiếu hai lần.
+
+      app.js nhân bản nội dung để vòng lặp khép kín. Không có JavaScript thì hai
+      hàng đứng yên và vẫn đọc được đủ tên - chuyển động ở đây là trang trí, và
+      trang trí không bao giờ được phép giữ nội dung làm con tin.
+    */-->
+    <section class="section">
+        <div class="container">
+            <div th:replace="~{fragments/components :: sectionHead(
+                    '', #{home.destinations.title}, '')}"></div>
+        </div>
+
+        <div th:with="half=${#lists.size(destinations) / 2}">
+            <div class="marquee" data-marquee>
+                <div class="marquee__track">
+                    <a th:each="d, s : ${destinations}" th:if="${s.index &lt; half}"
+                       class="marquee__item"
+                       th:classappend="${s.index % 2 == 1} ? 'marquee__item--ghost'"
+                       th:href="@{/tours(destination=${d})}"
+                       th:text="${d}">Điểm đến</a>
+                </div>
+            </div>
+
+            <div class="marquee marquee--reverse mt-2" data-marquee>
+                <div class="marquee__track">
+                    <a th:each="d, s : ${destinations}" th:if="${s.index &gt;= half}"
+                       class="marquee__item"
+                       th:classappend="${s.index % 2 == 1} ? 'marquee__item--ghost'"
+                       th:href="@{/tours(destination=${d})}"
+                       th:text="${d}">Điểm đến</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container text-center mt-4">
+            <a class="btn btn-outline-primary" th:href="@{/tours}">
+                <span th:text="#{home.destinations.all}">Tất cả điểm đến</span>
+                <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- ===================== 7. BỐN BƯỚC ===================== -->
+    <!--/*
+      Khối tối thứ nhất trong hai khối tối của cả trang.
+
+      Bốn bước xếp thành MỘT CỘT DỌC có thanh nối, không phải lưới 2x2: bốn ô
+      vuông cạnh nhau không nói được cái nào trước cái nào, mà thứ tự lại đúng là
+      thông tin duy nhất mà khối này có.
+
+      Vệt sáng trên thanh nối dâng theo vị trí cuộn (app.css mục 14.7) - nó trả
+      lời "đang ở bước mấy" ngay trong lúc đọc. Trình duyệt không hỗ trợ thì chỉ
+      còn nền mờ của thanh, chữ vẫn nguyên.
+    */-->
+    <section class="section bg-jade" id="cach-dat">
+        <div class="container">
+            <div class="row g-4 g-lg-5 align-items-start">
+                <div class="col-lg-4 reveal">
+                    <h2 class="section-title" th:text="#{home.steps.title}">Đặt tour trong bốn bước</h2>
+                    <p class="section-lead" th:text="#{home.steps.lead}">Câu dẫn</p>
+                    <a class="btn btn-accent mt-3" th:href="@{/tours}">
+                        <span th:text="#{home.hero.cta}">Xem tất cả tour</span>
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="step-rail reveal">
+                        <span class="step-rail__fill" aria-hidden="true"></span>
+
+                        <div class="step">
+                            <span class="step__num">1</span>
+                            <h3 class="h6" th:text="#{home.steps.1.title}">Chọn hành trình</h3>
+                            <p class="small mb-0 opacity-75" th:text="#{home.steps.1.text}">Mô tả</p>
+                        </div>
+                        <div class="step">
+                            <span class="step__num">2</span>
+                            <h3 class="h6" th:text="#{home.steps.2.title}">Chọn ngày và số khách</h3>
+                            <p class="small mb-0 opacity-75" th:text="#{home.steps.2.text}">Mô tả</p>
+                        </div>
+                        <div class="step">
+                            <span class="step__num">3</span>
+                            <h3 class="h6" th:text="#{home.steps.3.title}">Điền thông tin liên hệ</h3>
+                            <p class="small mb-0 opacity-75" th:text="#{home.steps.3.text}">Mô tả</p>
+                        </div>
+                        <div class="step">
+                            <span class="step__num">4</span>
+                            <h3 class="h6" th:text="#{home.steps.4.title}">Nhận thư xác nhận</h3>
+                            <p class="small mb-0 opacity-75" th:text="#{home.steps.4.text}">Mô tả</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 8. CẢM NHẬN ===================== -->
+    <section class="section">
+        <div class="container">
+            <div th:replace="~{fragments/components :: sectionHead(
+                    '', #{home.quotes.title}, '')}"></div>
+
+            <!--/*
+              Một khối lớn dẫn đầu cộng hai khối nhỏ, không phải ba khối bằng nhau:
+              ba ô y hệt nhau xếp ngang là bố cục mà cỗ máy nào cũng sinh ra, và nó
+              không nói được nên đọc cái nào trước.
+            */-->
+            <div class="quote-grid reveal">
+                <div class="quote quote--lead">
+                    <p class="quote__text" th:text="#{home.quotes.1.text}">Nội dung</p>
+                    <div class="quote__who">
+                        <span class="quote__avatar" aria-hidden="true">A</span>
+                        <div>
+                            <div class="fw-semibold small" th:text="#{home.quotes.1.name}">Tên</div>
+                            <div class="small text-muted" th:text="#{home.quotes.1.tour}">Tour</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quote">
+                    <p class="quote__text" th:text="#{home.quotes.2.text}">Nội dung</p>
+                    <div class="quote__who">
+                        <span class="quote__avatar" aria-hidden="true">B</span>
+                        <div>
+                            <div class="fw-semibold small" th:text="#{home.quotes.2.name}">Tên</div>
+                            <div class="small text-muted" th:text="#{home.quotes.2.tour}">Tour</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quote">
+                    <p class="quote__text" th:text="#{home.quotes.3.text}">Nội dung</p>
+                    <div class="quote__who">
+                        <span class="quote__avatar" aria-hidden="true">C</span>
+                        <div>
+                            <div class="fw-semibold small" th:text="#{home.quotes.3.name}">Tên</div>
+                            <div class="small text-muted" th:text="#{home.quotes.3.tour}">Tour</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--/*
+              Ghi rõ đây là nội dung minh hoạ. Ba lời khen không có thật mà trình bày
+              như thật thì dù là bài tập cũng vẫn là nói dối người đọc - một dòng chú
+              thích nhỏ giải quyết xong chuyện đó.
+            */-->
+            <p class="small text-muted mt-3 mb-0" th:text="#{home.quotes.note}">Nội dung minh hoạ.</p>
+        </div>
+    </section>
+
+    <!-- ===================== 9. KÊU GỌI HÀNH ĐỘNG ===================== -->
+    <section class="pb-5">
+        <div class="container">
+            <div class="cta-band reveal">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <h2 class="section-title mb-2" th:text="#{home.cta.title}">Sẵn sàng lên đường?</h2>
+                        <p class="mb-0" th:text="#{home.cta.lead}">Câu dẫn</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <a class="btn btn-paper btn-lg" th:href="@{/tours}">
+                            <span th:text="#{home.hero.cta}">Xem tất cả tour</span>
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

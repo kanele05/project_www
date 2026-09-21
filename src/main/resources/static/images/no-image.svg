@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ảnh thay thế khi một bản ghi chưa có ảnh đại diện.
+
+  Dùng SVG thay vì ảnh JPG/PNG: file chỉ vài trăm byte, không vỡ khi phóng to,
+  và không phải thêm tệp nhị phân vào kho mã nguồn.
+
+  Màu lấy đúng bảng màu "Ngọc bích & Đất nung" thay vì xám mặc định: một ô xám
+  nằm giữa lưới thẻ ấm màu trông như trang bị lỗi, còn ô cùng tông thì trông như
+  một lựa chọn thiết kế.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250"
+     role="img" aria-label="Chưa có ảnh">
+    <defs>
+        <linearGradient id="ph" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#12655B"/>
+            <stop offset="100%" stop-color="#06251F"/>
+        </linearGradient>
+    </defs>
+
+    <rect width="400" height="250" fill="url(#ph)"/>
+
+    <!-- Đường chân trời, đúng hình dùng cho nền nghệ thuật của thẻ tour -->
+    <path d="M0 186l52-30 44 22 58-42 52 34 62-46 68 40 64-26v92H0z" fill="#000" fill-opacity=".20"/>
+    <path d="M0 214l70-26 56 18 62-24 58 26 72-30 82 26v46H0z" fill="#000" fill-opacity=".28"/>
+
+    <circle cx="308" cy="62" r="22" fill="#E0A458" opacity=".85"/>
+
+    <text x="200" y="128" text-anchor="middle"
+          font-family="Playfair Display, Georgia, serif" font-size="19"
+          fill="#F6EFE4" fill-opacity=".78">IUH Tour Booking</text>
+</svg>

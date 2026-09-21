@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  Danh sách tài khoản.
+
+  Bảng này chỉ đọc các trường vô hại của entity User. Không có chỗ nào in ra
+  user.password, và biểu mẫu sửa thì bind vào AdminUserForm - lớp đó không hề có
+  trường mật khẩu. Xem mã nguồn trang trong trình duyệt sẽ không tìm thấy chuỗi
+  băm nào.
+
+  Ghi chú dùng cú pháp <!--​/* ... */--​> của Thymeleaf, tức là "chú thích mức bộ
+  phân tích": nó bị gỡ bỏ khi render nên KHÔNG đi ra trình duyệt. Cần như vậy vì
+  chú thích HTML thường vẫn nằm nguyên trong mã nguồn trang - và một ghi chú nhắc
+  tới tiền tố của chuỗi băm BCrypt sẽ làm phép kiểm tra "tìm chuỗi băm trong mã
+  nguồn trang" báo nhầm là có.
+*/-->
+
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.user.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('users')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h4 mb-0" th:text="#{admin.user.title}">Quản lý tài khoản</h1>
+                <a class="btn btn-primary" th:href="@{/admin/users/form}">
+                    <i class="bi bi-plus-lg"></i> <span th:text="#{admin.action.new}">Thêm mới</span>
+                </a>
+            </div>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <form class="row g-2 mb-3" method="get" th:action="@{/admin/users}">
+                <div class="col-md-5">
+                    <input class="form-control form-control-sm" type="search" name="keyword"
+                           th:value="${keyword}" th:placeholder="#{admin.user.searchPlaceholder}">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" name="role">
+                        <option value="" th:text="#{tour.filter.all}">Tất cả</option>
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="#{${r.messageKey}}"
+                                th:selected="${r == role}">Vai trò</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-primary w-100" type="submit">
+                        <i class="bi bi-search"></i> <span th:text="#{admin.action.search}">Tìm</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.user.fullName}">Họ và tên</th>
+                            <th th:text="#{admin.user.email}">Email</th>
+                            <th th:text="#{admin.user.phone}">Điện thoại</th>
+                            <th th:text="#{admin.user.role}">Vai trò</th>
+                            <th th:text="#{admin.user.enabled}">Trạng thái</th>
+                            <th class="text-end">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${usersPage.empty}">
+                            <td colspan="6" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <tr th:each="u : ${usersPage.content}">
+                            <td class="fw-semibold" th:text="${u.fullName}">Họ tên</td>
+                            <td class="small" th:text="${u.email}">email</td>
+                            <td class="small" th:text="${u.phone}">0900...</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${u.admin} ? 'bg-danger' : 'bg-info'"
+                                      th:text="#{${u.role.messageKey}}">Vai trò</span>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${u.enabled} ? 'bg-success' : 'bg-secondary'"
+                                      th:text="${u.enabled} ? #{admin.status.enabled} : #{admin.status.disabled}">Trạng thái</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/admin/users/form(id=${u.id})}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}">
+                                    <button class="btn btn-sm btn-outline-warning" type="submit"
+                                            th:title="${u.enabled} ? #{admin.action.disable} : #{admin.action.enable}">
+                                        <i class="bi" th:classappend="${u.enabled} ? 'bi-lock' : 'bi-unlock'"></i>
+                                    </button>
+                                </form>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/users/{id}/delete(id=${u.id})}"
+                                      th:data-ajax-delete="@{/api/admin/users/{id}(id=${u.id})}"
+                                      th:data-confirm="#{admin.confirmDelete}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${usersPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

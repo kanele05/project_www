@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   Khung giao diện của khu vực quản trị: thẻ head, thanh trên, menu bên trái.
+
+   Cố tình tách hẳn khỏi fragments/layout.html của trang bán hàng. Hai khu vực
+   này phục vụ hai loại người dùng khác nhau và có bố cục khác hẳn nhau (một bên
+   là trang giới thiệu, một bên là bảng làm việc có menu dọc); nhồi cả hai vào
+   một khung sẽ đầy th:if và rất khó đọc.
+
+   Lưu ý: GlobalModelAdvice chỉ áp dụng cho gói controller.web, nên trong khu vực
+   này KHÔNG có biến "cart" và "navCategories" - đừng tham chiếu tới chúng.
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|${pageTitle} - #{admin.title}|">Quản trị</title>
+
+    <!--/* Token CSRF cho AJAX - xem chú thích ở fragments/layout.html. Khu quản trị
+           cần nó cho nút xoá bằng AJAX (DELETE /api/admin/...). */-->
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
+
+    <!--/* Câu chữ cho JavaScript - xem chú thích ở fragments/layout.html. */-->
+    <meta name="msg.currency" th:content="#{common.currency}">
+    <meta name="msg.error.generic" th:content="#{error.js.generic}">
+    <meta name="msg.deleted" th:content="#{admin.ajax.deleted}">
+    <meta name="msg.chart.empty" th:content="#{admin.empty}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap">
+
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+
+<body>
+
+<!-- ======================= THANH TRÊN ======================= -->
+<nav th:fragment="topbar" class="navbar navbar-dark admin-topbar sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" th:href="@{/admin}">
+            <i class="bi bi-speedometer2"></i> <span th:text="#{admin.title}">Khu vực quản trị</span>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+            <a class="btn btn-sm btn-outline-light" th:href="@{/}">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span th:text="#{admin.nav.backToSite}">Về trang bán hàng</span>
+            </a>
+
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" th:title="#{nav.language}">
+                    <i class="bi bi-translate"></i>
+                    <span th:text="#{nav.language.current}">VI</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" th:href="@{/change-language(lang='vi')}">Tiếng Việt</a></li>
+                    <li><a class="dropdown-item" th:href="@{/change-language(lang='en')}">English</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i>
+                    <span sec:authentication="principal.fullName">Quản trị viên</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/account/profile}"
+                           th:text="#{nav.profile}">Thông tin cá nhân</a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" class="px-3 py-1">
+                            <button class="btn btn-sm btn-outline-danger w-100" type="submit"
+                                    th:text="#{nav.logout}">Đăng xuất</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ======================= MENU BÊN TRÁI ======================= -->
+<div th:fragment="sidebar(active)" class="list-group list-group-flush admin-sidebar">
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'dashboard'} ? 'active'" th:href="@{/admin}">
+        <i class="bi bi-graph-up"></i> <span th:text="#{admin.nav.dashboard}">Bảng điều khiển</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'tours'} ? 'active'" th:href="@{/admin/tours}">
+        <i class="bi bi-map"></i> <span th:text="#{admin.nav.tours}">Quản lý tour</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'categories'} ? 'active'" th:href="@{/admin/categories}">
+        <i class="bi bi-tags"></i> <span th:text="#{admin.nav.categories}">Quản lý danh mục</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'bookings'} ? 'active'" th:href="@{/admin/bookings}">
+        <i class="bi bi-receipt"></i> <span th:text="#{admin.nav.bookings}">Quản lý đơn hàng</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'promotions'} ? 'active'" th:href="@{/admin/promotions}">
+        <i class="bi bi-ticket-perforated"></i> <span th:text="#{admin.nav.promotions}">Mã khuyến mãi</span>
+    </a>
+    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+       th:classappend="${active == 'reviews'} ? 'active'" th:href="@{/admin/reviews}">
+        <span><i class="bi bi-star-half"></i> <span th:text="#{admin.nav.reviews}">Kiểm duyệt đánh giá</span></span>
+        <span class="badge bg-danger rounded-pill" th:if="${pendingReviewCount != null and pendingReviewCount > 0}"
+              th:text="${pendingReviewCount}">0</span>
+    </a>
+    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+       th:classappend="${active == 'contacts'} ? 'active'" th:href="@{/admin/contacts}">
+        <span><i class="bi bi-envelope"></i> <span th:text="#{admin.nav.contacts}">Liên hệ</span></span>
+        <span class="badge bg-danger rounded-pill" th:if="${newContactCount != null and newContactCount > 0}"
+              th:text="${newContactCount}">0</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">
+        <i class="bi bi-people"></i> <span th:text="#{admin.nav.users}">Quản lý tài khoản</span>
+    </a>
+</div>
+
+<!-- ======================= SCRIPT ======================= -->
+<th:block th:fragment="scripts">
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/admin.js}"></script>
+</th:block>
+
+</body>
+</html>

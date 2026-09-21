@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+  Trang danh sách tour. Dùng chung cho hai địa chỉ:
+    /tours                     - danh sách đầy đủ
+    /categories/{slug}         - lọc sẵn theo một danh mục (biến "category" khác null)
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${category != null} ? ${category.name} : #{tour.list.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="flex-grow-1">
+
+    <!-- ===================== Dải tiêu đề ===================== -->
+    <section class="page-head bg-jade">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" th:text="#{nav.home}">Trang chủ</a></li>
+                    <li class="breadcrumb-item" th:if="${category != null}">
+                        <a th:href="@{/tours}" th:text="#{nav.tours}">Tất cả tour</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page"
+                        th:text="${category != null} ? ${category.name} : #{tour.list.title}">Tất cả tour</li>
+                </ol>
+            </nav>
+
+            <span class="eyebrow eyebrow--light"
+                  th:text="${category != null} ? #{tour.list.categoryEyebrow} : #{home.destinations.eyebrow}">Danh mục</span>
+
+            <h1 class="hero-title" style="font-size: clamp(2rem, 4.5vw, 3.4rem)"
+                th:text="${category != null} ? ${category.name} : #{tour.list.title}">Tất cả tour</h1>
+
+            <p class="hero-lead mb-0"
+               th:text="${category != null and category.description != null}
+                        ? ${category.description} : #{tour.list.lead}">Mô tả</p>
+        </div>
+    </section>
+
+    <div class="container py-5">
+
+        <div th:replace="~{fragments/components :: alerts}"></div>
+
+        <div class="row g-4">
+
+            <!-- ===================== Cột bộ lọc ===================== -->
+            <aside class="col-lg-3">
+                <div class="panel panel__pad filter-panel">
+                    <h2 class="h6 mb-3">
+                        <i class="bi bi-sliders me-1"></i> <span th:text="#{common.filter}">Lọc</span>
+                    </h2>
+
+                    <!--
+                      Biểu mẫu gửi bằng GET để mọi bộ lọc nằm trên thanh địa chỉ:
+                      người dùng lưu hoặc gửi đường dẫn cho nhau vẫn giữ nguyên kết quả.
+                      Khi đang ở trang danh mục thì gửi lại chính địa chỉ đó để không
+                      rơi ra khỏi danh mục.
+                    -->
+                    <form method="get"
+                          th:action="${category != null}
+                                     ? @{/categories/{slug}(slug=${category.slug})}
+                                     : @{/tours}">
+
+                        <div class="mb-3">
+                            <label class="form-label" for="q" th:text="#{nav.search}">Tìm kiếm</label>
+                            <input class="form-control form-control-sm" type="search" id="q" name="q"
+                                   th:value="${searchForm.q}"
+                                   th:placeholder="#{tour.search.placeholder}">
+                        </div>
+
+                        <!-- Ở trang danh mục thì ô chọn danh mục là thừa, đã cố định rồi -->
+                        <div class="mb-3" th:if="${category == null}">
+                            <label class="form-label" for="categoryId"
+                                   th:text="#{tour.filter.category}">Danh mục</label>
+                            <select class="form-select form-select-sm" id="categoryId" name="categoryId">
+                                <option value="" th:text="#{tour.filter.all}">Tất cả</option>
+                                <option th:each="c : ${navCategories}"
+                                        th:value="${c.id}"
+                                        th:text="${c.name}"
+                                        th:selected="${c.id == searchForm.categoryId}">Danh mục</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="destination"
+                                   th:text="#{tour.filter.destination}">Điểm đến</label>
+                            <select class="form-select form-select-sm" id="destination" name="destination">
+                                <option value="" th:text="#{tour.filter.all}">Tất cả</option>
+                                <option th:each="d : ${destinations}"
+                                        th:value="${d}" th:text="${d}"
+                                        th:selected="${d == searchForm.destination}">Điểm đến</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="minPrice"
+                                       th:text="#{tour.filter.priceFrom}">Giá từ</label>
+                                <input class="form-control form-control-sm" type="number" min="0" step="100000"
+                                       id="minPrice" name="minPrice" th:value="${searchForm.minPrice}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="maxPrice"
+                                       th:text="#{tour.filter.priceTo}">Giá đến</label>
+                                <input class="form-control form-control-sm" type="number" min="0" step="100000"
+                                       id="maxPrice" name="maxPrice" th:value="${searchForm.maxPrice}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="sort"
+                                   th:text="#{tour.sort.label}">Sắp xếp</label>
+                            <select class="form-select form-select-sm" id="sort" name="sort">
+                                <option value="newest"     th:text="#{tour.sort.newest}"
+                                        th:selected="${searchForm.sort == 'newest'}">Mới nhất</option>
+                                <option value="price-asc"  th:text="#{tour.sort.priceAsc}"
+                                        th:selected="${searchForm.sort == 'price-asc'}">Giá tăng</option>
+                                <option value="price-desc" th:text="#{tour.sort.priceDesc}"
+                                        th:selected="${searchForm.sort == 'price-desc'}">Giá giảm</option>
+                                <option value="popular"    th:text="#{tour.sort.popular}"
+                                        th:selected="${searchForm.sort == 'popular'}">Xem nhiều</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary btn-sm w-100" type="submit"
+                                th:text="#{common.apply}">Áp dụng</button>
+                    </form>
+
+                    <a th:if="${searchForm.hasAnyFilter()}"
+                       class="btn btn-link btn-sm w-100 mt-2"
+                       th:href="${category != null}
+                                ? @{/categories/{slug}(slug=${category.slug})}
+                                : @{/tours}"
+                       th:text="#{common.clearFilter}">Xoá bộ lọc</a>
+                </div>
+            </aside>
+
+            <!-- ===================== Kết quả ===================== -->
+            <div class="col-lg-9">
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <p class="text-muted small mb-0"
+                       th:text="#{tour.list.resultCount(${toursPage.totalElements})}">Tìm thấy 0 tour</p>
+                    <p class="text-muted small mb-0" th:if="${toursPage.totalPages > 1}"
+                       th:text="#{tour.list.pageOf(${toursPage.number + 1}, ${toursPage.totalPages})}">Trang 1/3</p>
+                </div>
+
+                <div th:if="${toursPage.empty}" class="alert alert-info">
+                    <i class="bi bi-search me-1"></i> <span th:text="#{tour.list.empty}">Không có tour nào.</span>
+                </div>
+
+                <div class="row g-4">
+                    <!--
+                      th:each phải nằm ở thẻ NGOÀI, không được đặt chung một thẻ với
+                      th:replace: Thymeleaf xử lý th:replace trước th:each, nên viết
+                      chung thì mảnh giao diện được chèn khi biến lặp còn chưa tồn tại
+                      và hỏng ngay với lỗi "Property or field 'id' cannot be found on null".
+                    -->
+                    <th:block th:each="t : ${toursPage.content}">
+                        <div th:replace="~{fragments/components :: tourCard(${t})}"></div>
+                    </th:block>
+                </div>
+
+                <div th:replace="~{fragments/components :: pagination(${toursPage}, ${pageUrlPrefix})}"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

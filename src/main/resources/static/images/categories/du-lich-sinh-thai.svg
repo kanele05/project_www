@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Sinh thai">
+  <!-- Minh hoa danh muc "Du lich sinh thai" -->
+  <defs>
+    <linearGradient id="skyE" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#123F38"/>
+      <stop offset="50%" stop-color="#2A6E5E"/>
+      <stop offset="100%" stop-color="#6E9A4E"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A9484"/>
+      <stop offset="100%" stop-color="#0E4F47"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#skyE)"/>
+
+  <!-- Nang xuyen tan la -->
+  <g fill="#E0A458" opacity=".16">
+    <path d="M180 0l120 380-60 20z"/>
+    <path d="M420 0l90 400-56 12z"/>
+    <path d="M640 0l40 400-56 4z"/>
+  </g>
+
+  <!-- Song nuoc -->
+  <path d="M0 430h800v170H0z" fill="url(#water)"/>
+  <g fill="#DCEFEA" opacity=".22">
+    <rect x="60"  y="470" width="180" height="5" rx="2.5"/>
+    <rect x="330" y="504" width="240" height="5" rx="2.5"/>
+    <rect x="120" y="546" width="200" height="5" rx="2.5"/>
+  </g>
+
+  <!-- Rung ngap man doi bo -->
+  <path d="M0 430c60-10 96-52 150-52s86 40 140 34 92-50 150-44 96 46 150 42 122-34 210-26v46H0z"
+        fill="#123F38"/>
+
+  <!-- Tan cay lon -->
+  <g fill="#0A3833">
+    <circle cx="120" cy="336" r="86"/>
+    <circle cx="196" cy="374" r="62"/>
+    <circle cx="52"  cy="382" r="60"/>
+    <circle cx="668" cy="318" r="94"/>
+    <circle cx="588" cy="366" r="64"/>
+    <circle cx="748" cy="372" r="60"/>
+  </g>
+
+  <!-- Chiec xuong nho -->
+  <g fill="#14201E">
+    <path d="M330 512h140l-24 24h-92z"/>
+    <rect x="392" y="452" width="5" height="60"/>
+    <path d="M400 456l52 42h-52z" fill="#F6EFE4" opacity=".82"/>
+  </g>
+
+  <!-- Dan chim -->
+  <g fill="none" stroke="#F6EFE4" stroke-width="3" opacity=".65" stroke-linecap="round">
+    <path d="M470 150c10-12 20-12 30 0"/>
+    <path d="M508 128c8-10 18-10 26 0"/>
+    <path d="M436 186c8-10 18-10 26 0"/>
+  </g>
+</svg>

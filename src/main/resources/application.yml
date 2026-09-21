@@ -1,0 +1,141 @@
+# =============================================================================
+#  Cấu hình chung của ứng dụng
+#  Đề tài: Website giới thiệu tour du lịch và đăng ký tour trực tuyến
+#
+#  Profile mặc định là "dev" (xem application-dev.yml) - có seed dữ liệu mẫu.
+# =============================================================================
+
+spring:
+  application:
+    name: tourbooking
+
+  profiles:
+    default: dev
+
+  # ---------------------------------------------------------------------------
+  # Kết nối SQL Server (CLO4)
+  # ---------------------------------------------------------------------------
+  # LƯU Ý QUAN TRỌNG về chuỗi kết nối:
+  #   - Từ driver 10.x trở đi, encrypt mặc định = true. SQL Server cài local
+  #     dùng self-signed certificate nên PHẢI có trustServerCertificate=true,
+  #     nếu không sẽ gặp lỗi khó hiểu "PKIX path building failed".
+  #   - Không dùng integratedSecurity=true vì driver sẽ đòi file
+  #     mssql-jdbc_auth-*.dll trên java.library.path -> khó mang sang máy khác.
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=TourBookingDB;encrypt=true;trustServerCertificate=true;loginTimeout=30
+    username: tourapp
+    password: Tour@2026#IUH
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      maximum-pool-size: 10
+      pool-name: TourBookingHikariPool
+
+  # ---------------------------------------------------------------------------
+  # JPA / Hibernate
+  # ---------------------------------------------------------------------------
+  jpa:
+    hibernate:
+      # validate: Hibernate ĐỐI CHIẾU các entity với schema đang có rồi dừng lại
+      # nếu lệch, chứ không tự sửa CSDL nữa.
+      #
+      # Đây là bước chốt của giai đoạn cuối, và cũng là bằng chứng cho phần chấm
+      # về tầng dữ liệu: schema hiện tại được tạo từ database/02_schema.sql viết
+      # tay: ứng dụng khởi động được với "validate" nghĩa là toàn bộ entity khớp
+      # 1-1 với script ấy, không phải "script chỉ là bản chép lại từ Hibernate".
+      #
+      # Hệ quả phải nhớ: từ giờ THÊM/SỬA cột ở entity thì phải sửa cả
+      # 02_schema.sql và chạy lại, nếu không ứng dụng sẽ không khởi động.
+      ddl-auto: validate
+    # Tắt Open Session In View một cách CÓ CHỦ ĐÍCH:
+    # nếu template truy cập một association LAZY chưa được nạp, ứng dụng sẽ
+    # ném LazyInitializationException ngay thay vì âm thầm bắn hàng trăm câu
+    # truy vấn (bẫy N+1). Buộc tầng service phải nạp đủ dữ liệu.
+    open-in-view: false
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    properties:
+      hibernate:
+        format_sql: true
+        # BẮT BUỘC cho website tiếng Việt: ánh xạ String -> NVARCHAR thay vì
+        # VARCHAR, tránh mất dấu khi lưu.
+        use_nationalized_character_data: true
+        # BẮT BUỘC theo yêu cầu đề bài: không cho Bean Validation sinh ra
+        # CHECK constraint trong CSDL (đề bài cấm Function/CHECK/Stored Procedure).
+        validator:
+          apply_to_ddl: false
+        jdbc:
+          batch_size: 20
+        default_batch_fetch_size: 20   # giảm nhẹ N+1 khi nạp collection
+
+  # ---------------------------------------------------------------------------
+  # Thymeleaf
+  # ---------------------------------------------------------------------------
+  thymeleaf:
+    encoding: UTF-8
+    cache: false                # dev: sửa template không cần khởi động lại
+
+  # ---------------------------------------------------------------------------
+  # Đa ngôn ngữ (i18n) - Việt / Anh
+  # ---------------------------------------------------------------------------
+  messages:
+    basename: messages
+    encoding: UTF-8
+    # Nếu để true, máy có locale tiếng Anh sẽ rơi về messages.properties
+    # thay vì messages_vi.properties -> đặt false cho chắc chắn.
+    fallback-to-system-locale: false
+
+  # ---------------------------------------------------------------------------
+  # Upload ảnh tour
+  # ---------------------------------------------------------------------------
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+# =============================================================================
+#  Cấu hình riêng của ứng dụng (ánh xạ vào lớp AppProperties)
+# =============================================================================
+app:
+  upload:
+    # Thư mục lưu ảnh NẰM NGOÀI classpath: file ghi vào target/classes sẽ bị
+    # xoá sạch mỗi lần "mvn clean" và ứng dụng đang chạy cũng không thấy được.
+    dir: ${user.dir}/uploads
+    url-prefix: /uploads
+  mail:
+    mode: console               # console | smtp
+    from: no-reply@tourbooking.iuh.edu.vn
+    from-name: IUH Tour Booking
+
+server:
+  # Dùng 8081 vì cổng 8080 trên máy này đang bị Apache (XAMPP) chiếm.
+  # Có thể ghi đè khi chạy:  --server.port=8080
+  port: ${PORT:8081}
+  error:
+    # KHÔNG BAO GIỜ gửi vết lỗi ra ngoài. Vết lỗi để lộ tên lớp, tên bảng và
+    # đường dẫn thư mục trên máy chủ.
+    #
+    # Phải khai báo tường minh chứ không dựa vào mặc định: spring-boot-devtools
+    # tự đặt include-stacktrace = ALWAYS cho tiện lúc phát triển, nên khi chạy
+    # bằng mvn spring-boot:run thì phản hồi lỗi dạng JSON có kèm nguyên vết lỗi.
+    # Đã kiểm chứng: gọi /tours/99999 trả về cả chuỗi "vn.edu.iuh.fit...".
+    # Chỗ đúng để xem vết lỗi là nhật ký máy chủ.
+    include-stacktrace: never
+    include-exception: false
+  servlet:
+    session:
+      timeout: 30m              # giỏ hàng lưu trong session nên đừng để quá ngắn
+    encoding:
+      charset: UTF-8
+      force: true
+
+logging:
+  level:
+    vn.edu.iuh.fit.tourbooking: DEBUG

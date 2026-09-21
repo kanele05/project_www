@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.action.departures})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('tours')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/admin/tours}" th:text="#{admin.tour.title}">Quản lý tour</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/admin/tours/form(id=${tour.id})}" th:text="${tour.name}">Tên tour</a>
+                    </li>
+                    <li class="breadcrumb-item active" th:text="#{admin.action.departures}">Đợt khởi hành</li>
+                </ol>
+            </nav>
+
+            <h1 class="h5 mb-3" th:text="#{admin.departure.title(${tour.name})}">Đợt khởi hành</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="row g-4">
+
+                <!-- ===================== Danh sách ===================== -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                <tr>
+                                    <th th:text="#{admin.departure.departureDate}">Ngày đi</th>
+                                    <th th:text="#{admin.departure.returnDate}">Ngày về</th>
+                                    <th class="text-center" th:text="#{admin.departure.sold}">Đã bán</th>
+                                    <th class="text-end" th:text="#{admin.departure.priceAdult}">Giá người lớn</th>
+                                    <th th:text="#{admin.departure.active}">Trạng thái</th>
+                                    <th class="text-end">&nbsp;</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(departures)}">
+                                    <td colspan="6" class="text-center text-muted py-4"
+                                        th:text="#{admin.departure.empty}">Chưa có đợt nào.</td>
+                                </tr>
+
+                                <tr th:each="d : ${departures}">
+                                    <td class="small fw-semibold"
+                                        th:text="${#temporals.format(d.departureDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                                    <td class="small"
+                                        th:text="${#temporals.format(d.returnDate, 'dd/MM/yyyy')}">03/01/2026</td>
+                                    <td class="text-center small">
+                                        <span th:text="${d.bookedSeats}">0</span> /
+                                        <span th:text="${d.totalSeats}">30</span>
+                                    </td>
+                                    <td class="text-end small"
+                                        th:text="|${#numbers.formatInteger(d.priceAdult, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${d.active} ? 'bg-success' : 'bg-secondary'"
+                                              th:text="${d.active} ? #{admin.status.active} : #{admin.status.inactive}">Trạng thái</span>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           th:href="@{/admin/tours/{tourId}/departures(tourId=${tour.id}, editId=${d.id})}"
+                                           th:title="#{admin.action.edit}">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form class="d-inline" method="post"
+                                              th:action="@{/admin/tours/{tourId}/departures/{id}/toggle-active(tourId=${tour.id}, id=${d.id})}">
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">
+                                                <i class="bi" th:classappend="${d.active} ? 'bi-pause' : 'bi-play'"></i>
+                                            </button>
+                                        </form>
+                                        <form class="d-inline" method="post"
+                                              th:action="@{/admin/tours/{tourId}/departures/{id}/delete(tourId=${tour.id}, id=${d.id})}"
+                                              th:data-confirm="#{admin.confirmDelete}">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== Biểu mẫu thêm / sửa ===================== -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3"
+                                th:text="${departureForm.id} != null
+                                         ? #{admin.departure.formEdit} : #{admin.departure.formNew}">
+                                Thêm đợt khởi hành
+                            </h2>
+
+                            <form method="post" th:object="${departureForm}"
+                                  th:action="@{/admin/tours/{tourId}/departures/save(tourId=${tour.id})}">
+
+                                <input type="hidden" th:field="*{id}">
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="departureDate"
+                                           th:text="#{admin.departure.departureDate}">Ngày khởi hành</label>
+                                    <input class="form-control form-control-sm" type="date" id="departureDate"
+                                           th:field="*{departureDate}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{departureDate}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="returnDate"
+                                           th:text="#{admin.departure.returnDate}">Ngày về</label>
+                                    <input class="form-control form-control-sm" type="date" id="returnDate"
+                                           th:field="*{returnDate}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{returnDate}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="totalSeats"
+                                           th:text="#{admin.departure.totalSeats}">Tổng số chỗ</label>
+                                    <input class="form-control form-control-sm" type="number" min="1"
+                                           id="totalSeats" th:field="*{totalSeats}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{totalSeats}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="priceAdult"
+                                           th:text="#{admin.departure.priceAdult}">Giá người lớn</label>
+                                    <input class="form-control form-control-sm" type="number" min="0" step="1000"
+                                           id="priceAdult" th:field="*{priceAdult}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{priceAdult}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="priceChild"
+                                           th:text="#{admin.departure.priceChild}">Giá trẻ em</label>
+                                    <input class="form-control form-control-sm" type="number" min="0" step="1000"
+                                           id="priceChild" th:field="*{priceChild}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{priceChild}">Lỗi</div>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="departureActive"
+                                           th:field="*{active}">
+                                    <label class="form-check-label" for="departureActive"
+                                           th:text="#{admin.departure.active}">Đang mở bán</label>
+                                </div>
+
+                                <button class="btn btn-primary btn-sm w-100" type="submit"
+                                        th:text="#{admin.action.save}">Lưu</button>
+                                <a th:if="${departureForm.id} != null"
+                                   class="btn btn-link btn-sm w-100 text-decoration-none"
+                                   th:href="@{/admin/tours/{tourId}/departures(tourId=${tour.id})}"
+                                   th:text="#{admin.action.cancel}">Huỷ</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Nghi duong cao cap">
+  <!-- Minh hoa danh muc "Du lich nghi duong cao cap" -->
+  <defs>
+    <linearGradient id="skyR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A3833"/>
+      <stop offset="52%" stop-color="#C2622D"/>
+      <stop offset="100%" stop-color="#E0A458"/>
+    </linearGradient>
+    <linearGradient id="pool" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4EAF9D"/>
+      <stop offset="100%" stop-color="#12655B"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#skyR)"/>
+
+  <!-- Mat troi -->
+  <circle cx="400" cy="286" r="72" fill="#F9EBD6" opacity=".82"/>
+
+  <!-- Duong chan troi bien -->
+  <rect y="330" width="800" height="54" fill="#0E4F47" opacity=".8"/>
+  <path d="M340 330h120l30 54H310z" fill="#F9EBD6" opacity=".18"/>
+
+  <!-- Be boi tran vien -->
+  <path d="M0 384h800v130H0z" fill="url(#pool)"/>
+  <g fill="#DCEFEA" opacity=".26">
+    <rect x="70"  y="410" width="200" height="5" rx="2.5"/>
+    <rect x="360" y="440" width="260" height="5" rx="2.5"/>
+    <rect x="130" y="474" width="180" height="5" rx="2.5"/>
+  </g>
+
+  <!-- San go -->
+  <rect y="514" width="800" height="86" fill="#7E3A16"/>
+  <g stroke="#5E2A10" stroke-width="3" opacity=".55">
+    <line x1="0" y1="536" x2="800" y2="536"/>
+    <line x1="0" y1="560" x2="800" y2="560"/>
+    <line x1="0" y1="584" x2="800" y2="584"/>
+  </g>
+
+  <!-- Hai ghe tam nang + du -->
+  <g fill="#F6EFE4" opacity=".92">
+    <path d="M96 556l14-40h56l-10 40z"/>
+    <path d="M160 520l30-24h34l-22 24z"/>
+    <path d="M636 556l-14-40h-56l10 40z"/>
+    <path d="M572 520l-30-24h-34l22 24z"/>
+  </g>
+  <g fill="#14201E">
+    <rect x="392" y="452" width="6" height="104"/>
+    <path d="M300 452h192l-96-40z"/>
+  </g>
+
+  <!-- Hai cay dua -->
+  <g fill="#0A3833">
+    <path d="M712 556V430c0-16 4-30 12-44l14 6c-8 12-10 24-10 38v126z"/>
+    <path d="M738 386c34-14 66-4 88 26-32-12-60-8-84 8zM738 386c-34-14-70-2-90 30 34-14 64-12 90-8z"/>
+    <path d="M738 386c8-32 34-52 72-56-26 16-42 34-50 60z"/>
+    <path d="M74 556V446c0-14-4-26-12-38l14-8c10 14 14 30 14 46v110z"/>
+    <path d="M76 396c-32-16-64-8-88 20 30-14 58-12 82 2zM76 396c34-12 68 2 86 34-32-16-60-16-86-8z"/>
+  </g>
+</svg>

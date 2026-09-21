@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Van hoa tam linh">
+  <!-- Minh hoa danh muc "Du lich van hoa - tam linh" -->
+  <defs>
+    <linearGradient id="skyT" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7E3A16"/>
+      <stop offset="45%" stop-color="#C2622D"/>
+      <stop offset="100%" stop-color="#E0A458"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#skyT)"/>
+
+  <!-- Vang trang -->
+  <circle cx="628" cy="150" r="54" fill="#F9EBD6" opacity=".9"/>
+  <circle cx="628" cy="150" r="104" fill="#F9EBD6" opacity=".12"/>
+
+  <!-- Mai chua ba tang, bong do -->
+  <g fill="#14201E">
+    <!-- Tang 1 -->
+    <path d="M400 128l176 76H224z"/>
+    <path d="M224 204c-24 0-40 10-52 24h456c-12-14-28-24-52-24z"/>
+    <!-- Tang 2 -->
+    <path d="M400 236l142 62H258z"/>
+    <path d="M258 298c-22 0-36 10-46 22h376c-10-12-24-22-46-22z"/>
+    <!-- Tang 3 -->
+    <path d="M400 336l112 50H288z"/>
+    <path d="M288 386c-20 0-32 10-40 20h304c-8-10-20-20-40-20z"/>
+    <!-- Than chua -->
+    <rect x="316" y="406" width="168" height="140"/>
+    <!-- Cot -->
+    <rect x="292" y="430" width="16" height="116"/>
+    <rect x="492" y="430" width="16" height="116"/>
+    <!-- Chop -->
+    <path d="M400 92l14 30h-28z"/>
+    <circle cx="400" cy="84" r="10"/>
+  </g>
+
+  <!-- Cua vom sang den tu ben trong -->
+  <path d="M370 546V470a30 30 0 0 1 60 0v76z" fill="#E0A458"/>
+
+  <!-- Long den treo -->
+  <g fill="#F9EBD6" opacity=".92">
+    <rect x="196" y="230" width="4" height="34"/>
+    <ellipse cx="198" cy="284" rx="20" ry="26"/>
+    <rect x="604" y="230" width="4" height="34"/>
+    <ellipse cx="606" cy="284" rx="20" ry="26"/>
+  </g>
+
+  <!-- Bac them -->
+  <g fill="#06251F">
+    <rect y="546" width="800" height="18"/>
+    <rect y="564" width="800" height="16" opacity=".85"/>
+    <rect y="580" width="800" height="20" opacity=".7"/>
+  </g>
+</svg>

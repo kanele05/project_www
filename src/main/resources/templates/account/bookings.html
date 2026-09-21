@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{account.bookings.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="container my-4 flex-grow-1">
+    <h1 class="h3 mb-3" th:text="#{account.title}">Tài khoản của tôi</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div th:replace="~{fragments/account-nav :: accountNav('bookings')}"></div>
+        </div>
+
+        <div class="col-lg-9">
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <h2 class="h5 mb-3" th:text="#{account.bookings.title}">Đơn đặt tour của tôi</h2>
+
+            <div th:if="${bookingsPage.empty}" class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <span th:text="#{account.bookings.empty}">Bạn chưa đặt tour nào.</span>
+                <a th:href="@{/tours}" th:text="#{nav.tours}">Tất cả tour</a>
+            </div>
+
+            <div class="table-responsive" th:unless="${bookingsPage.empty}">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th th:text="#{account.bookings.code}">Mã đơn</th>
+                        <th th:text="#{account.bookings.date}">Ngày đặt</th>
+                        <th class="text-end" th:text="#{account.bookings.total}">Tổng tiền</th>
+                        <th th:text="#{account.bookings.status}">Trạng thái</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!--
+                      Chỉ đọc các cột nằm ngay trên bảng bookings. KHÔNG duyệt
+                      booking.details ở đây: quan hệ đó là LAZY, mà open-in-view
+                      đang tắt nên chạm vào sẽ ném LazyInitializationException.
+                      Muốn xem các tour trong đơn thì bấm vào mã đơn.
+                    -->
+                    <tr th:each="b : ${bookingsPage.content}">
+                        <td>
+                            <a class="fw-semibold text-decoration-none"
+                               th:href="@{/account/bookings/{code}(code=${b.code})}"
+                               th:text="${b.code}">TB...</a>
+                        </td>
+                        <td class="small"
+                            th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                        <td class="text-end fw-semibold text-danger"
+                            th:text="|${#numbers.formatInteger(b.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                        <td>
+                            <!-- Màu nhãn lấy từ chính enum BookingStatus, nhờ vậy thêm
+                                 trạng thái mới không phải sửa khuôn mẫu. -->
+                            <span class="badge"
+                                  th:classappend="'bg-' + ${b.status.badgeClass}"
+                                  th:text="#{${b.status.messageKey}}">Trạng thái</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${bookingsPage}, ${pageUrlPrefix})}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

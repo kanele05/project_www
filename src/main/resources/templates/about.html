@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   TRANG GIỚI THIỆU
+
+   Nội dung được viết như phần giới thiệu của một thương hiệu lữ hành, nhưng có
+   một khối ghi rõ đây là đồ án môn học chứ không phải doanh nghiệp có thật -
+   đặt ngay giữa trang chứ không giấu ở chân trang. Trang bán hàng đẹp là một
+   chuyện, nói với người đọc rằng công ty này có thật lại là chuyện khác.
+
+   Mọi con số dùng chung nguồn với trang chủ (HomeController gọi cùng một
+   TourService.siteStats), nên hai trang không bao giờ nói lệch nhau.
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{about.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="flex-grow-1">
+
+    <!-- ===================== Dải tiêu đề ===================== -->
+    <section class="page-head bg-jade">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a th:href="@{/}" th:text="#{nav.home}">Trang chủ</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page"
+                                th:text="#{about.title}">Giới thiệu</li>
+                        </ol>
+                    </nav>
+
+                    <span class="eyebrow eyebrow--light" th:text="#{about.eyebrow}">Về chúng tôi</span>
+                    <h1 class="hero-title" style="font-size: clamp(2.2rem, 5vw, 3.8rem)"
+                        th:text="#{about.heading}">Chúng tôi làm gì</h1>
+                    <p class="hero-lead mb-0" th:text="#{about.lead}">Câu dẫn</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Con số ===================== -->
+    <section class="py-5">
+        <div class="container">
+            <div class="panel panel--float panel__pad">
+                <div class="row g-4">
+                    <div class="col-6 col-lg-3">
+                        <div class="figure-stat">
+                            <div class="figure-stat__value" th:text="${stats.tourCount()}">20</div>
+                            <div class="figure-stat__label" th:text="#{home.stat.tours}">Hành trình</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="figure-stat">
+                            <div class="figure-stat__value" th:text="${stats.destinationCount()}">20</div>
+                            <div class="figure-stat__label" th:text="#{home.stat.destinations}">Điểm đến</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="figure-stat">
+                            <div class="figure-stat__value" th:text="${stats.departureCount()}">60</div>
+                            <div class="figure-stat__label" th:text="#{home.stat.departures}">Đợt khởi hành</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="figure-stat">
+                            <div class="figure-stat__value" th:text="${stats.categoryCount()}">6</div>
+                            <div class="figure-stat__label" th:text="#{home.stat.categories}">Dòng tour</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Câu chuyện ===================== -->
+    <section class="section--tight">
+        <div class="container">
+            <div class="row g-4 g-lg-5 align-items-center">
+                <div class="col-lg-6 reveal">
+                    <span class="eyebrow" th:text="#{about.story.eyebrow}">Câu chuyện</span>
+                    <h2 class="section-title" th:text="#{about.story.title}">Vì sao có website này</h2>
+                    <p th:text="#{about.story.p1}">Đoạn 1</p>
+                    <p th:text="#{about.story.p2}">Đoạn 2</p>
+                    <p class="mb-0" th:text="#{about.story.p3}">Đoạn 3</p>
+                </div>
+
+                <!--/*
+                  Cột phải là một "bưu thiếp" dựng hoàn toàn bằng CSS. Dự án chưa có
+                  ảnh chụp nào; nhét một ảnh tải trên mạng vào đây thì vừa sai bản
+                  quyền vừa lạc tông, nên thay bằng hình dựng sẵn cùng bảng màu.
+                */-->
+                <div class="col-lg-6 reveal reveal-d2">
+                    <div class="tour-hero-art tour-art art-3">
+                        <span class="tour-art__label" th:text="#{about.postcard}">Việt Nam</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Giá trị cốt lõi ===================== -->
+    <section class="section">
+        <div class="container">
+            <div th:replace="~{fragments/components :: sectionHead(
+                    #{about.values.eyebrow}, #{about.values.title}, #{about.values.lead})}"></div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 reveal reveal-d1">
+                    <div class="value-card">
+                        <span class="value-card__icon"><i class="bi bi-tags"></i></span>
+                        <h3 class="h6" th:text="#{about.values.1.title}">Minh bạch giá</h3>
+                        <p class="small text-muted mb-0" th:text="#{about.values.1.text}">Mô tả</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 reveal reveal-d2">
+                    <div class="value-card">
+                        <span class="value-card__icon"><i class="bi bi-people"></i></span>
+                        <h3 class="h6" th:text="#{about.values.2.title}">Đoàn nhỏ</h3>
+                        <p class="small text-muted mb-0" th:text="#{about.values.2.text}">Mô tả</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 reveal reveal-d3">
+                    <div class="value-card">
+                        <span class="value-card__icon"><i class="bi bi-tree"></i></span>
+                        <h3 class="h6" th:text="#{about.values.3.title}">Đi có trách nhiệm</h3>
+                        <p class="small text-muted mb-0" th:text="#{about.values.3.text}">Mô tả</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 reveal reveal-d4">
+                    <div class="value-card">
+                        <span class="value-card__icon"><i class="bi bi-headset"></i></span>
+                        <h3 class="h6" th:text="#{about.values.4.title}">Đồng hành tận nơi</h3>
+                        <p class="small text-muted mb-0" th:text="#{about.values.4.text}">Mô tả</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Các dòng tour ===================== -->
+    <section class="section bg-sand">
+        <div class="container">
+            <div th:replace="~{fragments/components :: sectionHead(
+                    #{about.lines.eyebrow}, #{about.lines.title}, '')}"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4 reveal" th:each="card : ${categoryCards}">
+                    <a class="panel panel__pad d-flex align-items-center gap-3 h-100"
+                       th:href="@{/categories/{slug}(slug=${card.category().slug})}">
+                        <span class="assurance__icon flex-shrink-0"><i class="bi bi-compass"></i></span>
+                        <span>
+                            <span class="d-block fw-semibold" th:text="${card.category().name}">Danh mục</span>
+                            <span class="d-block small text-muted"
+                                  th:text="#{home.categories.count(${card.tourCount()})}">0 hành trình</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Quy trình đặt tour ===================== -->
+    <section class="section bg-jade">
+        <div class="container">
+            <div class="row g-4 g-lg-5">
+                <div class="col-lg-4 reveal">
+                    <span class="eyebrow eyebrow--light" th:text="#{home.steps.eyebrow}">Rất đơn giản</span>
+                    <h2 class="section-title" th:text="#{about.process.title}">Đặt tour thế nào</h2>
+                    <p class="section-lead mb-0" th:text="#{about.process.lead}">Câu dẫn</p>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-4">
+                        <div class="col-md-6 reveal reveal-d1">
+                            <div class="step">
+                                <span class="step__num">1</span>
+                                <h3 class="h6" th:text="#{home.steps.1.title}">Chọn hành trình</h3>
+                                <p class="small mb-0 opacity-75" th:text="#{home.steps.1.text}">Mô tả</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 reveal reveal-d2">
+                            <div class="step">
+                                <span class="step__num">2</span>
+                                <h3 class="h6" th:text="#{home.steps.2.title}">Chọn ngày và số khách</h3>
+                                <p class="small mb-0 opacity-75" th:text="#{home.steps.2.text}">Mô tả</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 reveal reveal-d3">
+                            <div class="step">
+                                <span class="step__num">3</span>
+                                <h3 class="h6" th:text="#{home.steps.3.title}">Điền thông tin liên hệ</h3>
+                                <p class="small mb-0 opacity-75" th:text="#{home.steps.3.text}">Mô tả</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 reveal reveal-d4">
+                            <div class="step">
+                                <span class="step__num">4</span>
+                                <h3 class="h6" th:text="#{home.steps.4.title}">Nhận thư xác nhận</h3>
+                                <p class="small mb-0 opacity-75" th:text="#{home.steps.4.text}">Mô tả</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== Ghi chú trung thực + liên hệ ===================== -->
+    <section class="section">
+        <div class="container">
+            <div class="row g-4 align-items-start">
+
+                <div class="col-lg-7 reveal">
+                    <span class="eyebrow" th:text="#{about.project.eyebrow}">Bối cảnh</span>
+                    <h2 class="section-title" th:text="#{about.project.title}">Về dự án này</h2>
+                    <p th:text="#{about.project.text}">Mô tả</p>
+
+                    <div class="disclosure">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <span th:text="#{about.project.disclosure}">Ghi chú</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 reveal reveal-d2">
+                    <div class="panel panel__pad">
+                        <h3 class="h6 mb-3" th:text="#{about.contact.title}">Liên hệ</h3>
+
+                        <p class="small mb-2">
+                            <i class="bi bi-geo-alt text-danger me-1"></i>
+                            <span th:text="#{app.footer.address}">Địa chỉ</span>
+                        </p>
+                        <p class="small mb-2">
+                            <i class="bi bi-envelope text-danger me-1"></i>
+                            no-reply@tourbooking.iuh.edu.vn
+                        </p>
+                        <p class="small mb-3">
+                            <i class="bi bi-mortarboard text-danger me-1"></i>
+                            <span th:text="#{about.contact.course}">Môn học</span>
+                        </p>
+
+                        <a class="btn btn-primary w-100" th:href="@{/tours}">
+                            <span th:text="#{home.cta.button}">Bắt đầu tìm tour</span>
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

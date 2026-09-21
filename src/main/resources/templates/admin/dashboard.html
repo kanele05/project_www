@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.dashboard.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('dashboard')}"></div>
+        </aside>
+
+        <main class="admin-main">
+            <h1 class="h4 mb-4" th:text="#{admin.dashboard.title}">Bảng điều khiển</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <!-- ===================== Thẻ số liệu ===================== -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="admin-stat__label" th:text="#{admin.dashboard.tours}">Tour</div>
+                            <div class="admin-stat__value" th:text="${overview.tourCount()}">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="admin-stat__label" th:text="#{admin.dashboard.customers}">Khách hàng</div>
+                            <div class="admin-stat__value" th:text="${overview.customerCount()}">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="admin-stat__label" th:text="#{admin.dashboard.bookings}">Đơn đặt tour</div>
+                            <div class="admin-stat__value" th:text="${overview.bookingCount()}">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="admin-stat__label" th:text="#{admin.dashboard.revenue}">Doanh thu</div>
+                            <div class="admin-stat__value admin-stat__value--money"
+                                 th:text="|${#numbers.formatInteger(overview.revenue(), 1, 'POINT')} ${#messages.msg('common.currency')}|">
+                                0 ₫
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                <!-- ===================== Đơn theo trạng thái ===================== -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3" th:text="#{admin.dashboard.byStatus}">Đơn theo trạng thái</h2>
+                            <div class="d-flex justify-content-between align-items-center py-1"
+                                 th:each="entry : ${overview.bookingsByStatus()}">
+                                <span class="badge" th:classappend="'bg-' + ${entry.key.badgeClass}"
+                                      th:text="#{${entry.key.messageKey}}">Trạng thái</span>
+                                <span class="fw-semibold" th:text="${entry.value}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== Doanh thu theo tháng ===================== -->
+                <div class="col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="h6 mb-0" th:text="#{admin.dashboard.revenueChart}">
+                                    Doanh thu 12 tháng
+                                </h2>
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        id="reloadRevenue" th:title="#{admin.dashboard.reloadChart}">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+
+                            <!--/*
+                              Biểu đồ do admin.js vẽ bằng SVG từ dữ liệu của
+                              /api/admin/stats/revenue - bấm nút làm mới là có số liệu
+                              mới mà không phải tải lại cả trang.
+
+                              Khối thanh ngang bên dưới vẫn giữ nguyên và được máy chủ
+                              dựng sẵn: đó là bản dự phòng cho trường hợp tắt JavaScript,
+                              đồng thời là chỗ số liệu nằm ngay trong HTML để đọc được
+                              bằng công cụ hỗ trợ. Khi biểu đồ vẽ xong, app ẩn nó đi.
+                            */-->
+                            <div id="revenueChart" class="mb-3"></div>
+
+                            <p th:if="${#lists.isEmpty(revenueByMonth)}" class="text-muted small mb-0"
+                               th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+
+                            <details th:if="${not #lists.isEmpty(revenueByMonth)}">
+                                <summary class="small text-muted mb-2"
+                                         th:text="#{admin.dashboard.revenueTable}">Số liệu chi tiết</summary>
+                                <div th:each="row : ${revenueByMonth}" class="mb-2">
+                                    <div class="d-flex justify-content-between small">
+                                        <span th:text="${row.label()}">01/2026</span>
+                                        <span class="text-muted"
+                                              th:text="|${#numbers.formatInteger(row.amount(), 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <!--/* Tỉ lệ đã được StatisticsService tính sẵn. */-->
+                                        <div class="progress-bar bg-success"
+                                             th:style="'width:' + ${row.percentOfMax()} + '%'">
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== Tour bán chạy ===================== -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3" th:text="#{admin.dashboard.topTours}">Tour bán chạy</h2>
+                            <p th:if="${#lists.isEmpty(topTours)}" class="text-muted small mb-0"
+                               th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                            <ol class="mb-0 ps-3">
+                                <li th:each="t : ${topTours}" class="small mb-1">
+                                    <span th:text="${t.tourName()}">Tên tour</span>
+                                    <span class="text-muted">
+                                        - <span th:text="${t.guests()}">0</span>
+                                        <span th:text="#{admin.dashboard.guests}">khách</span>
+                                    </span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===================== Đơn mới nhất ===================== -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3" th:text="#{admin.dashboard.recentBookings}">Đơn mới nhất</h2>
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                <tr th:each="b : ${recentBookings}">
+                                    <td>
+                                        <a class="text-decoration-none"
+                                           th:href="@{/admin/bookings/{code}(code=${b.code})}"
+                                           th:text="${b.code}">TB...</a>
+                                    </td>
+                                    <td class="small" th:text="${b.customerName}">Khách</td>
+                                    <td class="small text-end"
+                                        th:text="|${#numbers.formatInteger(b.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                                    <td>
+                                        <span class="badge" th:classappend="'bg-' + ${b.status.badgeClass}"
+                                              th:text="#{${b.status.messageKey}}">Trạng thái</span>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

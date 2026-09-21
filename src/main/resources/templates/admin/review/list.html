@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+  Kiểm duyệt đánh giá tour (UC020).
+
+  ReviewRepository.findBy{Approved,All}...OrderByCreatedAtDesc đều nạp sẵn tour
+  và user bằng @EntityGraph, nên tour.name / user.fullName ở đây an toàn dù
+  open-in-view đang tắt (gotcha #43).
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.review.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('reviews')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3" th:text="#{admin.review.title}">Kiểm duyệt đánh giá</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <!-- Bộ lọc trạng thái: Chờ duyệt / Đã duyệt / Tất cả - mặc định Chờ duyệt. -->
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item" th:each="s : ${statuses}">
+                    <a class="nav-link" th:classappend="${s == status} ? 'active'"
+                       th:href="@{/admin/reviews(status=${s})}"
+                       th:text="#{${'admin.review.filter.' + s}}">Trạng thái</a>
+                </li>
+            </ul>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.review.tour}">Tour</th>
+                            <th th:text="#{admin.review.author}">Người viết</th>
+                            <th th:text="#{admin.review.rating}">Số sao</th>
+                            <th th:text="#{admin.review.content}">Nội dung</th>
+                            <th th:text="#{admin.review.submittedAt}">Ngày gửi</th>
+                            <th th:text="#{admin.category.active}">Trạng thái</th>
+                            <th class="text-end">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${reviewsPage.empty}">
+                            <td colspan="7" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <th:block th:each="r : ${reviewsPage.content}">
+                        <tr>
+                            <td class="small">
+                                <a th:href="@{/tours/{id}(id=${r.tour.id})}" th:text="${r.tour.name}"
+                                   target="_blank" rel="noopener">Tên tour</a>
+                            </td>
+                            <td class="small">
+                                <div class="fw-semibold" th:text="${r.user.fullName}">Họ tên</div>
+                                <div class="text-muted" th:text="${r.user.email}">email</div>
+                                <span class="badge text-bg-success mt-1" th:if="${r.verified}"
+                                      th:text="#{tour.detail.reviews.verified}">Đã xác thực</span>
+                            </td>
+                            <td class="small text-nowrap">
+                                <i class="bi" th:each="s : ${#numbers.sequence(1, 5)}"
+                                   th:classappend="${s <= r.rating} ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
+                            </td>
+                            <td class="small" style="max-width: 320px">
+                                <div class="fw-semibold" th:if="${r.title}" th:text="${r.title}">Tiêu đề</div>
+                                <div th:text="${#strings.abbreviate(r.content, 140)}">Nội dung</div>
+                                <div class="text-muted fst-italic mt-1" th:if="${r.adminReply}">
+                                    <i class="bi bi-reply"></i>
+                                    <span th:text="#{admin.review.replyPrefix}">Đã trả lời:</span>
+                                    <span th:text="${#strings.abbreviate(r.adminReply, 100)}">Trả lời</span>
+                                </div>
+                            </td>
+                            <td class="small text-muted"
+                                th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td>
+                                <span class="badge" th:classappend="${r.approved} ? 'bg-success' : 'bg-warning text-dark'"
+                                      th:text="${r.approved} ? #{admin.review.filter.APPROVED} : #{admin.review.filter.PENDING}">
+                                    Trạng thái
+                                </span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <!-- Duyệt / Bỏ duyệt - đổi cờ approved, không xoá gì cả. -->
+                                <form class="d-inline" method="post" th:if="${not r.approved}"
+                                      th:action="@{/admin/reviews/{id}/approve(id=${r.id})}">
+                                    <button class="btn btn-sm btn-outline-success" type="submit"
+                                            th:title="#{admin.review.approve}">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+                                <form class="d-inline" method="post" th:if="${r.approved}"
+                                      th:action="@{/admin/reviews/{id}/unapprove(id=${r.id})}">
+                                    <button class="btn btn-sm btn-outline-warning" type="submit"
+                                            th:title="#{admin.review.unapprove}">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </form>
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        data-bs-toggle="collapse" th:data-bs-target="'#reply-' + ${r.id}"
+                                        th:title="#{admin.review.reply}">
+                                    <i class="bi bi-chat-left-text"></i>
+                                </button>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/reviews/{id}/delete(id=${r.id})}"
+                                      th:data-confirm="#{admin.confirmDelete}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit"
+                                            th:title="#{admin.action.delete}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <!-- Hàng gấp mở chứa biểu mẫu trả lời - ẩn theo mặc định. -->
+                        <tr class="collapse" th:id="'reply-' + ${r.id}">
+                            <td colspan="7" class="bg-light-subtle">
+                                <form class="d-flex gap-2 align-items-start py-2" method="post"
+                                      th:action="@{/admin/reviews/{id}/reply(id=${r.id})}">
+                                    <textarea class="form-control form-control-sm" name="replyText" rows="2"
+                                              maxlength="1000" th:text="${r.adminReply}"
+                                              th:placeholder="#{admin.review.replyPlaceholder}"></textarea>
+                                    <button class="btn btn-sm btn-primary text-nowrap" type="submit"
+                                            th:text="#{admin.action.save}">Lưu</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </th:block>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${reviewsPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Nuoc ngoai">
+  <!-- Minh hoa danh muc "Du lich nuoc ngoai" -->
+  <defs>
+    <linearGradient id="skyF" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06251F"/>
+      <stop offset="55%" stop-color="#12655B"/>
+      <stop offset="100%" stop-color="#1D8C93"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#skyF)"/>
+
+  <!-- Qua cau kinh tuyen / vi tuyen -->
+  <g transform="translate(400 300)">
+    <circle r="188" fill="#0A3833" opacity=".55"/>
+    <circle r="188" fill="none" stroke="#4EAF9D" stroke-width="2" opacity=".55"/>
+    <g fill="none" stroke="#4EAF9D" stroke-width="1.6" opacity=".42">
+      <ellipse rx="188" ry="62"/>
+      <ellipse rx="188" ry="124"/>
+      <ellipse rx="62" ry="188"/>
+      <ellipse rx="124" ry="188"/>
+      <line x1="-188" y1="0" x2="188" y2="0"/>
+      <line x1="0" y1="-188" x2="0" y2="188"/>
+    </g>
+
+    <!-- Vai mang luc dia gian luoc -->
+    <g fill="#2A9484" opacity=".75">
+      <path d="M-140-70c40-24 84-16 108 10 20 22 6 52-24 60-44 12-108-38-84-70z"/>
+      <path d="M18-24c46-16 96 12 92 52-4 34-52 54-88 34-30-16-32-72-4-86z"/>
+      <path d="M-96 66c34-10 62 10 60 42-2 30-40 50-68 34-26-14-22-66 8-76z"/>
+    </g>
+  </g>
+
+  <!-- Duong bay dut net + may bay -->
+  <g fill="none" stroke="#E0A458" stroke-width="3" stroke-dasharray="12 10" opacity=".95">
+    <path d="M96 470C240 348 470 336 700 176"/>
+  </g>
+  <circle cx="96" cy="470" r="8" fill="#E0A458"/>
+  <g transform="translate(700 176) rotate(-36)" fill="#F6EFE4">
+    <path d="M0-16l10 30-10-6-10 6z"/>
+    <path d="M-22 6l22-8 22 8-22 10z"/>
+  </g>
+</svg>

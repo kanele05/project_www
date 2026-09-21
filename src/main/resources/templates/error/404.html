@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   Trang báo "không tìm thấy".
+
+   Spring Boot tự tìm khuôn mẫu tên error/<mã trạng thái> nên chỉ cần đặt đúng
+   tên file là xong, không phải viết controller nào cả. Khi không có file khớp,
+   nó rơi về error.html rồi cuối cùng là trang trắng mặc định ("Whitelabel Error
+   Page") - thứ để lộ tên lớp Java và không ai muốn nhìn thấy trong buổi demo.
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{error.page.404.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="container my-5 flex-grow-1 text-center">
+    <div class="py-5">
+        <i class="bi bi-compass display-1 text-secondary"></i>
+        <p class="display-4 fw-bold mt-3 mb-2">404</p>
+        <h1 class="h4" th:text="#{error.page.404.title}">Không tìm thấy trang</h1>
+        <p class="text-muted" th:text="#{error.page.404.message}">Trang không tồn tại.</p>
+
+        <div class="d-flex gap-2 justify-content-center mt-4">
+            <a class="btn btn-primary" th:href="@{/}" th:text="#{error.page.backHome}">Về trang chủ</a>
+            <a class="btn btn-outline-primary" th:href="@{/tours}"
+               th:text="#{error.page.backToTours}">Xem danh sách tour</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

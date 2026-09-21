@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(${tourForm.id} != null
+                    ? #{admin.tour.formTitleEdit} : #{admin.tour.formTitleNew})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('tours')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3"
+                th:text="${tourForm.id} != null ? #{admin.tour.formTitleEdit} : #{admin.tour.formTitleNew}">
+                Thêm tour
+            </h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <!--
+              enctype="multipart/form-data" là BẮT BUỘC khi biểu mẫu có ô chọn file.
+              Thiếu thuộc tính này, trình duyệt chỉ gửi lên TÊN file dưới dạng chuỗi,
+              còn nội dung file thì không - và lỗi hiện ra rất khó hiểu vì
+              MultipartFile luôn rỗng mà không báo gì.
+            -->
+            <form th:action="@{/admin/tours/save}" th:object="${tourForm}" method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-4">
+                    <div class="col-lg-8">
+
+                        <!-- ============ Thông tin cơ bản ============ -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h2 class="h6 mb-3" th:text="#{admin.tour.section.basic}">Thông tin cơ bản</h2>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="code"
+                                               th:text="#{admin.tour.code}">Mã tour</label>
+                                        <input class="form-control" type="text" id="code"
+                                               th:field="*{code}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{code}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label" for="name"
+                                               th:text="#{admin.tour.name}">Tên tour</label>
+                                        <input class="form-control" type="text" id="name"
+                                               th:field="*{name}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{name}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="categoryId"
+                                               th:text="#{admin.tour.category}">Danh mục</label>
+                                        <select class="form-select" id="categoryId"
+                                                th:field="*{categoryId}" th:errorclass="is-invalid">
+                                            <option value="">---</option>
+                                            <option th:each="c : ${categories}"
+                                                    th:value="${c.id}" th:text="${c.name}">Danh mục</option>
+                                        </select>
+                                        <div class="invalid-feedback" th:errors="*{categoryId}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="transportation"
+                                               th:text="#{admin.tour.transportation}">Phương tiện</label>
+                                        <input class="form-control" type="text" id="transportation"
+                                               th:field="*{transportation}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{transportation}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="departureLocation"
+                                               th:text="#{admin.tour.departureLocation}">Nơi khởi hành</label>
+                                        <input class="form-control" type="text" id="departureLocation"
+                                               th:field="*{departureLocation}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{departureLocation}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="destination"
+                                               th:text="#{admin.tour.destination}">Điểm đến</label>
+                                        <input class="form-control" type="text" id="destination"
+                                               th:field="*{destination}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{destination}">Lỗi</div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label" for="durationDays"
+                                               th:text="#{admin.tour.durationDays}">Số ngày</label>
+                                        <input class="form-control" type="number" id="durationDays" min="1"
+                                               th:field="*{durationDays}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{durationDays}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" for="durationNights"
+                                               th:text="#{admin.tour.durationNights}">Số đêm</label>
+                                        <input class="form-control" type="number" id="durationNights" min="0"
+                                               th:field="*{durationNights}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{durationNights}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="basePrice"
+                                               th:text="#{admin.tour.basePrice}">Giá tham khảo</label>
+                                        <input class="form-control" type="number" id="basePrice"
+                                               min="0" step="1000"
+                                               th:field="*{basePrice}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{basePrice}">Lỗi</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============ Nội dung ============ -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-3" th:text="#{admin.tour.section.content}">Nội dung</h2>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="shortDescription"
+                                           th:text="#{admin.tour.shortDescription}">Mô tả ngắn</label>
+                                    <textarea class="form-control" id="shortDescription" rows="2"
+                                              th:field="*{shortDescription}" th:errorclass="is-invalid"></textarea>
+                                    <div class="invalid-feedback" th:errors="*{shortDescription}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="description"
+                                           th:text="#{admin.tour.description}">Mô tả chi tiết</label>
+                                    <textarea class="form-control" id="description" rows="5"
+                                              th:field="*{description}"></textarea>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label class="form-label" for="itinerary"
+                                           th:text="#{admin.tour.itinerary}">Lịch trình</label>
+                                    <textarea class="form-control" id="itinerary" rows="6"
+                                              th:field="*{itinerary}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============ Cột phải: ảnh và trạng thái ============ -->
+                    <div class="col-lg-4">
+
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h2 class="h6 mb-3" th:text="#{admin.tour.section.images}">Hình ảnh</h2>
+
+                                <label class="form-label" for="thumbnailFile"
+                                       th:text="#{admin.tour.thumbnail}">Ảnh đại diện</label>
+                                <img class="img-fluid rounded mb-2 d-block"
+                                     th:src="*{currentThumbnail} != null
+                                             ? @{'/uploads/' + *{currentThumbnail}}
+                                             : @{/images/no-image.svg}" alt="">
+                                <input class="form-control form-control-sm mb-1" type="file"
+                                       id="thumbnailFile" th:field="*{thumbnailFile}"
+                                       accept="image/jpeg,image/png,image/webp">
+                                <p class="small text-muted" th:text="#{admin.tour.uploadHint}">Gợi ý</p>
+
+                                <label class="form-label" for="galleryFiles"
+                                       th:text="#{admin.tour.gallery}">Thư viện ảnh</label>
+                                <input class="form-control form-control-sm" type="file" multiple
+                                       id="galleryFiles" th:field="*{galleryFiles}"
+                                       accept="image/jpeg,image/png,image/webp">
+                                <p class="small text-muted mb-0">
+                                    Ảnh chọn ở đây sẽ được <b>thêm vào</b> thư viện.
+                                    Muốn bỏ ảnh cũ thì dùng phần bên dưới.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="featured"
+                                           th:field="*{featured}">
+                                    <label class="form-check-label" for="featured"
+                                           th:text="#{admin.tour.featured}">Tour nổi bật</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="active"
+                                           th:field="*{active}">
+                                    <label class="form-check-label" for="active"
+                                           th:text="#{admin.tour.active}">Đang mở bán</label>
+                                </div>
+
+                                <button class="btn btn-primary w-100 mt-3" type="submit">
+                                    <i class="bi bi-check-lg"></i>
+                                    <span th:text="#{admin.action.save}">Lưu</span>
+                                </button>
+                                <a class="btn btn-link w-100 text-decoration-none"
+                                   th:href="@{/admin/tours}" th:text="#{admin.action.cancel}">Huỷ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!--
+              Xoá từng ảnh trong thư viện.
+
+              Phải đặt NGOÀI biểu mẫu chính vì HTML không cho lồng <form> trong
+              <form>; trình duyệt sẽ lặng lẽ bỏ thẻ bên trong và nút xoá thành ra
+              gửi luôn biểu mẫu lưu tour.
+            -->
+            <div class="card mt-4" th:if="${tour != null and not #lists.isEmpty(tour.images)}">
+                <div class="card-body">
+                    <h2 class="h6 mb-3" th:text="#{admin.tour.gallery}">Thư viện ảnh</h2>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 col-lg-2" th:each="img : ${tour.images}">
+                            <img class="img-fluid rounded mb-1" th:src="@{'/uploads/' + ${img.imagePath}}" alt="">
+                            <form method="post"
+                                  th:action="@{/admin/tours/{id}/images/{imageId}/delete(id=${tour.id}, imageId=${img.id})}"
+                                  th:data-confirm="#{admin.confirmDelete}">
+                                <button class="btn btn-sm btn-outline-danger w-100" type="submit">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

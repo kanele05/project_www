@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{account.profile.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="container my-4 flex-grow-1">
+    <h1 class="h3 mb-3" th:text="#{account.title}">Tài khoản của tôi</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div th:replace="~{fragments/account-nav :: accountNav('profile')}"></div>
+        </div>
+
+        <div class="col-lg-9">
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h5 mb-3" th:text="#{account.profile.title}">Thông tin cá nhân</h2>
+
+                    <form th:action="@{/account/profile}" th:object="${profileForm}" method="post">
+
+                        <div class="mb-3">
+                            <label class="form-label" for="fullName"
+                                   th:text="#{auth.register.fullName}">Họ và tên</label>
+                            <input class="form-control" type="text" id="fullName"
+                                   th:field="*{fullName}" th:errorclass="is-invalid" required>
+                            <div class="invalid-feedback" th:errors="*{fullName}">Lỗi</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="email"
+                                   th:text="#{auth.register.email}">Email</label>
+                            <input class="form-control" type="email" id="email"
+                                   th:field="*{email}" th:errorclass="is-invalid" required>
+                            <div class="invalid-feedback" th:errors="*{email}">Lỗi</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="phone"
+                                   th:text="#{auth.register.phone}">Số điện thoại</label>
+                            <input class="form-control" type="tel" id="phone"
+                                   th:field="*{phone}" th:errorclass="is-invalid" required>
+                            <div class="invalid-feedback" th:errors="*{phone}">Lỗi</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="address"
+                                   th:text="#{auth.register.address}">Địa chỉ</label>
+                            <input class="form-control" type="text" id="address"
+                                   th:field="*{address}" th:errorclass="is-invalid">
+                            <div class="invalid-feedback" th:errors="*{address}">Lỗi</div>
+                        </div>
+
+                        <!--
+                          Biểu mẫu này KHÔNG có ô mật khẩu. Đó là chủ ý: không có ô
+                          thì chuỗi băm cũng không thể lọt ra HTML, dù có vô tình
+                          viết nhầm th:field. Đổi mật khẩu là một trang riêng, có
+                          bước xác nhận mật khẩu hiện tại.
+                        -->
+                        <button class="btn btn-primary" type="submit"
+                                th:text="#{account.profile.submit}">Lưu thay đổi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

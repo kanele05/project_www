@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!--
+  Chi tiết một đơn đặt tour.
+
+  Địa chỉ dùng MÃ ĐƠN chứ không dùng khoá chính tuần tự, và controller còn gọi
+  BookingService.getOwnedByCode để so chủ sở hữu - khách hàng khác mở đúng địa
+  chỉ này sẽ nhận 403 chứ không xem được.
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${booking.code})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="container my-4 flex-grow-1">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item">
+                <a th:href="@{/account/bookings}" th:text="#{nav.myBookings}">Đơn của tôi</a>
+            </li>
+            <li class="breadcrumb-item active" th:text="${booking.code}">TB...</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0" th:text="#{account.bookings.detail.title(${booking.code})}">Chi tiết đơn</h1>
+        <span class="badge fs-6" th:classappend="'bg-' + ${booking.status.badgeClass}"
+              th:text="#{${booking.status.messageKey}}">Trạng thái</span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ===================== Các tour trong đơn ===================== -->
+        <div class="col-lg-8">
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.tours}">Tour</h2>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th th:text="#{cart.column.tour}">Tour</th>
+                                <th th:text="#{cart.column.departure}">Ngày khởi hành</th>
+                                <th th:text="#{cart.column.guests}">Số khách</th>
+                                <th class="text-end" th:text="#{cart.column.subtotal}">Thành tiền</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- booking.details và departure.tour đã được nạp sẵn bằng
+                                 join fetch ở BookingRepository.findDetailByCode. -->
+                            <tr th:each="d : ${booking.details}">
+                                <td>
+                                    <!-- Hiển thị tên đã CHÉP vào đơn lúc đặt, không đọc
+                                         tên hiện tại của tour: hoá đơn phải giữ nguyên
+                                         thông tin tại thời điểm giao dịch. -->
+                                    <a class="text-decoration-none"
+                                       th:href="@{/tours/{id}(id=${d.departure.tour.id})}"
+                                       th:text="${d.tourNameSnapshot}">Tên tour</a>
+                                </td>
+                                <td class="small"
+                                    th:text="${#temporals.format(d.departure.departureDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                                <td class="small">
+                                    <span th:text="${d.numAdults}">1</span>
+                                    <span th:text="#{common.adults}">người lớn</span>
+                                    <span th:if="${d.numChildren > 0}">
+                                        , <span th:text="${d.numChildren}">0</span>
+                                        <span th:text="#{common.children}">trẻ em</span>
+                                    </span>
+                                </td>
+                                <td class="text-end fw-semibold"
+                                    th:text="|${#numbers.formatInteger(d.subtotal, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <!--/* Chỉ hiện hai dòng này khi đơn thực sự có giảm giá:
+                                   đơn không dùng mã mà vẫn thấy "Giảm giá 0 đ" thì
+                                   khách lại tưởng mình bị sót ưu đãi. */-->
+                            <tr th:if="${booking.discountAmount != null and booking.discountAmount.signum() > 0}">
+                                <td colspan="3" class="text-end small text-muted"
+                                    th:text="#{booking.subtotal}">Tiền hàng</td>
+                                <td class="text-end small text-muted"
+                                    th:text="|${#numbers.formatInteger(booking.subtotalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            </tr>
+                            <tr th:if="${booking.discountAmount != null and booking.discountAmount.signum() > 0}">
+                                <td colspan="3" class="text-end small text-success">
+                                    <span th:text="#{checkout.coupon.discount}">Giảm giá</span>
+                                    <span class="badge text-bg-success ms-1"
+                                          th:if="${booking.promotion != null}"
+                                          th:text="${booking.promotion.code}">MA</span>
+                                </td>
+                                <td class="text-end small text-success"
+                                    th:text="|- ${#numbers.formatInteger(booking.discountAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-semibold" th:text="#{common.total}">Tổng cộng</td>
+                                <td class="text-end fs-5 fw-bold text-danger"
+                                    th:text="|${#numbers.formatInteger(booking.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== Thông tin liên hệ ===================== -->
+        <div class="col-lg-4">
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.customer}">Thông tin liên hệ</h2>
+                    <dl class="row small mb-0">
+                        <dt class="col-5" th:text="#{account.bookings.placedAt}">Đặt lúc</dt>
+                        <dd class="col-7"
+                            th:text="${#temporals.format(booking.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+
+                        <dt class="col-5" th:text="#{checkout.name}">Người liên hệ</dt>
+                        <dd class="col-7" th:text="${booking.customerName}">Họ tên</dd>
+
+                        <dt class="col-5" th:text="#{checkout.email}">Email</dt>
+                        <dd class="col-7 text-break" th:text="${booking.customerEmail}">email</dd>
+
+                        <dt class="col-5" th:text="#{checkout.phone}">Điện thoại</dt>
+                        <dd class="col-7" th:text="${booking.customerPhone}">0900...</dd>
+
+                        <dt class="col-5" th:text="#{checkout.address}">Địa chỉ</dt>
+                        <dd class="col-7" th:text="${booking.customerAddress}">Địa chỉ</dd>
+
+                        <dt class="col-5" th:text="#{account.bookings.payment}">Thanh toán</dt>
+                        <dd class="col-7" th:text="${booking.paymentMethod}">Chuyển khoản</dd>
+
+                        <dt class="col-5" th:if="${booking.note}" th:text="#{account.bookings.note}">Ghi chú</dt>
+                        <dd class="col-7 mb-0" th:if="${booking.note}" th:text="${booking.note}">Ghi chú</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== Danh sách hành khách ===================== -->
+    <!--/* BookingPassengerRepository.findByBookingId đã JOIN FETCH detail nên
+           an toàn dù open-in-view đang tắt (gotcha #43). */-->
+    <div class="row g-4 mt-0">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.passengers}">Danh sách hành khách</h2>
+
+                    <p th:if="${#lists.isEmpty(passengers)}" class="text-muted small mb-0"
+                       th:text="#{account.bookings.passengers.empty}">Chưa có dữ liệu hành khách.</p>
+
+                    <div class="table-responsive" th:unless="${#lists.isEmpty(passengers)}">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th th:text="#{passenger.column.name}">Họ tên</th>
+                                <th th:text="#{passenger.column.type}">Loại khách</th>
+                                <th th:text="#{passenger.column.gender}">Giới tính</th>
+                                <th th:text="#{passenger.column.birthDate}">Ngày sinh</th>
+                                <th th:text="#{passenger.column.idNumber}">CCCD / Hộ chiếu</th>
+                                <th th:text="#{passenger.column.phone}">Điện thoại</th>
+                                <th th:text="#{passenger.column.singleRoom}">Phòng đơn</th>
+                                <th th:text="#{passenger.column.note}">Ghi chú</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${passengers}">
+                                <td class="fw-semibold" th:text="${p.fullName}">Họ tên</td>
+                                <td class="small" th:text="#{${p.passengerType.messageKey}}">Loại</td>
+                                <td class="small"
+                                    th:text="${p.gender != null} ? #{${p.gender.messageKey}} : '—'">Giới tính</td>
+                                <td class="small"
+                                    th:text="${p.birthDate != null} ? ${#temporals.format(p.birthDate, 'dd/MM/yyyy')} : '—'">Ngày sinh</td>
+                                <td class="small" th:text="${p.idNumber} ?: '—'">CCCD</td>
+                                <td class="small" th:text="${p.phone} ?: '—'">Điện thoại</td>
+                                <td class="small" th:text="${p.singleRoom} ? #{common.yes} : #{common.no}">Có/Không</td>
+                                <td class="small" th:text="${p.note} ?: '—'">Ghi chú</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== Bổ sung A/B: thanh toán + dòng thời gian ===================== -->
+    <div class="row g-4 mt-0">
+        <div class="col-lg-6">
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.payments}">Thanh toán</h2>
+                    <p th:if="${#lists.isEmpty(payments)}" class="text-muted small mb-0"
+                       th:text="#{account.bookings.payments.empty}">Chưa có thông tin thanh toán.</p>
+                    <div th:unless="${#lists.isEmpty(payments)}" class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-center border rounded p-2"
+                             th:each="p : ${payments}">
+                            <div>
+                                <div class="small fw-semibold"
+                                     th:text="|${#numbers.formatInteger(p.amount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 đ</div>
+                                <div class="small text-muted">
+                                    <span th:text="#{${p.method.messageKey}}">Hình thức</span>
+                                    <span th:if="${p.paidAt != null}">
+                                        &middot; <span th:text="${#temporals.format(p.paidAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="badge" th:classappend="'bg-' + ${p.status.badgeClass}"
+                                  th:text="#{${p.status.messageKey}}">Trạng thái</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.timeline}">Dòng thời gian</h2>
+                    <p th:if="${#lists.isEmpty(statusHistory)}" class="text-muted small mb-0"
+                       th:text="#{account.bookings.timeline.empty}">Chưa có lịch sử.</p>
+                    <ol class="list-unstyled small mb-0" th:unless="${#lists.isEmpty(statusHistory)}">
+                        <li class="border-start ps-3 pb-3" th:each="h : ${statusHistory}">
+                            <div class="fw-semibold">
+                                <span th:if="${h.fromStatus != null}" th:text="#{${h.fromStatus.messageKey}}">Cũ</span>
+                                <span th:if="${h.fromStatus != null}"> &rarr; </span>
+                                <span th:text="#{${h.toStatus.messageKey}}">Mới</span>
+                            </div>
+                            <div class="text-muted" th:text="${#temporals.format(h.changedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</div>
+                            <div class="text-muted fst-italic" th:if="${h.reason}" th:text="${h.reason}">Lý do</div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

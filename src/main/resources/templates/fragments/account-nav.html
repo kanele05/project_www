@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--
+  Menu bên trái của khu vực tài khoản. Tách riêng vì bốn trang trong /account đều
+  dùng chung; tham số "active" cho biết mục nào đang được xem để tô sáng.
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="accountNav(active)" class="list-group shadow-sm">
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'bookings'} ? 'active'"
+       th:href="@{/account/bookings}">
+        <i class="bi bi-receipt"></i> <span th:text="#{nav.myBookings}">Đơn của tôi</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'profile'} ? 'active'"
+       th:href="@{/account/profile}">
+        <i class="bi bi-person"></i> <span th:text="#{nav.profile}">Thông tin cá nhân</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'password'} ? 'active'"
+       th:href="@{/account/password}">
+        <i class="bi bi-key"></i> <span th:text="#{nav.changePassword}">Đổi mật khẩu</span>
+    </a>
+</div>
+
+</body>
+</html>

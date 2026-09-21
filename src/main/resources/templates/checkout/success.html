@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{checkout.success.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="container my-5 flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 text-center">
+
+            <i class="bi bi-check-circle-fill display-1 text-success"></i>
+
+            <h1 class="h3 mt-3" th:text="#{checkout.success.heading}">Cảm ơn bạn đã đặt tour!</h1>
+            <p class="text-muted" th:text="#{checkout.success.message}">Đơn đã được ghi nhận.</p>
+
+            <div class="card shadow-sm my-4">
+                <div class="panel__pad">
+                    <p class="small text-muted mb-1" th:text="#{checkout.success.code}">Mã đơn của bạn</p>
+                    <p class="display-6 fw-bold text-primary mb-3" th:text="${booking.code}">TB...</p>
+
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <span th:text="#{common.total}">Tổng cộng</span>
+                        <span class="fw-bold text-danger"
+                              th:text="|${#numbers.formatInteger(booking.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="small text-muted"
+               th:text="#{checkout.success.emailSent(${booking.customerEmail})}">
+                Thư xác nhận đã được gửi.
+            </p>
+
+            <div class="d-flex gap-2 justify-content-center mt-4">
+                <a class="btn btn-primary"
+                   th:href="@{/account/bookings/{code}(code=${booking.code})}"
+                   th:text="#{checkout.success.viewBooking}">Xem chi tiết đơn</a>
+                <a class="btn btn-outline-secondary" th:href="@{/tours}"
+                   th:text="#{checkout.success.keepShopping}">Tiếp tục xem tour</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

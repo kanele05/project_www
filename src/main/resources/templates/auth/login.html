@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{auth.login.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<!--
+  ⚠️ ĐỪNG thêm d-flex vào thẻ <main> này để căn giữa theo chiều dọc.
+
+  Đã thử và hỏng: d-flex biến .row thành một flex item, mà flex item thì co lại
+  vừa nội dung thay vì chiếm hết bề ngang. Lúc ấy col-md-6 tính 50% của một hàng
+  chỉ rộng hơn trăm pixel, cả thẻ đăng nhập teo thành một cột hẹp, chữ "Ghi nhớ
+  đăng nhập" xuống bốn dòng và chữ trong nút bị cắt cụt.
+
+  Muốn căn giữa dọc thì phải thêm w-100 cho .row, nhưng cách đó lại có bẫy khác:
+  align-items-center làm phần nội dung tràn ra phía trên không cuộn tới được khi
+  màn hình thấp. Giữ dòng chảy bình thường như trang đăng ký là gọn và chắc nhất.
+-->
+<main class="container py-5 flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="panel">
+                <div class="panel__pad">
+
+                    <h1 class="h4 mb-4 text-center">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span th:text="#{auth.login.title}">Đăng nhập</span>
+                    </h1>
+
+                    <!-- Ba trạng thái Spring Security báo về qua tham số trên địa chỉ -->
+                    <div th:if="${param.error}" class="alert alert-danger py-2 small"
+                         th:text="#{auth.login.failed}">Sai thông tin đăng nhập</div>
+                    <div th:if="${param.logout}" class="alert alert-info py-2 small"
+                         th:text="#{auth.login.loggedOut}">Đã đăng xuất</div>
+                    <div th:if="${param.registered}" class="alert alert-success py-2 small"
+                         th:text="#{auth.login.registered}">Đăng ký thành công</div>
+
+                    <!--
+                      Biểu mẫu gửi tới chính /login - đường dẫn này do bộ lọc của
+                      Spring Security xử lý, không hề đi tới controller nào.
+                      Tên ô nhập là "email" chứ không phải "username" vì
+                      SecurityConfig đã khai báo usernameParameter("email").
+                    -->
+                    <form th:action="@{/login}" method="post">
+
+                        <div class="mb-3">
+                            <label class="form-label" for="email"
+                                   th:text="#{auth.login.email}">Email</label>
+                            <input class="form-control" type="email" id="email" name="email"
+                                   required autofocus autocomplete="username">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="password"
+                                   th:text="#{auth.login.password}">Mật khẩu</label>
+                            <input class="form-control" type="password" id="password" name="password"
+                                   required autocomplete="current-password">
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox"
+                                   id="remember-me" name="remember-me">
+                            <label class="form-check-label small" for="remember-me"
+                                   th:text="#{auth.login.remember}">Ghi nhớ đăng nhập</label>
+                        </div>
+
+                        <button class="btn btn-primary w-100" type="submit"
+                                th:text="#{auth.login.submit}">Đăng nhập</button>
+                    </form>
+
+                    <p class="text-center small text-muted mt-3 mb-0">
+                        <span th:text="#{auth.login.noAccount}">Chưa có tài khoản?</span>
+                        <a th:href="@{/register}" th:text="#{nav.register}">Đăng ký</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.category.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('categories')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h4 mb-0" th:text="#{admin.category.title}">Quản lý danh mục</h1>
+                <a class="btn btn-primary" th:href="@{/admin/categories/form}">
+                    <i class="bi bi-plus-lg"></i> <span th:text="#{admin.action.new}">Thêm mới</span>
+                </a>
+            </div>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <form class="row g-2 mb-3" method="get" th:action="@{/admin/categories}">
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" type="search" name="keyword"
+                           th:value="${keyword}" th:placeholder="#{admin.category.searchPlaceholder}">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-primary w-100" type="submit">
+                        <i class="bi bi-search"></i> <span th:text="#{admin.action.search}">Tìm</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.category.name}">Tên danh mục</th>
+                            <th th:text="#{admin.category.slug}">Đường dẫn</th>
+                            <th th:text="#{admin.category.description}">Mô tả</th>
+                            <th th:text="#{admin.category.active}">Trạng thái</th>
+                            <th class="text-end">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${categoriesPage.empty}">
+                            <td colspan="5" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <tr th:each="c : ${categoriesPage.content}">
+                            <td class="fw-semibold" th:text="${c.name}">Tên</td>
+                            <td class="small text-muted" th:text="${c.slug}">slug</td>
+                            <td class="small text-muted" th:text="${c.description}">Mô tả</td>
+                            <td>
+                                <span class="badge" th:classappend="${c.active} ? 'bg-success' : 'bg-secondary'"
+                                      th:text="${c.active} ? #{admin.status.active} : #{admin.status.inactive}">Trạng thái</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/admin/categories/form(id=${c.id})}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/categories/{id}/toggle-active(id=${c.id})}">
+                                    <button class="btn btn-sm btn-outline-warning" type="submit">
+                                        <i class="bi" th:classappend="${c.active} ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                    </button>
+                                </form>
+                                <!-- Bấm xoá một danh mục còn tour sẽ bị tầng service chặn lại
+                                     kèm thông báo tiếng Việt, chứ không phải lỗi SQL. -->
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/categories/{id}/delete(id=${c.id})}"
+                                      th:data-ajax-delete="@{/api/admin/categories/{id}(id=${c.id})}"
+                                      th:data-confirm="#{admin.confirmDelete}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${categoriesPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

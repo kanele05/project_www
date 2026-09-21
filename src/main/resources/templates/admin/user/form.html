@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(${userForm.id} != null
+                    ? #{admin.user.formTitleEdit} : #{admin.user.formTitleNew})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('users')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3"
+                th:text="${userForm.id} != null
+                         ? #{admin.user.formTitleEdit} : #{admin.user.formTitleNew}">
+                Thêm tài khoản
+            </h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <form th:action="@{/admin/users/save}" th:object="${userForm}" method="post">
+
+                                <input type="hidden" th:field="*{id}">
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="fullName"
+                                           th:text="#{admin.user.fullName}">Họ và tên</label>
+                                    <input class="form-control" type="text" id="fullName"
+                                           th:field="*{fullName}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{fullName}">Lỗi</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="email"
+                                           th:text="#{admin.user.email}">Email</label>
+                                    <input class="form-control" type="email" id="email"
+                                           th:field="*{email}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{email}">Lỗi</div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="phone"
+                                               th:text="#{admin.user.phone}">Số điện thoại</label>
+                                        <input class="form-control" type="tel" id="phone"
+                                               th:field="*{phone}" th:errorclass="is-invalid">
+                                        <div class="invalid-feedback" th:errors="*{phone}">Lỗi</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="role"
+                                               th:text="#{admin.user.role}">Vai trò</label>
+                                        <select class="form-select" id="role"
+                                                th:field="*{role}" th:errorclass="is-invalid">
+                                            <option th:each="r : ${roles}"
+                                                    th:value="${r}" th:text="#{${r.messageKey}}">Vai trò</option>
+                                        </select>
+                                        <div class="invalid-feedback" th:errors="*{role}">Lỗi</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="address"
+                                           th:text="#{admin.user.address}">Địa chỉ</label>
+                                    <input class="form-control" type="text" id="address"
+                                           th:field="*{address}" th:errorclass="is-invalid">
+                                    <div class="invalid-feedback" th:errors="*{address}">Lỗi</div>
+                                </div>
+
+                                <!--
+                                  Ô mật khẩu là ô CHỈ GHI: nó không bao giờ được điền sẵn giá
+                                  trị vì AdminUserForm không mang chuỗi băm cũ lên trình duyệt.
+                                  Để trống khi sửa nghĩa là giữ nguyên mật khẩu hiện tại.
+                                -->
+                                <div class="mb-3">
+                                    <label class="form-label" for="newPassword"
+                                           th:text="#{admin.user.newPassword}">Mật khẩu</label>
+                                    <input class="form-control" type="password" id="newPassword"
+                                           th:field="*{newPassword}" th:errorclass="is-invalid"
+                                           autocomplete="new-password">
+                                    <div class="invalid-feedback" th:errors="*{newPassword}">Lỗi</div>
+                                    <p class="small text-muted mb-0"
+                                       th:text="${userForm.id} == null
+                                                ? #{admin.user.passwordHintNew}
+                                                : #{admin.user.passwordHintEdit}">Gợi ý</p>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enabled"
+                                           th:field="*{enabled}">
+                                    <label class="form-check-label" for="enabled"
+                                           th:text="#{admin.user.enabled}">Cho phép đăng nhập</label>
+                                </div>
+
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-check-lg"></i>
+                                    <span th:text="#{admin.action.save}">Lưu</span>
+                                </button>
+                                <a class="btn btn-link text-decoration-none"
+                                   th:href="@{/admin/users}" th:text="#{admin.action.cancel}">Huỷ</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

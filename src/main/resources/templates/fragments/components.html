@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   Các thành phần lặp lại: khung thông báo, thanh phân trang, thẻ tour, tiêu đề
+   khối, nền nghệ thuật cho tour chưa có ảnh.
+   Tách khỏi layout.html vì đây là những mảnh nhận tham số, còn layout.html chỉ
+   chứa khung cố định của trang.
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ===================================================================
+     THÔNG BÁO SAU THAO TÁC
+     Đọc flash attribute do controller đặt trước khi chuyển hướng. Vì là flash
+     nên chỉ hiện đúng một lần, tải lại trang là biến mất.
+     =================================================================== -->
+<div th:fragment="alerts">
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i> <span th:text="${successMessage}">Thành công</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${errorMessage}">Có lỗi</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+</div>
+
+<!-- ===================================================================
+     TIÊU ĐỀ KHỐI
+     Nhãn nhỏ in hoa + tiêu đề lớn + câu dẫn. Gom thành một mảnh để mọi khối
+     trên website có đúng một nhịp, thay vì mỗi trang tự chế một kiểu.
+     Truyền chuỗi rỗng cho eyebrow hoặc lead nếu không cần tới chúng - trang chủ
+     bỏ hết nhãn nhỏ vì tiêu đề tự đứng được, nhãn lặp ở mọi khối chỉ thành nhịp
+     đều đều của một trang do máy sinh ra.
+     =================================================================== -->
+<div th:fragment="sectionHead(eyebrow, title, lead)" class="mb-4 mb-lg-5 reveal">
+    <span class="eyebrow" th:if="${eyebrow != null and !eyebrow.isEmpty()}"
+          th:text="${eyebrow}">Nhãn</span>
+    <h2 class="section-title" th:text="${title}">Tiêu đề</h2>
+    <p class="section-lead mb-0" th:if="${lead != null and !lead.isEmpty()}" th:text="${lead}">Câu dẫn</p>
+</div>
+
+<!-- ===================================================================
+     NỀN NGHỆ THUẬT CHO TOUR CHƯA CÓ ẢNH
+
+     Dữ liệu mẫu chưa có ảnh chụp nào (0/20 tour có thumbnail). Thay vì để lộ
+     khung ảnh vỡ, mỗi tour được gán một trong sáu khung cảnh vẽ bằng gradient.
+
+     Cảnh do Tour.getArtVariant() chọn, băm theo TÊN ĐIỂM ĐẾN - xem chú thích ở
+     đó về lý do không dùng mã số. Hệ quả dễ thấy: mọi tour đi Đà Lạt luôn cùng
+     một khung cảnh, và các thẻ cạnh nhau hiếm khi trùng.
+
+     Ngay khi quản trị viên tải ảnh thật lên, nhánh th:if bên dưới sẽ dùng ảnh đó.
+     =================================================================== -->
+<div th:fragment="tourArt(tour)" class="tour-art"
+     th:classappend="'art-' + ${tour.artVariant}">
+    <span class="tour-art__label" th:text="${tour.destination}">Điểm đến</span>
+</div>
+
+<!-- ===================================================================
+     THANH PHÂN TRANG
+
+     urlPrefix là địa chỉ đã kèm sẵn mọi bộ lọc hiện tại và kết thúc bằng dấu &
+     hoặc ? (do TourSearchForm.toQueryPrefix dựng). Nhờ vậy bấm sang trang khác
+     vẫn giữ nguyên từ khoá và bộ lọc - đây đúng là chỗ hay hỏng nếu ghép chuỗi
+     thủ công ngay trong khuôn mẫu.
+     =================================================================== -->
+<nav th:fragment="pagination(page, urlPrefix)" th:if="${page.totalPages > 1}"
+     aria-label="Phân trang" class="mt-5">
+    <ul class="pagination justify-content-center"
+        th:with="start=${page.number - 2 < 0 ? 0 : page.number - 2},
+                 end=${page.number + 2 > page.totalPages - 1 ? page.totalPages - 1 : page.number + 2}">
+
+        <!-- Ở trang đầu thì trỏ về # thay vì để nguyên công thức, nếu không địa chỉ
+             sẽ là page=-1 - trông vô lý và người dùng bàn phím vẫn bấm vào được
+             dù Bootstrap đã làm mờ nút. -->
+        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+            <a class="page-link" aria-label="Trang trước"
+               th:href="${page.first} ? '#' : @{|${urlPrefix}page=${page.number - 1}|}"
+               th:aria-disabled="${page.first}"><i class="bi bi-chevron-left"></i></a>
+        </li>
+
+        <li th:each="i : ${#numbers.sequence(start, end)}"
+            class="page-item" th:classappend="${i == page.number} ? 'active'">
+            <a class="page-link" th:href="@{|${urlPrefix}page=${i}|}" th:text="${i + 1}">1</a>
+        </li>
+
+        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+            <a class="page-link" aria-label="Trang sau"
+               th:href="${page.last} ? '#' : @{|${urlPrefix}page=${page.number + 1}|}"
+               th:aria-disabled="${page.last}"><i class="bi bi-chevron-right"></i></a>
+        </li>
+    </ul>
+</nav>
+
+<!-- ===================================================================
+     THẺ TOUR
+
+     Chỉ đọc các trường nằm ngay trên bảng tours cộng thêm tên danh mục - danh
+     mục đã được nạp sẵn bằng fetch trong TourSpecifications. Không đụng tới
+     tour.images hay tour.departures: hai quan hệ đó là LAZY và open-in-view
+     đang tắt, chạm vào là ném LazyInitializationException.
+
+     Nút "Đặt tour" ở đây chỉ gửi tourId - máy chủ tự chọn đợt khởi hành gần nhất
+     còn chỗ, đúng như yêu cầu "chọn tour ngay từ trang danh sách" của đề bài.
+     =================================================================== -->
+<div th:fragment="tourCard(tour)" class="col-12 col-sm-6 col-lg-4 reveal">
+    <article class="tour-card">
+
+        <div class="tour-card__media">
+            <a th:href="@{/tours/{id}/{slug}(id=${tour.id}, slug=${tour.slug})}"
+               th:aria-label="${tour.name}">
+                <!--/* Ảnh seed tĩnh bắt đầu bằng "/" (vd. /images/tours/...), ảnh quản trị
+                       viên tải lên thì tương đối trong uploads/tours/ - xem TourCategory.imageUrl
+                       ở CategoryService để biết gốc quy ước này. */-->
+                <img th:if="${tour.thumbnail != null}"
+                     th:src="${tour.thumbnail.startsWith('/')} ? ${tour.thumbnail} : @{'/uploads/' + ${tour.thumbnail}}"
+                     th:alt="${tour.name}" loading="lazy">
+                <!--/* ⚠️ th:replace CHẠY TRƯỚC th:if/th:unless trên cùng một thẻ (giống hệt
+                       bẫy th:each+th:replace ở gotcha #10) - đặt chung khiến khối tourArt
+                       hiện ra bất kể điều kiện, đè lên ảnh thật. Phải bọc bằng th:block để
+                       th:unless đứng RIÊNG, ngoài thẻ mang th:replace. Vấp thật khi 20 tour
+                       seed đổi từ "chưa có ảnh" sang "đã có ảnh thật": khối art vẫn cứ hiện. */-->
+                <th:block th:unless="${tour.thumbnail != null}">
+                    <div th:replace="~{fragments/components :: tourArt(${tour})}"></div>
+                </th:block>
+            </a>
+
+            <span class="tour-card__chip"
+                  th:text="#{common.durationText(${tour.durationDays}, ${tour.durationNights})}">3 ngày 2 đêm</span>
+
+            <span th:if="${tour.featured}" class="tour-card__chip tour-card__chip--featured">
+                <i class="bi bi-star-fill"></i>
+            </span>
+        </div>
+
+        <div class="tour-card__body">
+            <p class="tour-card__cat mb-0" th:text="${tour.category.name}">Danh mục</p>
+
+            <h3 class="tour-card__title">
+                <a th:href="@{/tours/{id}/{slug}(id=${tour.id}, slug=${tour.slug})}"
+                   th:text="${tour.name}">Tên tour</a>
+            </h3>
+
+            <p class="tour-card__desc" th:text="${tour.shortDescription}">Mô tả ngắn</p>
+
+            <div class="tour-card__meta">
+                <span><i class="bi bi-geo-alt"></i><span th:text="${tour.destination}">Điểm đến</span></span>
+                <span><i class="bi bi-bus-front"></i><span th:text="${tour.transportation}">Phương tiện</span></span>
+            </div>
+
+            <div class="tour-card__foot">
+                <div>
+                    <span class="tour-card__price-label" th:text="#{common.from}">Từ</span>
+                    <span class="tour-card__price"
+                          th:text="|${#numbers.formatInteger(tour.basePrice, 1, 'POINT')} ${#messages.msg('common.currency')}|">
+                        0 ₫
+                    </span>
+                </div>
+
+                <!--/*
+                  data-ajax-cart bật lối thêm vào giỏ không nạp lại trang (app.js).
+                  Biểu mẫu vẫn giữ nguyên action và method thật: tắt JavaScript thì
+                  nó gửi theo cách thường và máy chủ chuyển hướng về /cart như cũ.
+                */-->
+                <form th:action="@{/cart/add}" method="post" data-ajax-cart>
+                    <input type="hidden" name="tourId" th:value="${tour.id}">
+                    <input type="hidden" name="numAdults" value="1">
+                    <input type="hidden" name="numChildren" value="0">
+                    <button class="btn btn-primary btn-sm" type="submit"
+                            th:title="#{common.book}" th:aria-label="#{common.book}">
+                        <i class="bi bi-bag-plus"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </article>
+</div>
+
+</body>
+</html>

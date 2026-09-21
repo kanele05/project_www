@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+  Mẫu thư xác nhận đặt tour.
+
+  Viết bằng bảng và CSS nội tuyến chứ không dùng Bootstrap: các phần mềm đọc thư
+  (nhất là Outlook) không tải file CSS bên ngoài và hỗ trợ flexbox/grid rất kém.
+  Đây là lý do bố cục ở đây trông cũ kỹ hơn hẳn phần còn lại của website.
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận đặt tour</title>
+</head>
+<body style="margin:0; padding:24px; background-color:#f4f5f7;
+             font-family:Arial, Helvetica, sans-serif; color:#212529;">
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+       style="max-width:640px; margin:0 auto; background-color:#ffffff;
+              border-radius:8px; overflow:hidden;">
+
+    <!-- Tiêu đề -->
+    <tr>
+        <td style="background-color:#0d6efd; color:#ffffff; padding:20px 24px;">
+            <h1 style="margin:0; font-size:20px;">IUH Tour Booking</h1>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding:24px;">
+
+            <p style="margin:0 0 12px;"
+               th:text="#{email.booking.greeting(${booking.customerName})}">Xin chào,</p>
+            <p style="margin:0 0 20px;"
+               th:text="#{email.booking.intro}">Cảm ơn bạn đã đặt tour.</p>
+
+            <!-- Thông tin đơn -->
+            <table role="presentation" cellpadding="8" cellspacing="0" width="100%"
+                   style="background-color:#f8f9fa; border-radius:6px; margin-bottom:20px;">
+                <tr>
+                    <td style="color:#6c757d; width:35%;" th:text="#{email.booking.code}">Mã đơn</td>
+                    <td style="font-weight:bold; font-size:18px; color:#0d6efd;"
+                        th:text="${booking.code}">TB...</td>
+                </tr>
+                <tr>
+                    <td style="color:#6c757d;" th:text="#{email.booking.date}">Ngày đặt</td>
+                    <td th:text="${#temporals.format(booking.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                </tr>
+                <tr>
+                    <td style="color:#6c757d;" th:text="#{email.booking.status}">Trạng thái</td>
+                    <td th:text="#{${booking.status.messageKey}}">Chờ xác nhận</td>
+                </tr>
+            </table>
+
+            <!-- Các tour đã đặt -->
+            <table role="presentation" cellpadding="8" cellspacing="0" width="100%"
+                   style="border-collapse:collapse; margin-bottom:20px;">
+                <tr style="background-color:#e9ecef;">
+                    <th align="left" style="border-bottom:1px solid #dee2e6;"
+                        th:text="#{cart.column.tour}">Tour</th>
+                    <th align="left" style="border-bottom:1px solid #dee2e6;"
+                        th:text="#{cart.column.guests}">Số khách</th>
+                    <th align="right" style="border-bottom:1px solid #dee2e6;"
+                        th:text="#{cart.column.subtotal}">Thành tiền</th>
+                </tr>
+                <tr th:each="d : ${booking.details}">
+                    <td style="border-bottom:1px solid #dee2e6;">
+                        <strong th:text="${d.tourNameSnapshot}">Tên tour</strong><br>
+                        <span style="color:#6c757d; font-size:13px;"
+                              th:text="${#temporals.format(d.departure.departureDate, 'dd/MM/yyyy')}">01/01/2026</span>
+                    </td>
+                    <td style="border-bottom:1px solid #dee2e6; font-size:13px;">
+                        <span th:text="${d.numAdults}">1</span>
+                        <span th:text="#{common.adults}">người lớn</span>
+                        <span th:if="${d.numChildren > 0}">
+                            , <span th:text="${d.numChildren}">0</span>
+                            <span th:text="#{common.children}">trẻ em</span>
+                        </span>
+                    </td>
+                    <td align="right" style="border-bottom:1px solid #dee2e6;"
+                        th:text="|${#numbers.formatInteger(d.subtotal, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="right" style="font-weight:bold; padding-top:12px;"
+                        th:text="#{common.total}">Tổng cộng</td>
+                    <td align="right" style="font-weight:bold; font-size:18px;
+                                             color:#dc3545; padding-top:12px;"
+                        th:text="|${#numbers.formatInteger(booking.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                </tr>
+            </table>
+
+            <!-- Thông tin liên hệ -->
+            <p style="margin:0 0 6px; font-weight:bold;"
+               th:text="#{email.booking.contact}">Thông tin liên hệ</p>
+            <p style="margin:0 0 20px; color:#6c757d; font-size:14px;">
+                <span th:text="${booking.customerName}">Họ tên</span><br>
+                <span th:text="${booking.customerPhone}">0900...</span><br>
+                <span th:text="${booking.customerEmail}">email</span><br>
+                <span th:text="${booking.customerAddress}">Địa chỉ</span>
+            </p>
+
+            <p style="margin:0 0 16px;" th:text="#{email.booking.outro}">Chúng tôi sẽ liên hệ.</p>
+            <p style="margin:0; color:#6c757d;" th:text="#{email.booking.signature}">Đội ngũ IUH Tour Booking</p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="background-color:#212529; color:#adb5bd; padding:16px 24px; font-size:12px;">
+            <span th:text="#{app.footer.rights}">Đồ án môn học</span>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

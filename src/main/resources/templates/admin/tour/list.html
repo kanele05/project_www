@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.tour.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('tours')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h4 mb-0" th:text="#{admin.tour.title}">Quản lý tour</h1>
+                <a class="btn btn-primary" th:href="@{/admin/tours/form}">
+                    <i class="bi bi-plus-lg"></i> <span th:text="#{admin.action.new}">Thêm mới</span>
+                </a>
+            </div>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <!-- ===================== Tìm kiếm ===================== -->
+            <form class="row g-2 mb-3" method="get" th:action="@{/admin/tours}">
+                <div class="col-md-5">
+                    <input class="form-control form-control-sm" type="search" name="keyword"
+                           th:value="${keyword}" th:placeholder="#{admin.tour.searchPlaceholder}">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" name="categoryId">
+                        <option value="" th:text="#{tour.filter.all}">Tất cả</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${c.id == categoryId}">Danh mục</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-primary w-100" type="submit">
+                        <i class="bi bi-search"></i> <span th:text="#{admin.action.search}">Tìm</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- ===================== Bảng dữ liệu ===================== -->
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.tour.code}">Mã</th>
+                            <th th:text="#{admin.tour.name}">Tên tour</th>
+                            <th th:text="#{admin.tour.category}">Danh mục</th>
+                            <th class="text-end" th:text="#{admin.tour.basePrice}">Giá</th>
+                            <th th:text="#{admin.tour.active}">Trạng thái</th>
+                            <th class="text-end">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${toursPage.empty}">
+                            <td colspan="6" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <tr th:each="t : ${toursPage.content}">
+                            <td class="small fw-semibold" th:text="${t.code}">MÃ</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <!--/* Ảnh seed đi kèm mã nguồn là đường dẫn TĨNH bắt đầu bằng "/"
+                                           (vd. /images/tours/...), khác ảnh do quản trị viên tải lên
+                                           (đường dẫn tương đối, nằm trong uploads/tours/ ở runtime) -
+                                           cùng quy ước với TourCategory.imageUrl. */-->
+                                    <img class="rounded cart-thumb"
+                                         th:src="${t.thumbnail == null}
+                                                 ? @{/images/no-image.svg}
+                                                 : (${t.thumbnail.startsWith('/')} ? ${t.thumbnail} : @{'/uploads/' + ${t.thumbnail}})"
+                                         th:alt="${t.name}">
+                                    <div>
+                                        <div th:text="${t.name}">Tên tour</div>
+                                        <div class="small text-muted">
+                                            <span th:text="${t.destination}">Điểm đến</span> &middot;
+                                            <span th:text="#{common.durationText(${t.durationDays}, ${t.durationNights})}">3 ngày 2 đêm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <!-- t.category đã được nạp sẵn bằng @EntityGraph ở truy vấn
+                                 adminSearch, nên truy cập ở đây an toàn dù open-in-view tắt. -->
+                            <td class="small" th:text="${t.category.name}">Danh mục</td>
+                            <td class="text-end small"
+                                th:text="|${#numbers.formatInteger(t.basePrice, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            <td>
+                                <span class="badge" th:classappend="${t.active} ? 'bg-success' : 'bg-secondary'"
+                                      th:text="${t.active} ? #{admin.status.active} : #{admin.status.inactive}">Trạng thái</span>
+                                <span th:if="${t.featured}" class="badge bg-warning text-dark">
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/admin/tours/{id}/departures(id=${t.id})}"
+                                   th:title="#{admin.action.departures}">
+                                    <i class="bi bi-calendar-event"></i>
+                                </a>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/admin/tours/form(id=${t.id})}"
+                                   th:title="#{admin.action.edit}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <!-- Mọi thao tác làm thay đổi dữ liệu đều là POST kèm token
+                                     CSRF (Thymeleaf tự chèn nhờ th:action). Dùng đường dẫn
+                                     GET cho các thao tác này sẽ mở đường cho tấn công CSRF. -->
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/tours/{id}/toggle-active(id=${t.id})}">
+                                    <button class="btn btn-sm btn-outline-warning" type="submit"
+                                            th:title="${t.active} ? #{admin.action.deactivate} : #{admin.action.activate}">
+                                        <i class="bi" th:classappend="${t.active} ? 'bi-pause' : 'bi-play'"></i>
+                                    </button>
+                                </form>
+
+                                <!--/*
+                                  data-ajax-delete chuyển nút này sang gọi
+                                  DELETE /api/admin/tours/{id}. Tour đã có lượt đặt sẽ
+                                  nhận 409 và admin.js hiện thông báo ngay tại chỗ.
+                                  Thuộc tính action vẫn giữ nguyên nên tắt JavaScript
+                                  thì biểu mẫu gửi theo cách thường như trước.
+                                */-->
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/tours/{id}/delete(id=${t.id})}"
+                                      th:data-ajax-delete="@{/api/admin/tours/{id}(id=${t.id})}"
+                                      th:data-confirm="#{admin.confirmDelete}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit"
+                                            th:title="#{admin.action.delete}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${toursPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!--
+  Quản lý liên hệ (UC022).
+
+  ContactMessageRepository.find{All,ByStatus}...OrderByCreatedAtDesc đều nạp
+  sẵn tour và handledBy bằng @EntityGraph, nên hai quan hệ đó an toàn ở đây dù
+  open-in-view đang tắt (gotcha #43).
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.contact.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('contacts')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3" th:text="#{admin.contact.title}">Quản lý liên hệ</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <!-- Bộ lọc trạng thái - mặc định "Mới". -->
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${status == 'NEW'} ? 'active'"
+                       th:href="@{/admin/contacts(status='NEW')}" th:text="#{contact.status.NEW}">Mới</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${status == 'IN_PROGRESS'} ? 'active'"
+                       th:href="@{/admin/contacts(status='IN_PROGRESS')}" th:text="#{contact.status.IN_PROGRESS}">Đang xử lý</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${status == 'RESOLVED'} ? 'active'"
+                       th:href="@{/admin/contacts(status='RESOLVED')}" th:text="#{contact.status.RESOLVED}">Đã xử lý</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${status == 'SPAM'} ? 'active'"
+                       th:href="@{/admin/contacts(status='SPAM')}" th:text="#{contact.status.SPAM}">Thư rác</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${status == 'ALL'} ? 'active'"
+                       th:href="@{/admin/contacts(status='ALL')}" th:text="#{admin.review.filter.ALL}">Tất cả</a>
+                </li>
+            </ul>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.contact.sender}">Người gửi</th>
+                            <th th:text="#{admin.contact.subject}">Tiêu đề</th>
+                            <th th:text="#{admin.contact.tour}">Tour</th>
+                            <th th:text="#{admin.review.submittedAt}">Ngày gửi</th>
+                            <th th:text="#{admin.category.active}">Trạng thái</th>
+                            <th class="text-end">&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${contactsPage.empty}">
+                            <td colspan="6" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <th:block th:each="c : ${contactsPage.content}">
+                        <tr>
+                            <td class="small">
+                                <div class="fw-semibold" th:text="${c.fullName}">Họ tên</div>
+                                <div class="text-muted" th:text="${c.email}">email</div>
+                                <div class="text-muted" th:if="${c.phone}" th:text="${c.phone}">điện thoại</div>
+                            </td>
+                            <td class="small" style="max-width: 280px">
+                                <div class="fw-semibold" th:text="${c.subject}">Tiêu đề</div>
+                                <div th:text="${#strings.abbreviate(c.content, 120)}">Nội dung</div>
+                                <div class="text-muted fst-italic mt-1" th:if="${c.replyNote}">
+                                    <i class="bi bi-reply"></i>
+                                    <span th:text="#{admin.review.replyPrefix}">Đã trả lời:</span>
+                                    <span th:text="${#strings.abbreviate(c.replyNote, 100)}">Trả lời</span>
+                                </div>
+                            </td>
+                            <td class="small">
+                                <a th:if="${c.tour != null}" th:href="@{/tours/{id}(id=${c.tour.id})}"
+                                   target="_blank" rel="noopener" th:text="${c.tour.name}">Tên tour</a>
+                                <span th:unless="${c.tour != null}" class="text-muted">&mdash;</span>
+                            </td>
+                            <td class="small text-muted"
+                                th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td>
+                                <span class="badge" th:classappend="'bg-' + ${c.status.badgeClass}"
+                                      th:text="#{${c.status.messageKey}}">Trạng thái</span>
+                                <div class="small text-muted mt-1" th:if="${c.handledBy != null}">
+                                    <span th:text="#{admin.contact.handledBy}">Đã xử lý bởi</span>
+                                    <span th:text="${c.handledBy.fullName}">Tên</span>
+                                </div>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        data-bs-toggle="collapse" th:data-bs-target="'#handle-' + ${c.id}"
+                                        th:title="#{admin.contact.handle}">
+                                    <i class="bi bi-reply-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Hàng gấp mở: đổi trạng thái + ghi chú trả lời, cùng lúc. -->
+                        <tr class="collapse" th:id="'handle-' + ${c.id}">
+                            <td colspan="6" class="bg-light-subtle">
+                                <form class="row g-2 align-items-end py-2" method="post"
+                                      th:action="@{/admin/contacts/{id}/status(id=${c.id})}">
+                                    <div class="col-auto">
+                                        <label class="form-label small mb-0" th:text="#{admin.category.active}">Trạng thái</label>
+                                        <select class="form-select form-select-sm" name="newStatus">
+                                            <option th:each="s : ${statuses}" th:value="${s}"
+                                                    th:selected="${s == c.status}"
+                                                    th:text="#{${s.messageKey}}">Trạng thái</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label class="form-label small mb-0" th:text="#{admin.contact.replyNote}">Ghi chú trả lời</label>
+                                        <textarea class="form-control form-control-sm" name="replyNote" rows="2"
+                                                  maxlength="1000" th:text="${c.replyNote}"
+                                                  th:placeholder="#{admin.contact.replyPlaceholder}"></textarea>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-primary" type="submit"
+                                                th:text="#{admin.action.save}">Lưu</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        </th:block>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${contactsPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

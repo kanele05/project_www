@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.booking.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('bookings')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <h1 class="h4 mb-3" th:text="#{admin.booking.title}">Quản lý đơn hàng</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <form class="row g-2 mb-3" method="get" th:action="@{/admin/bookings}">
+                <div class="col-md-5">
+                    <input class="form-control form-control-sm" type="search" name="keyword"
+                           th:value="${keyword}" th:placeholder="#{admin.booking.searchPlaceholder}">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="" th:text="#{tour.filter.all}">Tất cả</option>
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="#{${s.messageKey}}"
+                                th:selected="${s == status}">Trạng thái</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-sm btn-outline-primary w-100" type="submit">
+                        <i class="bi bi-search"></i> <span th:text="#{admin.action.search}">Tìm</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{account.bookings.code}">Mã đơn</th>
+                            <th th:text="#{admin.booking.customer}">Khách hàng</th>
+                            <th th:text="#{account.bookings.date}">Ngày đặt</th>
+                            <th class="text-end" th:text="#{account.bookings.total}">Tổng tiền</th>
+                            <th th:text="#{account.bookings.status}">Trạng thái</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${bookingsPage.empty}">
+                            <td colspan="5" class="text-center text-muted py-4"
+                                th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+
+                        <!-- Danh sách này KHÔNG duyệt booking.details: quan hệ đó là LAZY và
+                             open-in-view đang tắt. Muốn xem các tour trong đơn thì mở trang
+                             chi tiết, nơi dữ liệu được nạp bằng join fetch. -->
+                        <tr th:each="b : ${bookingsPage.content}">
+                            <td>
+                                <a class="fw-semibold text-decoration-none"
+                                   th:href="@{/admin/bookings/{code}(code=${b.code})}"
+                                   th:text="${b.code}">TB...</a>
+                            </td>
+                            <td class="small">
+                                <div th:text="${b.customerName}">Họ tên</div>
+                                <div class="text-muted" th:text="${b.customerPhone}">0900...</div>
+                            </td>
+                            <td class="small"
+                                th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                            <td class="text-end fw-semibold text-danger"
+                                th:text="|${#numbers.formatInteger(b.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                            <td>
+                                <span class="badge" th:classappend="'bg-' + ${b.status.badgeClass}"
+                                      th:text="#{${b.status.messageKey}}">Trạng thái</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:replace="~{fragments/components :: pagination(${bookingsPage}, ${pageUrlPrefix})}"></div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

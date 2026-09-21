@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${tour.name})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="flex-grow-1">
+
+    <!-- ===================== Dải tiêu đề ===================== -->
+    <section class="page-head bg-jade pb-0" style="padding-bottom: 6rem !important">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" th:text="#{nav.home}">Trang chủ</a></li>
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/categories/{slug}(slug=${tour.category.slug})}"
+                           th:text="${tour.category.name}">Danh mục</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${tour.name}">Tên tour</li>
+                </ol>
+            </nav>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <span class="eyebrow eyebrow--light" th:text="${tour.category.name}">Danh mục</span>
+                    <h1 class="hero-title" style="font-size: clamp(1.9rem, 4.2vw, 3.2rem)"
+                        th:text="${tour.name}">Tên tour</h1>
+
+                    <div class="d-flex flex-wrap gap-4 mt-3 small" style="color: rgba(246,239,228,.8)">
+                        <span><i class="bi bi-geo-alt me-1"></i><span th:text="${tour.destination}">Điểm đến</span></span>
+                        <span><i class="bi bi-clock me-1"></i><span
+                                th:text="#{common.durationText(${tour.durationDays}, ${tour.durationNights})}">3 ngày</span></span>
+                        <span><i class="bi bi-bus-front me-1"></i><span th:text="${tour.transportation}">Phương tiện</span></span>
+                        <span><i class="bi bi-eye me-1"></i><span th:text="${tour.viewCount}">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container pb-5">
+
+        <div class="row g-4 panel--float">
+
+            <!-- ===================== Cột trái: hình ảnh và nội dung ===================== -->
+            <div class="col-lg-8">
+
+                <!--/*
+                  Tour chưa có ảnh thật thì dùng khung cảnh vẽ sẵn thay vì khung ảnh
+                  vỡ - cùng một cảnh với thẻ tour ở trang danh sách nên khách nhận ra
+                  ngay là vừa bấm vào đúng tour đó.
+                */-->
+                <!--/* Ảnh seed tĩnh bắt đầu bằng "/", ảnh tải lên thì tương đối trong
+                       uploads/tours/ - xem admin/tour/list.html. */-->
+                <img th:if="${tour.thumbnail != null}" class="tour-hero-img shadow-sm mb-3"
+                     th:src="${tour.thumbnail.startsWith('/')} ? ${tour.thumbnail} : @{'/uploads/' + ${tour.thumbnail}}"
+                     th:alt="${tour.name}" loading="lazy">
+                <div th:unless="${tour.thumbnail != null}" class="tour-hero-art shadow-sm mb-3 tour-art"
+                     th:classappend="'art-' + ${tour.artVariant}">
+                    <span class="tour-art__label" th:text="${tour.destination}">Điểm đến</span>
+                </div>
+
+                <!-- Thư viện ảnh: tour.images đã được nạp sẵn bằng join fetch ở
+                     TourRepository.findDetailById nên truy cập ở đây an toàn dù
+                     open-in-view đang tắt. -->
+                <div class="row g-2 mb-4" th:if="${not #lists.isEmpty(tour.images)}">
+                    <div class="col-3" th:each="img : ${tour.images}">
+                        <img class="img-fluid tour-gallery-img"
+                             th:src="@{'/uploads/' + ${img.imagePath}}"
+                             th:alt="${img.caption}">
+                    </div>
+                </div>
+
+                <div class="panel panel__pad mb-4">
+                    <span class="eyebrow" th:text="#{tour.detail.overview}">Giới thiệu</span>
+                    <!-- th:text (không phải th:utext) để nội dung do quản trị viên nhập
+                         luôn được thoát ký tự - chặn chèn mã HTML/JavaScript.
+                         Xuống dòng được giữ nhờ CSS white-space: pre-line. -->
+                    <p class="preserve-lines mb-0" th:text="${tour.description}">Mô tả</p>
+                </div>
+
+                <div class="panel panel__pad mb-4">
+                    <span class="eyebrow" th:text="#{tour.detail.itinerary}">Lịch trình</span>
+                    <p class="preserve-lines mb-0" th:text="${tour.itinerary}">Lịch trình</p>
+                </div>
+
+                <!-- ===================== UC018: Đánh giá tour ===================== -->
+                <div class="panel panel__pad" id="reviews">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <span class="eyebrow mb-0" th:text="#{tour.detail.reviews}">Đánh giá từ khách hàng</span>
+                        <div class="text-end">
+                            <span class="fw-bold fs-5" th:if="${avgRating != null}"
+                                  th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">4.5</span>
+                            <i class="bi bi-star-fill text-warning" th:if="${avgRating != null}"></i>
+                            <span class="small text-muted"
+                                  th:text="${avgRating != null} ? #{tour.detail.reviews.countLabel(${reviewCount})} : #{tour.detail.reviews.noRating}">
+                                0 đánh giá
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách đánh giá đã duyệt - ReviewRepository nạp sẵn user
+                         bằng @EntityGraph nên review.user.fullName an toàn dù
+                         open-in-view đang tắt (gotcha #43). -->
+                    <p th:if="${reviewsPage.empty}" class="text-muted small mb-4"
+                       th:text="#{tour.detail.reviews.empty}">Chưa có đánh giá nào.</p>
+
+                    <div th:unless="${reviewsPage.empty}" class="mb-4">
+                        <div class="border-bottom pb-3 mb-3" th:each="r : ${reviewsPage.content}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="fw-semibold" th:text="${r.user.fullName}">Khách hàng</span>
+                                    <span class="badge text-bg-success ms-2" th:if="${r.verified}"
+                                          th:text="#{tour.detail.reviews.verified}">Đã xác thực</span>
+                                </div>
+                                <span class="small text-muted"
+                                      th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy')}">01/01/2026</span>
+                            </div>
+                            <div class="mb-1">
+                                <i class="bi" th:each="s : ${#numbers.sequence(1, 5)}"
+                                   th:classappend="${s <= r.rating} ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
+                            </div>
+                            <p class="fw-semibold mb-1" th:if="${r.title}" th:text="${r.title}">Tiêu đề</p>
+                            <p class="mb-0 preserve-lines" th:text="${r.content}">Nội dung đánh giá</p>
+                        </div>
+
+                        <div th:replace="~{fragments/components :: pagination(${reviewsPage}, ${pageUrlPrefix})}"></div>
+                    </div>
+
+                    <!-- Biểu mẫu gửi đánh giá - chỉ khi đủ điều kiện (đã đăng nhập,
+                         đơn hoàn tất, chưa từng đánh giá). Kiểm lại toàn bộ ở
+                         AccountController/ReviewService, đây chỉ là hiện/ẩn cho gọn. -->
+                    <!--/* #authorization là đối tượng biểu thức toàn cục của
+                           thymeleaf-extras-springsecurity6 (đã đăng ký sẵn cho cả dự
+                           án - xem fragments/layout.html dùng sec:authorize), dùng
+                           được ở bất kỳ khuôn mẫu nào mà không cần khai riêng
+                           xmlns:sec trên thẻ html của file này. */-->
+                    <div class="border-top pt-3"
+                         th:with="loggedIn=${#authorization.expression('isAuthenticated()')}">
+                        <div th:unless="${loggedIn}" class="small text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span th:text="#{tour.detail.reviews.loginPrompt}">Đăng nhập để đánh giá tour này.</span>
+                            —
+                            <a th:href="@{/login}" th:text="#{nav.login}">Đăng nhập</a>
+                        </div>
+
+                        <!--/* UC020: khách thấy đánh giá của chính mình kèm nhãn trạng thái, kể cả
+                               khi chưa duyệt nên chưa nằm trong danh sách công khai ở trên. */-->
+                        <div th:if="${loggedIn and hasReviewed and ownReview != null}" class="own-review">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h3 class="h6 mb-0" th:text="#{tour.detail.reviews.yourReview}">Đánh giá của bạn</h3>
+                                <span class="badge" th:classappend="${ownReview.approved} ? 'bg-success' : 'bg-warning text-dark'"
+                                      th:text="${ownReview.approved} ? #{tour.detail.reviews.approvedBadge} : #{tour.detail.reviews.pendingBadge}">
+                                    Trạng thái
+                                </span>
+                            </div>
+                            <div class="mb-1">
+                                <i class="bi" th:each="s : ${#numbers.sequence(1, 5)}"
+                                   th:classappend="${s <= ownReview.rating} ? 'bi-star-fill text-warning' : 'bi-star text-muted'"></i>
+                            </div>
+                            <p class="fw-semibold mb-1" th:if="${ownReview.title}" th:text="${ownReview.title}">Tiêu đề</p>
+                            <p class="mb-1 preserve-lines" th:text="${ownReview.content}">Nội dung đánh giá</p>
+                            <p class="small text-muted mb-0" th:unless="${ownReview.approved}"
+                               th:text="#{tour.detail.reviews.pendingHint}">
+                                Đánh giá của bạn đang chờ quản trị viên duyệt.
+                            </p>
+                        </div>
+
+                        <div th:if="${loggedIn and not hasReviewed and not canReview}" class="small text-muted">
+                            <i class="bi bi-lock me-1"></i>
+                            <span th:text="#{tour.detail.reviews.notEligible}">Chỉ khách đã đặt và hoàn tất tour này mới đánh giá được.</span>
+                        </div>
+
+                        <form th:if="${canReview}" th:action="@{/account/reviews}" th:object="${reviewForm}" method="post">
+                            <h3 class="h6 mb-2" th:text="#{tour.detail.reviews.writeTitle}">Viết đánh giá của bạn</h3>
+                            <input type="hidden" th:field="*{tourId}">
+
+                            <div class="mb-2">
+                                <label class="form-label small" for="rating" th:text="#{tour.detail.reviews.rating}">Số sao</label>
+                                <select class="form-select form-select-sm" id="rating" th:field="*{rating}" style="max-width: 8rem">
+                                    <option value="5">5 ★★★★★</option>
+                                    <option value="4">4 ★★★★</option>
+                                    <option value="3">3 ★★★</option>
+                                    <option value="2">2 ★★</option>
+                                    <option value="1">1 ★</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small" for="reviewTitle" th:text="#{tour.detail.reviews.titleLabel}">Tiêu đề</label>
+                                <input class="form-control form-control-sm" type="text" id="reviewTitle"
+                                       th:field="*{title}" maxlength="200">
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small" for="reviewContent" th:text="#{tour.detail.reviews.contentLabel}">Nội dung</label>
+                                <textarea class="form-control form-control-sm" id="reviewContent" rows="3"
+                                          th:field="*{content}" maxlength="1000" required></textarea>
+                            </div>
+
+                            <button class="btn btn-sm btn-primary" type="submit">
+                                <i class="bi bi-send me-1"></i>
+                                <span th:text="#{tour.detail.reviews.submit}">Gửi đánh giá</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== Cột phải: thông tin và đặt tour ===================== -->
+            <div class="col-lg-4">
+
+                <div th:replace="~{fragments/components :: alerts}"></div>
+
+                <div class="panel panel__pad mb-3">
+                    <h2 class="h6 mb-3" th:text="#{tour.detail.info}">Thông tin tour</h2>
+                    <dl class="row small mb-0">
+                        <dt class="col-5 text-muted fw-normal" th:text="#{tour.detail.code}">Mã tour</dt>
+                        <dd class="col-7 fw-semibold" th:text="${tour.code}">MÃ</dd>
+
+                        <dt class="col-5 text-muted fw-normal" th:text="#{tour.detail.departureFrom}">Khởi hành từ</dt>
+                        <dd class="col-7 fw-semibold" th:text="${tour.departureLocation}">TP.HCM</dd>
+
+                        <dt class="col-5 text-muted fw-normal" th:text="#{tour.detail.destination}">Điểm đến</dt>
+                        <dd class="col-7 fw-semibold" th:text="${tour.destination}">Điểm đến</dd>
+
+                        <dt class="col-5 text-muted fw-normal" th:text="#{tour.detail.duration}">Thời gian</dt>
+                        <dd class="col-7 fw-semibold"
+                            th:text="#{common.durationText(${tour.durationDays}, ${tour.durationNights})}">3 ngày 2 đêm</dd>
+
+                        <dt class="col-5 text-muted fw-normal" th:text="#{tour.detail.transportation}">Phương tiện</dt>
+                        <dd class="col-7 fw-semibold mb-0" th:text="${tour.transportation}">Máy bay</dd>
+                    </dl>
+                    <!--/* UC021: liên hệ có sẵn tour đang xem, không đòi đăng nhập. */-->
+                    <a class="btn btn-outline-secondary btn-sm w-100 mt-3"
+                       th:href="@{/contact(tourId=${tour.id})}">
+                        <i class="bi bi-envelope me-1"></i>
+                        <span th:text="#{tour.detail.contactAboutTour}">Liên hệ về tour này</span>
+                    </a>
+                </div>
+
+                <div class="panel panel__pad booking-panel">
+
+                    <p th:if="${#lists.isEmpty(departures)}" class="text-muted small mb-0"
+                       th:text="#{tour.detail.noDeparture}">Chưa có đợt khởi hành.</p>
+
+                    <!--
+                      Khác với trang danh sách, ở đây khách chọn đích danh đợt khởi
+                      hành và số khách. Biểu mẫu vì vậy gửi departureId chứ không
+                      gửi tourId. Cả hai lối đều đổ về cùng một giỏ hàng.
+                    -->
+                    <form th:unless="${#lists.isEmpty(departures)}"
+                          th:action="@{/cart/add}" method="post" data-ajax-cart>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="h6 mb-0" th:text="#{tour.detail.chooseDeparture}">
+                                Chọn ngày khởi hành
+                            </h2>
+                            <!--/*
+                              Nạp lại số chỗ trống từ /api/tours/{id}/departures.
+                              Danh sách bên dưới đã do máy chủ dựng sẵn nên nút này
+                              không phải điều kiện để trang chạy được - nó chỉ để số
+                              chỗ luôn đúng khi khách để trang mở lâu.
+                            */-->
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    id="refreshDepartures" th:title="#{tour.detail.refreshSeats}">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+
+                        <!--/*
+                          data-seats-label lấy #{tour.detail.seatsLeft} mà KHÔNG truyền
+                          tham số, nên Spring trả về nguyên văn "còn {0} chỗ" và app.js
+                          tự thay {0} bằng số thật. Nhờ mẹo này mà câu chữ vẫn chỉ nằm
+                          trong messages.properties, không có chuỗi tiếng Việt nào lọt
+                          vào file .js.
+                        */-->
+                        <div id="departureList"
+                             th:data-tour-id="${tour.id}"
+                             th:data-seats-label="#{tour.detail.seatsLeft}"
+                             th:data-empty-message="#{tour.detail.noDeparture}"
+                             th:data-refreshed-message="#{tour.detail.seatsRefreshed}">
+                            <div class="form-check p-2 mb-2 departure-option"
+                                 th:each="d, stat : ${departures}">
+                                <input class="form-check-input ms-0 me-2" type="radio" name="departureId"
+                                       th:id="'dep-' + ${d.id}" th:value="${d.id}"
+                                       th:checked="${stat.first}" required>
+                                <label class="form-check-label w-100" th:for="'dep-' + ${d.id}">
+                                    <span class="fw-semibold"
+                                          th:text="${#temporals.format(d.departureDate, 'dd/MM/yyyy')}">01/01/2026</span>
+                                    <span class="badge bg-success float-end"
+                                          th:text="#{tour.detail.seatsLeft(${d.availableSeats})}">còn 0 chỗ</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        <span th:text="#{tour.detail.priceAdult}">Người lớn</span>:
+                                        <span class="text-danger fw-semibold"
+                                              th:text="|${#numbers.formatInteger(d.priceAdult, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</span>
+                                        &middot;
+                                        <span th:text="#{tour.detail.priceChild}">Trẻ em</span>:
+                                        <span th:text="|${#numbers.formatInteger(d.priceChild, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</span>
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <label class="form-label" for="numAdults"
+                                       th:text="#{common.adult}">Người lớn</label>
+                                <input class="form-control form-control-sm" type="number"
+                                       id="numAdults" name="numAdults" value="1" min="1" max="30">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="numChildren"
+                                       th:text="#{common.child}">Trẻ em</label>
+                                <input class="form-control form-control-sm" type="number"
+                                       id="numChildren" name="numChildren" value="0" min="0" max="30">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-accent w-100 mt-3" type="submit">
+                            <i class="bi bi-bag-plus me-1"></i>
+                            <span th:text="#{tour.detail.addToCart}">Thêm vào giỏ hàng</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

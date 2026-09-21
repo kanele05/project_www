@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+   LIÊN HỆ (UC021) - AC01 Khách vãng lai, không cần đăng nhập.
+
+   tourId tuỳ chọn: có giá trị khi mở từ nút "Liên hệ về tour này" ở trang chi
+   tiết tour (xem tour/detail.html), lúc đó prefillTour khác null và trang hiện
+   thêm một dòng "Đang hỏi về tour này".
+  ============================================================================
+-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{contact.title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+
+<header th:replace="~{fragments/layout :: header(false)}"></header>
+
+<main class="flex-grow-1">
+
+    <section class="page-head bg-jade">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/}" th:text="#{nav.home}">Trang chủ</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="#{contact.title}">Liên hệ</li>
+                </ol>
+            </nav>
+            <span class="eyebrow eyebrow--light" th:text="#{contact.eyebrow}">Liên hệ</span>
+            <h1 class="hero-title" style="font-size: clamp(2.2rem, 5vw, 3.8rem)" th:text="#{contact.heading}">
+                Cần chúng tôi tư vấn?
+            </h1>
+            <p class="mt-2" style="color: rgba(246,239,228,.85); max-width: 46rem"
+               th:text="#{contact.lead}">Gửi câu hỏi, chúng tôi trả lời trong 24 giờ.</p>
+        </div>
+    </section>
+
+    <div class="container py-5">
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-7">
+                <div class="panel panel__pad">
+
+                    <div th:replace="~{fragments/components :: alerts}"></div>
+
+                    <!--/* Đang hỏi về một tour cụ thể - chỉ hiện khi mở từ nút
+                           "Liên hệ về tour này". */-->
+                    <div class="alert alert-light border d-flex align-items-center gap-2 mb-4"
+                         th:if="${prefillTour != null}">
+                        <i class="bi bi-info-circle text-jade"></i>
+                        <span th:text="#{contact.aboutTour(${prefillTour.name})}">Đang hỏi về tour</span>
+                    </div>
+
+                    <form th:action="@{/contact}" th:object="${contactForm}" method="post">
+                        <input type="hidden" th:field="*{tourId}">
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="fullName" th:text="#{contact.fullName}">Họ tên</label>
+                                <input class="form-control" type="text" id="fullName"
+                                       th:field="*{fullName}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{fullName}">Lỗi</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="email" th:text="#{checkout.email}">Email</label>
+                                <input class="form-control" type="email" id="email"
+                                       th:field="*{email}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{email}">Lỗi</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="phone" th:text="#{contact.phone}">Điện thoại (không bắt buộc)</label>
+                                <input class="form-control" type="text" id="phone"
+                                       th:field="*{phone}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{phone}">Lỗi</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="subject" th:text="#{contact.subject}">Tiêu đề</label>
+                                <input class="form-control" type="text" id="subject"
+                                       th:field="*{subject}" th:errorclass="is-invalid">
+                                <div class="invalid-feedback" th:errors="*{subject}">Lỗi</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="content" th:text="#{contact.content}">Nội dung</label>
+                                <textarea class="form-control" id="content" rows="5"
+                                          th:field="*{content}" th:errorclass="is-invalid"
+                                          maxlength="2000"></textarea>
+                                <div class="invalid-feedback" th:errors="*{content}">Lỗi</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-accent mt-4" type="submit">
+                            <i class="bi bi-send me-1"></i>
+                            <span th:text="#{contact.submit}">Gửi liên hệ</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{about.contact.title}">Thông tin liên hệ</h2>
+                    <p class="small mb-2">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        <span th:text="#{app.footer.address}">Địa chỉ</span>
+                    </p>
+                    <p class="small mb-0">
+                        <i class="bi bi-envelope me-1"></i>
+                        no-reply@tourbooking.iuh.edu.vn
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

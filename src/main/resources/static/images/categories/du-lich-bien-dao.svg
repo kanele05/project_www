@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"
+     role="img" aria-label="Bien dao">
+  <!--
+    Minh hoa danh muc "Du lich bien dao".
+    Ve bang SVG thay vi dung anh chup: du an chua co kho anh co ban quyen, ma anh
+    tai tren mang thi vua sai luat vua lac tong mau. Hinh ve dung dung bang mau
+    Ngoc bich & Dat nung nen sau nay thay anh that cung khong bi vo bo cuc.
+    Kich thuoc 800x600 (ti le 4:3) - o danh muc dung object-fit: cover nen cat
+    theo chieu nao cung con du phan chinh.
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A3833"/>
+      <stop offset="55%" stop-color="#12655B"/>
+      <stop offset="100%" stop-color="#2A9484"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1D8C93"/>
+      <stop offset="100%" stop-color="#0A3833"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+
+  <!-- Mat troi lan -->
+  <circle cx="596" cy="228" r="66" fill="#E0A458" opacity=".92"/>
+  <circle cx="596" cy="228" r="128" fill="#E0A458" opacity=".14"/>
+
+  <!-- Day dao xa -->
+  <path d="M0 344l96-58 74 40 88-70 92 62 104-46 118 74 128-40v50H0z" fill="#0A3833" opacity=".85"/>
+  <path d="M150 344l70-52 66 52z" fill="#06251F" opacity=".7"/>
+
+  <!-- Mat bien -->
+  <rect y="344" width="800" height="256" fill="url(#sea)"/>
+
+  <!-- Vet sang tren mat nuoc -->
+  <g fill="#BEE0D8" opacity=".28">
+    <rect x="120" y="392" width="150" height="5" rx="2.5"/>
+    <rect x="330" y="424" width="220" height="5" rx="2.5"/>
+    <rect x="90"  y="462" width="180" height="5" rx="2.5"/>
+    <rect x="420" y="500" width="260" height="5" rx="2.5"/>
+    <rect x="180" y="540" width="140" height="5" rx="2.5"/>
+  </g>
+
+  <!-- Duong sang cua mat troi doi xuong nuoc -->
+  <path d="M566 344h60l40 256h-150z" fill="#E0A458" opacity=".16"/>
+
+  <!-- Thuyen thung -->
+  <path d="M232 452h96l-18 26h-60z" fill="#14201E" opacity=".8"/>
+  <path d="M278 452V404l44 26z" fill="#F6EFE4" opacity=".82"/>
+
+  <!-- La dua o goc -->
+  <g fill="#06251F" opacity=".9">
+    <path d="M0 600V430c46 22 74 62 88 108 6 20 8 41 8 62z"/>
+    <path d="M-6 424c58-16 108 4 150 58-56-14-102-8-142 22z"/>
+    <path d="M-6 470c54-2 96 26 126 84-48-30-92-38-132-24z"/>
+  </g>
+</svg>
