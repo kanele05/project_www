@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--/*
+  Trang chi tiết CHỈ XEM của một tài khoản (mục 12.8 - đề bài đòi "xem chi tiết
+  từng tài khoản người dùng, không xem được password").
+
+  Trang này đọc thẳng đối tượng User (không qua AdminUserForm) nhưng KHÔNG có
+  bất kỳ th:field/ô nhập nào - chỉ th:text các trường vô hại. Không có dòng nào
+  đụng tới user.password nên không có đường nào để chuỗi băm lọt ra HTML. Ghi
+  chú này dùng cú pháp <!--​/* ... */--​> của Thymeleaf (bị gỡ khi render) đúng
+  như quy ước ở admin/user/list.html, để bản thân ghi chú không vô tình chứa
+  chuỗi "$2a$" làm phép kiểm tra báo nhầm.
+*/-->
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(${user.fullName})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('users')}"></div>
+        </aside>
+
+        <main class="admin-main">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item">
+                        <a th:href="@{/admin/users}" th:text="#{admin.user.title}">Quản lý tài khoản</a>
+                    </li>
+                    <li class="breadcrumb-item active" th:text="${user.fullName}">Họ tên</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h5 mb-0" th:text="${user.fullName}">Họ tên</h1>
+                <a class="btn btn-primary btn-sm" th:href="@{/admin/users/form(id=${user.id})}">
+                    <i class="bi bi-pencil"></i> <span th:text="#{admin.action.edit}">Sửa</span>
+                </a>
+            </div>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <dl class="row small mb-0">
+                                <dt class="col-5" th:text="#{admin.user.email}">Email</dt>
+                                <dd class="col-7 text-break" th:text="${user.email}">email</dd>
+
+                                <dt class="col-5" th:text="#{admin.user.phone}">Số điện thoại</dt>
+                                <dd class="col-7" th:text="${user.phone} ?: '—'">0900...</dd>
+
+                                <dt class="col-5" th:text="#{admin.user.address}">Địa chỉ</dt>
+                                <dd class="col-7" th:text="${user.address} ?: '—'">Địa chỉ</dd>
+
+                                <dt class="col-5" th:text="#{admin.user.role}">Vai trò</dt>
+                                <dd class="col-7">
+                                    <span class="badge" th:classappend="${user.admin} ? 'bg-danger' : 'bg-info'"
+                                          th:text="#{${user.role.messageKey}}">Vai trò</span>
+                                </dd>
+
+                                <dt class="col-5" th:text="#{admin.user.enabled}">Cho phép đăng nhập</dt>
+                                <dd class="col-7">
+                                    <span class="badge" th:classappend="${user.enabled} ? 'bg-success' : 'bg-secondary'"
+                                          th:text="${user.enabled} ? #{admin.status.enabled} : #{admin.status.disabled}">
+                                        Trạng thái
+                                    </span>
+                                </dd>
+
+                                <dt class="col-5" th:text="#{admin.user.detail.createdAt}">Ngày tạo tài khoản</dt>
+                                <dd class="col-7 mb-0"
+                                    th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3" th:text="#{admin.user.detail.bookingHistory}">Lịch sử đơn đã đặt</h2>
+
+                            <p th:if="${bookingsPage.empty}" class="text-muted small mb-0"
+                               th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+
+                            <div class="table-responsive" th:unless="${bookingsPage.empty}">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th th:text="#{account.bookings.code}">Mã đơn</th>
+                                        <th th:text="#{account.bookings.date}">Ngày đặt</th>
+                                        <th class="text-end" th:text="#{account.bookings.total}">Tổng tiền</th>
+                                        <th th:text="#{account.bookings.status}">Trạng thái</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <!-- Chỉ đọc các cột nằm ngay trên bảng bookings, cùng nguyên
+                                         tắc với account/bookings.html - KHÔNG duyệt b.details ở
+                                         đây (LAZY, open-in-view đang tắt). -->
+                                    <tr th:each="b : ${bookingsPage.content}">
+                                        <td>
+                                            <a class="fw-semibold text-decoration-none"
+                                               th:href="@{/admin/bookings/{code}(code=${b.code})}"
+                                               th:text="${b.code}">TB...</a>
+                                        </td>
+                                        <td class="small"
+                                            th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                                        <td class="text-end fw-semibold text-danger"
+                                            th:text="|${#numbers.formatInteger(b.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
+                                        <td>
+                                            <span class="badge" th:classappend="'bg-' + ${b.status.badgeClass}"
+                                                  th:text="#{${b.status.messageKey}}">Trạng thái</span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div th:replace="~{fragments/components :: pagination(${bookingsPage}, '/admin/users/' + ${user.id} + '/view?')}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

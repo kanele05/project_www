@@ -376,6 +376,25 @@ public class TourService {
                 .orElseThrow(() -> ResourceNotFoundException.of("tour", id));
     }
 
+    /**
+     * Gói dữ liệu cho trang chi tiết CHỈ XEM của quản trị viên (mục 12.8 - đề
+     * bài đòi "xem chi tiết từng tour"). Tách khỏi biểu mẫu sửa: trang này không
+     * có ô nhập nào, chỉ đọc.
+     */
+    public record TourAdminDetail(Tour tour, List<TourDeparture> departures,
+                                  long reviewCount, Double avgRating, long orderCount) {
+    }
+
+    @Transactional(readOnly = true)
+    public TourAdminDetail adminDetail(Long id) {
+        Tour tour = getForEdit(id);
+        List<TourDeparture> departures = departureRepository.findByTourIdOrderByDepartureDateAsc(id);
+        long reviewCount = reviewRepository.countByTourId(id);
+        Double avgRating = reviewRepository.averageRatingByTourId(id);
+        long orderCount = bookingDetailRepository.countDistinctBookingsByTourId(id);
+        return new TourAdminDetail(tour, departures, reviewCount, avgRating, orderCount);
+    }
+
     private void requireUniqueCode(String code, Long excludeId) {
         boolean duplicated = excludeId == null
                 ? tourRepository.existsByCode(code)

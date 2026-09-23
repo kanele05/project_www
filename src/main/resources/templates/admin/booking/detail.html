@@ -92,6 +92,42 @@
                                         </button>
                                     </div>
                                 </form>
+
+                                <!-- ============ Mục 12.7: giữ bất biến hành khách ============ -->
+                                <!--/* Chỉ hiện khi BookingService vừa từ chối áp dụng vì tăng số
+                                       khách mà chưa đủ tên (AdminBookingController đẩy các
+                                       pendingXxx qua flash attribute) VÀ đúng dòng đang sửa -
+                                       hai dòng khác trong cùng đơn không bị ảnh hưởng. */-->
+                                <div class="mt-2 p-2 border rounded bg-body-tertiary"
+                                     th:if="${pendingDetailId != null and pendingDetailId == d.id}">
+                                    <p class="small fw-semibold mb-2"
+                                       th:text="#{admin.booking.passengers.needNames}">
+                                        Tăng số khách cần nhập tên cho người mới, nhập rồi bấm Xác nhận.
+                                    </p>
+                                    <form method="post"
+                                          th:action="@{/admin/bookings/{code}/details/{id}(code=${booking.code}, id=${d.id})}">
+                                        <input type="hidden" name="numAdults" th:value="${pendingAdults}">
+                                        <input type="hidden" name="numChildren" th:value="${pendingChildren}">
+                                        <div class="row g-2">
+                                            <div class="col-6 col-md-4" th:if="${pendingAdultsNeeded > 0}"
+                                                 th:each="i : ${#numbers.sequence(1, pendingAdultsNeeded)}">
+                                                <input class="form-control form-control-sm" type="text"
+                                                       name="newAdultNames" maxlength="100" required
+                                                       th:placeholder="#{admin.booking.passengers.newAdultName(${i})}">
+                                            </div>
+                                            <div class="col-6 col-md-4" th:if="${pendingChildrenNeeded > 0}"
+                                                 th:each="i : ${#numbers.sequence(1, pendingChildrenNeeded)}">
+                                                <input class="form-control form-control-sm" type="text"
+                                                       name="newChildNames" maxlength="100" required
+                                                       th:placeholder="#{admin.booking.passengers.newChildName(${i})}">
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary mt-2" type="submit">
+                                            <i class="bi bi-check2"></i>
+                                            <span th:text="#{admin.action.confirm}">Xác nhận</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
 
                             <div class="border-top pt-3"

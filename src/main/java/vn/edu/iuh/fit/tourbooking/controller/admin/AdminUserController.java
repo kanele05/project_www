@@ -17,6 +17,7 @@ import vn.edu.iuh.fit.tourbooking.dto.form.AdminUserForm;
 import vn.edu.iuh.fit.tourbooking.entity.Role;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
+import vn.edu.iuh.fit.tourbooking.service.BookingService;
 import vn.edu.iuh.fit.tourbooking.service.UserService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
@@ -34,6 +35,7 @@ import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 public class AdminUserController {
 
     private final UserService userService;
+    private final BookingService bookingService;
     private final MessageHelper messages;
 
     @GetMapping
@@ -47,6 +49,22 @@ public class AdminUserController {
         model.addAttribute("roles", Role.values());
         model.addAttribute("pageUrlPrefix", buildPageUrl(keyword, role));
         return "admin/user/list";
+    }
+
+    /**
+     * Trang chi tiết CHỈ XEM (mục 12.8 - đề bài đòi "xem chi tiết từng tài
+     * khoản người dùng, không xem được password"). {@code AdminUserForm} không
+     * hề mang chuỗi băm mật khẩu (xem Javadoc lớp), nhưng để chắc chắn hơn nữa,
+     * trang này đọc thẳng từ {@code User} và HTML sinh ra <b>không có ô nhập
+     * nào</b> - không có nơi nào để lỡ tay in mật khẩu ra.
+     */
+    @GetMapping("/{id}/view")
+    public String view(@PathVariable Long id,
+                       @RequestParam(defaultValue = "0") int page,
+                       Model model) {
+        model.addAttribute("user", userService.getById(id));
+        model.addAttribute("bookingsPage", bookingService.findByUser(id, page));
+        return "admin/user/detail";
     }
 
     @GetMapping("/form")

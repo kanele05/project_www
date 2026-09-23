@@ -89,8 +89,16 @@
                                       th:text="${u.enabled} ? #{admin.status.enabled} : #{admin.status.disabled}">Trạng thái</span>
                             </td>
                             <td class="text-end text-nowrap">
+                                <!-- Mục 12.8: trang chi tiết CHỈ XEM (lịch sử đơn), tách khỏi
+                                     biểu mẫu sửa - và KHÔNG hề chạm tới cột password. -->
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/admin/users/{id}/view(id=${u.id})}"
+                                   th:title="#{admin.action.view}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <a class="btn btn-sm btn-outline-primary"
-                                   th:href="@{/admin/users/form(id=${u.id})}">
+                                   th:href="@{/admin/users/form(id=${u.id})}"
+                                   th:title="#{admin.action.edit}">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form class="d-inline" method="post"

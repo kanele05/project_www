@@ -109,16 +109,39 @@ public class AdminBookingController {
      * <p>Sau thao tác này, thành tiền của dòng, tổng tiền của đơn và số chỗ còn
      * trống của đợt khởi hành đều được tính lại - xem
      * {@code BookingService.updateDetailQuantity}.</p>
+     *
+     * <p>Mục 12.7: cùng một địa chỉ này phục vụ CẢ HAI bước của luồng giữ bất
+     * biến hành khách - lần gửi đầu (từ ô số lượng) không kèm
+     * {@code newAdultNames}/{@code newChildNames}; nếu tăng số khách,
+     * {@code BookingService} không áp dụng gì cả và trả về phần tên còn thiếu,
+     * controller đẩy vào flash để trang chi tiết hiện đúng bấy nhiêu ô nhập tên
+     * ngay dưới dòng đang sửa; lần gửi thứ hai (từ chính các ô đó, cùng địa
+     * chỉ) mới thực sự ghi.</p>
      */
     @PostMapping("/{code}/details/{detailId}")
     public String updateDetail(@PathVariable String code,
                                @PathVariable Long detailId,
                                @RequestParam @jakarta.validation.constraints.Min(0) int numAdults,
                                @RequestParam @jakarta.validation.constraints.Min(0) int numChildren,
+                               @RequestParam(required = false) java.util.List<String> newAdultNames,
+                               @RequestParam(required = false) java.util.List<String> newChildNames,
                                RedirectAttributes ra) {
         try {
-            bookingService.updateDetailQuantity(code, detailId, numAdults, numChildren);
-            ra.addFlashAttribute("successMessage", messages.get("admin.booking.detailUpdated"));
+            BookingService.PassengerNameGap gap = bookingService.updateDetailQuantity(
+                    code, detailId, numAdults, numChildren, newAdultNames, newChildNames);
+            if (gap.isEmpty()) {
+                ra.addFlashAttribute("successMessage", messages.get("admin.booking.detailUpdated"));
+            } else {
+                // Chưa ghi gì cả - còn thiếu tên. Giữ lại đúng detailId/số khách
+                // đang chờ để trang chi tiết render tiếp phần "nhập tên" (xem
+                // admin/booking/detail.html, khối pendingDetailId).
+                ra.addFlashAttribute("errorMessage", messages.get("admin.booking.passengers.needNames"));
+                ra.addFlashAttribute("pendingDetailId", detailId);
+                ra.addFlashAttribute("pendingAdults", numAdults);
+                ra.addFlashAttribute("pendingChildren", numChildren);
+                ra.addFlashAttribute("pendingAdultsNeeded", gap.adultsNeeded());
+                ra.addFlashAttribute("pendingChildrenNeeded", gap.childrenNeeded());
+            }
         } catch (BusinessRuleException e) {
             ra.addFlashAttribute("errorMessage", messages.of(e));
         }

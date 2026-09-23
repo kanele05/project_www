@@ -103,6 +103,20 @@ public class CategoryService {
                 .orElseThrow(() -> ResourceNotFoundException.of("danh mục", id));
     }
 
+    /**
+     * Trang chi tiết CHỈ XEM của quản trị viên (mục 12.8 - đề bài đòi "xem chi
+     * tiết từng danh mục"): danh mục kèm toàn bộ tour thuộc nó, kể cả tour đã
+     * ngừng bán (khác trang công khai {@code /categories/{slug}}).
+     */
+    public record CategoryAdminDetail(TourCategory category, List<vn.edu.iuh.fit.tourbooking.entity.Tour> tours) {
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryAdminDetail adminDetail(Long id) {
+        TourCategory category = getById(id);
+        return new CategoryAdminDetail(category, tourRepository.findByCategoryIdOrderByNameAsc(id));
+    }
+
     @Transactional
     public TourCategory save(CategoryForm form) {
         boolean creating = form.getId() == null;

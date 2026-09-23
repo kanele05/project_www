@@ -41,6 +41,13 @@ public interface TourRepository extends JpaRepository<Tour, Long>, JpaSpecificat
     long countByCategoryId(Long categoryId);
 
     /**
+     * Toàn bộ tour của một danh mục cho trang chi tiết CHỈ XEM của quản trị
+     * viên (mục 12.8) - khác {@link #findByCategoryIdAndActiveTrue}: quản trị
+     * viên phải thấy cả tour đã ngừng bán.
+     */
+    List<Tour> findByCategoryIdOrderByNameAsc(Long categoryId);
+
+    /**
      * Trang chủ: tour nổi bật. Nạp kèm danh mục bằng {@code @EntityGraph} vì
      * {@code open-in-view} đang tắt - template truy cập {@code tour.category.name}
      * mà chưa nạp sẽ ném {@code LazyInitializationException}.

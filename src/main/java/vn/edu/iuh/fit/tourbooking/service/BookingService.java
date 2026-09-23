@@ -11,14 +11,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.dto.form.CheckoutForm;
+import vn.edu.iuh.fit.tourbooking.dto.form.PassengerForm;
+import vn.edu.iuh.fit.tourbooking.dto.form.PassengerGroupForm;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.entity.BookingDetail;
+import vn.edu.iuh.fit.tourbooking.entity.BookingPassenger;
 import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 import vn.edu.iuh.fit.tourbooking.entity.BookingStatusHistory;
+import vn.edu.iuh.fit.tourbooking.entity.PassengerType;
 import vn.edu.iuh.fit.tourbooking.entity.TourDeparture;
 import vn.edu.iuh.fit.tourbooking.entity.User;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.exception.ResourceNotFoundException;
+import vn.edu.iuh.fit.tourbooking.repository.BookingPassengerRepository;
 import vn.edu.iuh.fit.tourbooking.repository.BookingRepository;
 import vn.edu.iuh.fit.tourbooking.repository.BookingStatusHistoryRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourDepartureRepository;
@@ -56,6 +61,7 @@ public class BookingService {
     private final PromotionService promotionService;
     private final PaymentService paymentService;
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
+    private final BookingPassengerRepository bookingPassengerRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final AppProperties appProperties;
     private final MessageHelper messages;
@@ -129,7 +135,16 @@ public class BookingService {
             }
 
             departure.holdSeats(seats);
-            booking.addDetail(new BookingDetail(departure, item.getNumAdults(), item.getNumChildren()));
+            BookingDetail detail = new BookingDetail(departure, item.getNumAdults(), item.getNumChildren());
+
+            // Mục 12.7: gắn danh sách hành khách của đúng dòng giỏ hàng này. Đây
+            // là lần kiểm THỨ HAI (lần đầu ở CheckoutController.validatePassengerStructure)
+            // - không tin cấu trúc form đã qua được tầng controller, vì giữa lúc
+            // khách gửi biểu mẫu và lúc giao dịch này chạy, giỏ hàng có thể đã đổi
+            // (ví dụ mở hai tab). Sai gì cũng huỷ toàn bộ giao dịch, không ghi dở dang.
+            attachPassengers(detail, findGroup(form, item.getDepartureId()), item);
+
+            booking.addDetail(detail);
         }
 
         // Mã giảm giá: kiểm LẠI ở đây chứ không tin kết quả của nút "Áp dụng" bên
@@ -169,6 +184,68 @@ public class BookingService {
         log.info("Đã tạo đơn {} cho {} - {} dòng, tổng {} đ",
                 saved.getCode(), user.getEmail(), saved.getDetails().size(), saved.getTotalAmount());
         return saved;
+    }
+
+    /** Tìm đúng nhóm hành khách của một dòng giỏ hàng theo {@code departureId}. */
+    private PassengerGroupForm findGroup(CheckoutForm form, Long departureId) {
+        if (form.getPassengerGroups() == null) {
+            return null;
+        }
+        return form.getPassengerGroups().stream()
+                .filter(g -> departureId.equals(g.getDepartureId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Gắn danh sách hành khách vào một dòng chi tiết vừa tạo (mục 12.7).
+     *
+     * <p><b>Không tin dữ liệu gửi lên</b>: số hành khách theo từng loại phải
+     * khớp CHÍNH XÁC {@code numAdults}/{@code numChildren} của dòng - lệch một
+     * người cũng bị chặn (kể cả khi tầng controller đã kiểm - phòng khi giỏ hàng
+     * đổi giữa hai lần kiểm, hoặc yêu cầu được gửi thẳng không qua controller
+     * này, ví dụ trong kiểm thử). Mỗi tên đều được kiểm lại {@code NotBlank} và
+     * ngày sinh không ở tương lai - <b>không tin @Valid ở tầng trước đã chặn
+     * hết</b>.</p>
+     */
+    private void attachPassengers(BookingDetail detail, PassengerGroupForm group, CartItem item) {
+        List<PassengerForm> adults = group == null || group.getAdults() == null
+                ? List.of() : group.getAdults();
+        List<PassengerForm> children = group == null || group.getChildren() == null
+                ? List.of() : group.getChildren();
+
+        if (adults.size() != item.getNumAdults() || children.size() != item.getNumChildren()) {
+            throw new BusinessRuleException("error.checkout.passengerMismatch");
+        }
+
+        for (PassengerForm p : adults) {
+            detail.getPassengers().add(toPassenger(detail, p, PassengerType.ADULT));
+        }
+        for (PassengerForm p : children) {
+            detail.getPassengers().add(toPassenger(detail, p, PassengerType.CHILD));
+        }
+    }
+
+    private BookingPassenger toPassenger(BookingDetail detail, PassengerForm form, PassengerType type) {
+        if (form.getFullName() == null || form.getFullName().isBlank()) {
+            throw new BusinessRuleException("error.checkout.passengerNameRequired");
+        }
+        if (form.getBirthDate() != null && form.getBirthDate().isAfter(LocalDate.now())) {
+            throw new BusinessRuleException("error.checkout.passengerBirthDateFuture");
+        }
+        BookingPassenger passenger = new BookingPassenger(form.getFullName().trim(), type);
+        passenger.setDetail(detail);
+        passenger.setGender(form.getGender());
+        passenger.setBirthDate(form.getBirthDate());
+        passenger.setIdNumber(blankToNull(form.getIdNumber()));
+        passenger.setPhone(blankToNull(form.getPhone()));
+        passenger.setSingleRoom(form.isSingleRoom());
+        passenger.setNote(blankToNull(form.getNote()));
+        return passenger;
+    }
+
+    private String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
     }
 
     /** Lịch sử đặt tour của một khách hàng, mới nhất lên đầu. */
@@ -458,14 +535,46 @@ public class BookingService {
     }
 
     /**
-     * Sửa số khách của một dòng trong đơn.
+     * Kết quả một lần gọi {@link #updateDetailQuantity}: hoặc áp dụng luôn, hoặc
+     * còn thiếu tên cho một số hành khách <b>mới</b> - khi đó phương thức
+     * <b>chưa đổi gì cả</b> (kể cả số chỗ), gọi lại đúng nó kèm đủ tên
+     * ({@code newAdultNames}/{@code newChildNames}) là xong (mục 12.7).
+     */
+    public record PassengerNameGap(int adultsNeeded, int childrenNeeded) {
+        public boolean isEmpty() {
+            return adultsNeeded <= 0 && childrenNeeded <= 0;
+        }
+    }
+
+    /**
+     * Sửa số khách của một dòng trong đơn - giao diện tối thiểu cho quản trị
+     * viên giữ đúng bất biến "số hành khách theo loại luôn khớp
+     * {@code numAdults}/{@code numChildren}" (mục 12.7), kể cả khi đề bài bắt
+     * buộc chức năng sửa số lượng này phải còn dùng được:
+     *
+     * <ul>
+     *   <li><b>Tăng</b> số khách một loại &rArr; phải có đủ {@code newAdultNames}/
+     *       {@code newChildNames} cho đúng số người MỚI; thiếu tên thì
+     *       {@link PassengerNameGap#isEmpty()} trả {@code false} và <b>không có
+     *       gì được ghi</b> - controller hiện lại đúng bấy nhiêu ô nhập tên.</li>
+     *   <li><b>Giảm</b> số khách một loại &rArr; tự động bỏ bớt hành khách có id
+     *       LỚN NHẤT của đúng loại đó (người được thêm gần đây nhất) - đơn giản
+     *       hơn hẳn so với để quản trị viên tự chọn từng người mà vẫn đúng.</li>
+     * </ul>
+     *
+     * <p>Số lượng hành khách HIỆN CÓ được đếm trực tiếp trong CSDL (không dựa
+     * vào {@code detail.numAdults} cũ) nên phương thức này còn <b>tự chữa</b>
+     * được cả những dòng đã lệch bất biến từ trước (ví dụ đặt qua bản chưa có
+     * màn nhập hành khách): gọi lại với đúng số khách hiện tại sẽ được yêu cầu
+     * bổ sung đủ tên còn thiếu.</p>
      *
      * <p>Số chỗ được điều chỉnh theo <b>mức chênh lệch</b>, và tổng tiền của dòng
      * lẫn của cả đơn đều được tính lại - ba con số đó phải luôn khớp nhau, nếu
      * không thì báo cáo doanh thu và số chỗ còn trống đều sai.</p>
      */
     @Transactional
-    public Booking updateDetailQuantity(String code, Long detailId, int adults, int children) {
+    public PassengerNameGap updateDetailQuantity(String code, Long detailId, int adults, int children,
+                                                  List<String> newAdultNames, List<String> newChildNames) {
         Booking booking = bookingRepository.findDetailByCode(code)
                 .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
 
@@ -500,6 +609,23 @@ public class BookingService {
                 .findFirst()
                 .orElseThrow(() -> ResourceNotFoundException.of("dòng chi tiết", detailId));
 
+        long currentAdultPassengers = bookingPassengerRepository
+                .countByDetailIdAndPassengerType(detailId, PassengerType.ADULT);
+        long currentChildPassengers = bookingPassengerRepository
+                .countByDetailIdAndPassengerType(detailId, PassengerType.CHILD);
+        int adultGap = (int) (adults - currentAdultPassengers);
+        int childGap = (int) (children - currentChildPassengers);
+
+        List<String> cleanAdultNames = cleanNames(newAdultNames);
+        List<String> cleanChildNames = cleanNames(newChildNames);
+
+        // Tăng mà chưa đủ tên: KHÔNG áp dụng gì cả (kể cả số chỗ/thành tiền) -
+        // trả phần còn thiếu để controller hiện lại đúng bấy nhiêu ô nhập tên.
+        if ((adultGap > 0 && cleanAdultNames.size() < adultGap)
+                || (childGap > 0 && cleanChildNames.size() < childGap)) {
+            return new PassengerNameGap(Math.max(adultGap, 0), Math.max(childGap, 0));
+        }
+
         TourDeparture departure = detail.getDeparture();
         int delta = (adults + children) - detail.getTotalGuests();
 
@@ -525,9 +651,50 @@ public class BookingService {
         // chi tiết hiện hai con số vênh nhau (xem PaymentService.syncPendingAmount).
         paymentService.syncPendingAmount(booking);
 
-        log.info("Đơn {}: sửa dòng {} thành {} người lớn, {} trẻ em (chênh lệch {} chỗ)",
-                code, detailId, adults, children, delta);
-        return booking;
+        // Giữ bất biến (mục 12.7): đồng bộ danh sách hành khách theo đúng
+        // chênh lệch vừa tính - PHẢI chạy sau khi đã chắc chắn đủ chỗ/đủ tên,
+        // không thì một lần gọi lỗi giữa chừng có thể để lại hành khách "mồ côi".
+        syncPassengers(detail, PassengerType.ADULT, adultGap, cleanAdultNames);
+        syncPassengers(detail, PassengerType.CHILD, childGap, cleanChildNames);
+
+        log.info("Đơn {}: sửa dòng {} thành {} người lớn, {} trẻ em (chênh lệch {} chỗ, hành khách {}A/{}C)",
+                code, detailId, adults, children, delta, adultGap, childGap);
+        return new PassengerNameGap(0, 0);
+    }
+
+    private List<String> cleanNames(List<String> raw) {
+        if (raw == null) {
+            return List.of();
+        }
+        return raw.stream()
+                .filter(s -> s != null && !s.isBlank())
+                .map(String::trim)
+                .toList();
+    }
+
+    /**
+     * Đồng bộ hành khách một loại trong dòng chi tiết theo mức chênh lệch
+     * {@code gap} (dương = cần thêm bấy nhiêu người tên trong {@code namesForAdd},
+     * âm = cần bớt bấy nhiêu người - luôn chọn id LỚN NHẤT trước).
+     */
+    private void syncPassengers(BookingDetail detail, PassengerType type, int gap, List<String> namesForAdd) {
+        if (gap > 0) {
+            for (int i = 0; i < gap; i++) {
+                BookingPassenger p = new BookingPassenger(namesForAdd.get(i), type);
+                p.setDetail(detail);
+                detail.getPassengers().add(p);
+            }
+        } else if (gap < 0) {
+            List<BookingPassenger> ofType = new ArrayList<>(detail.getPassengers().stream()
+                    .filter(p -> p.getPassengerType() == type)
+                    .toList());
+            ofType.sort(Comparator.comparing(BookingPassenger::getId,
+                    Comparator.nullsLast(Comparator.naturalOrder())));
+            int toRemove = -gap;
+            for (int i = 0; i < toRemove && i < ofType.size(); i++) {
+                detail.getPassengers().remove(ofType.get(ofType.size() - 1 - i));
+            }
+        }
     }
 
     /**

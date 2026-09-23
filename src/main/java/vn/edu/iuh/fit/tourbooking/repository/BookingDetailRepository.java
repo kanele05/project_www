@@ -27,6 +27,15 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
     /** <b>Chặn xoá tour</b> khi bất kỳ đợt khởi hành nào của nó đã có khách đặt. */
     long countByDeparture_Tour_Id(Long tourId);
 
+    /**
+     * Số ĐƠN (không phải số dòng chi tiết) từng đặt một tour - dùng cho trang
+     * chi tiết riêng của quản trị viên (mục 12.8). {@code DISTINCT d.booking.id}
+     * vì một đơn có thể có hai dòng cùng trỏ một tour (hai đợt khác nhau) - đếm
+     * thẳng {@code COUNT(d)} sẽ ra số lớn hơn số đơn thực tế.
+     */
+    @Query("SELECT COUNT(DISTINCT d.booking.id) FROM BookingDetail d WHERE d.departure.tour.id = :tourId")
+    long countDistinctBookingsByTourId(@Param("tourId") Long tourId);
+
     List<BookingDetail> findByBookingId(Long bookingId);
 
     /**

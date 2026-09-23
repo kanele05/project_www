@@ -61,8 +61,15 @@
                                       th:text="${c.active} ? #{admin.status.active} : #{admin.status.inactive}">Trạng thái</span>
                             </td>
                             <td class="text-end text-nowrap">
+                                <!-- Mục 12.8: trang chi tiết CHỈ XEM, tách khỏi biểu mẫu sửa. -->
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/admin/categories/{id}/view(id=${c.id})}"
+                                   th:title="#{admin.action.view}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <a class="btn btn-sm btn-outline-primary"
-                                   th:href="@{/admin/categories/form(id=${c.id})}">
+                                   th:href="@{/admin/categories/form(id=${c.id})}"
+                                   th:title="#{admin.action.edit}">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form class="d-inline" method="post"

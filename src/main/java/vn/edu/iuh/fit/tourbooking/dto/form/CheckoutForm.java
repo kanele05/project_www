@@ -1,11 +1,15 @@
 package vn.edu.iuh.fit.tourbooking.dto.form;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import vn.edu.iuh.fit.tourbooking.validation.ValidPaymentMethod;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Biểu mẫu thông tin liên hệ khi đặt tour.
@@ -68,4 +72,15 @@ public class CheckoutForm {
      */
     @Size(max = 30, message = "{validation.coupon.size}")
     private String couponCode;
+
+    /**
+     * Danh sách hành khách của từng dòng giỏ hàng (mục 12.7 - UC007).
+     *
+     * <p>Được dựng sẵn ở {@code CheckoutController.checkoutPage} với đúng số ô
+     * theo {@code numAdults}/{@code numChildren} của từng dòng giỏ hàng, và
+     * <b>đối chiếu lại</b> với giỏ hàng hiện tại ngay khi biểu mẫu được gửi lên -
+     * không tin cấu trúc danh sách này tới từ trình duyệt.</p>
+     */
+    @Valid
+    private List<PassengerGroupForm> passengerGroups = new ArrayList<>();
 }

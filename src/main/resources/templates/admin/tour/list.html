@@ -97,6 +97,12 @@
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">
+                                <!-- Mục 12.8: trang chi tiết CHỈ XEM, tách khỏi biểu mẫu sửa. -->
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/admin/tours/{id}/view(id=${t.id})}"
+                                   th:title="#{admin.action.view}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <a class="btn btn-sm btn-outline-secondary"
                                    th:href="@{/admin/tours/{id}/departures(id=${t.id})}"
                                    th:title="#{admin.action.departures}">

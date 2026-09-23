@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.iuh.fit.tourbooking.dto.form.CheckoutForm;
+import vn.edu.iuh.fit.tourbooking.dto.form.PassengerForm;
+import vn.edu.iuh.fit.tourbooking.dto.form.PassengerGroupForm;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.entity.User;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
@@ -23,6 +25,10 @@ import vn.edu.iuh.fit.tourbooking.service.BookingService;
 import vn.edu.iuh.fit.tourbooking.service.CartService;
 import vn.edu.iuh.fit.tourbooking.service.UserService;
 import vn.edu.iuh.fit.tourbooking.session.Cart;
+import vn.edu.iuh.fit.tourbooking.session.CartItem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Thanh toán - biến giỏ hàng trong session thành một đơn hàng trong CSDL.
@@ -54,7 +60,12 @@ public class CheckoutController {
         // Điền sẵn thông tin từ hồ sơ cho đỡ phải gõ lại, nhưng vẫn cho sửa:
         // người đặt tour không nhất thiết là người đi.
         if (!model.containsAttribute("checkoutForm")) {
-            model.addAttribute("checkoutForm", prefill(principal.getId()));
+            CheckoutForm form = prefill(principal.getId());
+            // Mục 12.7: mỗi dòng giỏ có N người lớn + M trẻ em thì dựng sẵn đúng
+            // N+M ô hành khách - loại tự suy ra từ việc nằm trong danh sách adults
+            // hay children, người dùng không có ô nào để chọn loại.
+            form.setPassengerGroups(buildPassengerGroups(cart, form.getCustomerName(), form.getCustomerPhone()));
+            model.addAttribute("checkoutForm", form);
         }
         return "checkout/checkout";
     }
@@ -69,6 +80,14 @@ public class CheckoutController {
         if (cart.isEmpty()) {
             return "redirect:/cart";
         }
+        // Đối chiếu CẤU TRÚC danh sách hành khách gửi lên với giỏ hàng hiện tại
+        // (đang nằm trong session, phía máy chủ) - không tin số dòng/số ô mà
+        // trình duyệt gửi lên khớp với những gì trang GET đã dựng. Lỗi cấu trúc
+        // được gắn vào chính BindingResult (lỗi toàn cục) nên nhánh "còn lỗi"
+        // bên dưới xử lý luôn, biểu mẫu vẫn hiện lại với dữ liệu người dùng đã gõ.
+        // Chạy độc lập với @Valid ở trên: có lỗi @NotBlank tên khách KHÔNG che
+        // mất lỗi lệch số lượng, cả hai cùng hiện một lượt.
+        validatePassengerStructure(form, cart, binding);
         if (binding.hasErrors()) {
             return "checkout/checkout";
         }
@@ -118,5 +137,73 @@ public class CheckoutController {
         form.setCustomerAddress(user.getAddress());
         form.setPaymentMethod("Chuyển khoản ngân hàng");
         return form;
+    }
+
+    /**
+     * Dựng sẵn N+M ô hành khách cho từng dòng giỏ hàng (mục 12.7), theo đúng
+     * thứ tự lặp của {@code cart.getItems()} - thứ tự này ổn định vì {@link Cart}
+     * dùng {@code LinkedHashMap}, nên chỉ số trong danh sách khớp lại được giữa
+     * lần dựng biểu mẫu (GET) và lần đối chiếu lúc gửi (POST).
+     *
+     * <p>Hành khách đầu tiên của tour đầu tiên được điền sẵn tên và số điện
+     * thoại người đặt cho tiện - đúng yêu cầu "điền sẵn hành khách đầu tiên
+     * bằng thông tin người đặt".</p>
+     */
+    private List<PassengerGroupForm> buildPassengerGroups(Cart cart, String customerName, String customerPhone) {
+        List<PassengerGroupForm> groups = new ArrayList<>();
+        boolean first = true;
+        for (CartItem item : cart.getItems()) {
+            PassengerGroupForm group = new PassengerGroupForm();
+            group.setDepartureId(item.getDepartureId());
+            for (int i = 0; i < item.getNumAdults(); i++) {
+                PassengerForm p = new PassengerForm();
+                if (first) {
+                    p.setFullName(customerName);
+                    p.setPhone(customerPhone);
+                    first = false;
+                }
+                group.getAdults().add(p);
+            }
+            for (int i = 0; i < item.getNumChildren(); i++) {
+                group.getChildren().add(new PassengerForm());
+            }
+            groups.add(group);
+        }
+        return groups;
+    }
+
+    /**
+     * Đối chiếu {@code form.passengerGroups} với giỏ hàng hiện tại - đúng số
+     * dòng, đúng {@code departureId} theo đúng thứ tự, và số ô hành khách mỗi
+     * loại khớp {@code numAdults}/{@code numChildren} của dòng giỏ hàng đó.
+     *
+     * <p>Đây là lớp phòng thủ ở tầng controller (giữ được dữ liệu đã nhập khi
+     * sai) - {@link vn.edu.iuh.fit.tourbooking.service.BookingService#placeOrder}
+     * vẫn kiểm tra lại lần nữa trước khi ghi CSDL, không tin bước này đã chặn
+     * hết mọi trường hợp (ví dụ giỏ hàng đổi ngay giữa lúc gửi biểu mẫu).</p>
+     */
+    private void validatePassengerStructure(CheckoutForm form, Cart cart, BindingResult binding) {
+        List<PassengerGroupForm> groups = form.getPassengerGroups();
+        List<CartItem> items = new ArrayList<>(cart.getItems());
+
+        if (groups == null || groups.size() != items.size()) {
+            binding.reject("error.checkout.passengerMismatch");
+            return;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            CartItem item = items.get(i);
+            PassengerGroupForm group = groups.get(i);
+            if (group == null || group.getDepartureId() == null
+                    || !group.getDepartureId().equals(item.getDepartureId())) {
+                binding.reject("error.checkout.passengerMismatch");
+                return;
+            }
+            int adultCount = group.getAdults() == null ? 0 : group.getAdults().size();
+            int childCount = group.getChildren() == null ? 0 : group.getChildren().size();
+            if (adultCount != item.getNumAdults() || childCount != item.getNumChildren()) {
+                binding.reject("error.checkout.passengerMismatch");
+                return;
+            }
+        }
     }
 }

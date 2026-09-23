@@ -42,6 +42,15 @@ public class AdminCategoryController {
         return "admin/category/list";
     }
 
+    /**
+     * Trang chi tiết CHỈ XEM (mục 12.8): danh mục kèm danh sách tour thuộc nó.
+     */
+    @GetMapping("/{id}/view")
+    public String view(@PathVariable Long id, Model model) {
+        model.addAttribute("detail", categoryService.adminDetail(id));
+        return "admin/category/detail";
+    }
+
     @GetMapping("/form")
     public String form(@RequestParam(required = false) Long id, Model model) {
         if (!model.containsAttribute("categoryForm")) {

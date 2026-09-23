@@ -55,6 +55,17 @@ public class AdminTourController {
      * <p>Hai màn hình gần như giống hệt nhau; tách làm hai khuôn mẫu chỉ tạo ra
      * hai bản sao phải sửa song song mỗi lần thêm một trường mới.</p>
      */
+    /**
+     * Trang chi tiết CHỈ XEM (mục 12.8 - đề bài đòi "xem chi tiết từng tour/loại").
+     * Tách khỏi {@link #form}: không có ô nhập nào, chỉ hiện thông tin, ảnh,
+     * lịch trình, các đợt khởi hành (số chỗ còn/đã bán), số đơn và số đánh giá.
+     */
+    @GetMapping("/{id}/view")
+    public String view(@PathVariable Long id, Model model) {
+        model.addAttribute("detail", tourService.adminDetail(id));
+        return "admin/tour/detail";
+    }
+
     @GetMapping("/form")
     public String form(@RequestParam(required = false) Long id, Model model) {
         if (!model.containsAttribute("tourForm")) {
