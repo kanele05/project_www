@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -63,6 +64,27 @@ public class GlobalExceptionHandler {
         log.warn("Tham số không hợp lệ tại {}: {}", request.getRequestURI(), e.getMessage());
 
         ra.addFlashAttribute("errorMessage", messages.get("error.request.invalidParam"));
+        return "redirect:" + SafeRedirect.refererPath(request, "/");
+    }
+
+    /**
+     * Lưới an toàn cho khoá lạc quan ({@code @Version}, xem {@code TourDeparture}).
+     *
+     * <p>Kịch bản thật (1.18): quản trị viên đang sửa một đợt khởi hành đúng lúc có
+     * khách đặt tour thành công cho đợt đó (hoặc một quản trị viên khác cũng đang
+     * sửa) - phiên bản trong tay quản trị viên đã cũ hơn bản mới nhất dưới CSDL,
+     * Hibernate ném {@link ObjectOptimisticLockingFailureException} khi cố ghi đè.
+     * Không có lưới này thì người dùng nhận thẳng trang 500 dù họ không thao tác
+     * sai gì cả - chỉ là chậm chân hơn người khác một chút. Bắt lại thành một câu
+     * thân thiện, mời họ tải lại và thử lại.</p>
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public String handleOptimisticLock(ObjectOptimisticLockingFailureException e,
+                                       HttpServletRequest request,
+                                       RedirectAttributes ra) {
+        log.warn("Khoá lạc quan xung đột tại {}: {}", request.getRequestURI(), e.getMessage());
+
+        ra.addFlashAttribute("errorMessage", messages.get("error.request.dataChanged"));
         return "redirect:" + SafeRedirect.refererPath(request, "/");
     }
 }

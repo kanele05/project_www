@@ -63,6 +63,7 @@ public class AdminUserController {
     @PostMapping("/save")
     public String save(@Valid @ModelAttribute("userForm") AdminUserForm form,
                        BindingResult binding,
+                       @AuthenticationPrincipal CustomUserDetails principal,
                        Model model,
                        RedirectAttributes ra) {
         if (binding.hasErrors()) {
@@ -70,14 +71,19 @@ public class AdminUserController {
             return "admin/user/form";
         }
         try {
-            userService.saveFromAdmin(form);
+            userService.saveFromAdmin(form, principal.getId());
             ra.addFlashAttribute("successMessage",
                     messages.get(form.isNew() ? "admin.user.created" : "admin.user.updated",
                             form.getEmail()));
             return "redirect:/admin/users";
 
         } catch (BusinessRuleException e) {
-            binding.rejectValue("newPassword", "error", messages.of(e));
+            // Lỗi mật khẩu gắn vào đúng ô đó; lỗi "tự hạ quyền / khoá chính mình"
+            // hay "hạ quyền admin cuối cùng" gắn vào ô vai trò, vì đó là trường
+            // người dùng cần sửa lại để đi tiếp.
+            String field = e.getMessageKey().startsWith("error.user.passwordRequired")
+                    ? "newPassword" : "role";
+            binding.rejectValue(field, "error", messages.of(e));
             model.addAttribute("roles", Role.values());
             return "admin/user/form";
         }

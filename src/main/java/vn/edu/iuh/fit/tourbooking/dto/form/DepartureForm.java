@@ -1,7 +1,6 @@
 package vn.edu.iuh.fit.tourbooking.dto.form;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,6 +16,15 @@ import java.time.LocalDate;
  * <p>{@code @DateTimeFormat(iso = DATE)} là bắt buộc: ô {@code <input type="date">}
  * gửi lên chuỗi dạng {@code 2026-08-22}, không có chú thích này Spring sẽ không
  * biết cách đổi chuỗi đó thành {@code LocalDate}.</p>
+ *
+ * <p><b>Cố ý KHÔNG có {@code @Future} trên {@link #departureDate}.</b> Trước bản
+ * vá này nó có, và hậu quả là một đợt khởi hành đã qua ngày (còn nguyên trong hệ
+ * thống vì đã có khách đặt) không sửa được <b>bất cứ điều gì</b> nữa, kể cả chỉ
+ * để chỉnh giá hay số chỗ - {@code @Valid} chặn ngay từ vòng bind tham số, trước
+ * khi thân {@code AdminDepartureController.save} kịp chạy. Ràng buộc "phải ở
+ * tương lai" giờ chuyển xuống {@code DepartureService.save}, nơi biết được đây là
+ * <b>tạo mới</b> hay <b>sửa mà không đổi ngày</b> để chỉ áp dụng đúng lúc cần: tạo
+ * mới, hoặc sửa mà đổi sang một ngày khác.</p>
  */
 @Data
 public class DepartureForm {
@@ -27,7 +35,6 @@ public class DepartureForm {
     private Long tourId;
 
     @NotNull(message = "{validation.departure.departureDate.required}")
-    @Future(message = "{validation.departure.departureDate.future}")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate departureDate;
 

@@ -99,6 +99,13 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+      # JavaMail KHÔNG có timeout mặc định - ba thuộc tính dưới đây thiếu thì một
+      # máy chủ SMTP không tới được (mạng chặn cổng 587, DNS treo...) làm luồng
+      # gửi thư đợi VÔ HẠN. Thư được gửi CÙNG luồng với @TransactionalEventListener
+      # (không có hàng đợi/worker riêng) nên request của người dùng bị treo theo.
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 # =============================================================================
 #  Cấu hình riêng của ứng dụng (ánh xạ vào lớp AppProperties)
@@ -139,3 +146,10 @@ server:
 logging:
   level:
     vn.edu.iuh.fit.tourbooking: DEBUG
+  # Không khai báo thì Logback ghi console theo bảng mã mặc định của hệ điều
+  # hành - trên Windows là Cp1252/Cp1258, biến hết dấu tiếng Việt trong log
+  # (kể cả thư chào mừng/xác nhận in ra "chế độ console") thành dấu hỏi "?".
+  # Ép UTF-8 tường minh để nhật ký giữ đúng dấu, bất kể mã trang của terminal.
+  charset:
+    console: UTF-8
+    file: UTF-8

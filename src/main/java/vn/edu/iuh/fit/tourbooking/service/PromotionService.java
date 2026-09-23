@@ -173,6 +173,39 @@ public class PromotionService {
         return usage;
     }
 
+    /**
+     * Tính lại số tiền giảm của một đơn đang dùng mã, sau khi số khách của một
+     * dòng bị sửa (xem {@code BookingService.updateDetailQuantity}).
+     *
+     * <p>Trước bản vá này, sửa số khách chỉ gọi lại {@code Booking.recalculateTotal()}
+     * - phương thức đó chỉ <b>kẹp trần</b> {@code discountAmount} không cho vượt
+     * quá tiền hàng mới, chứ không tính lại số tiền giảm theo đúng luật của
+     * {@link Promotion} (phần trăm nhân tiền hàng rồi kẹp trần {@code maxDiscount},
+     * hay kiểm lại {@code minOrderAmount}). Hậu quả: giảm số khách để tiền hàng
+     * tụt xuống dưới mức tối thiểu của mã vẫn giữ nguyên số tiền đã giảm lúc đặt -
+     * khách được giảm giá cho một đơn lẽ ra không đủ điều kiện áp mã nữa.</p>
+     *
+     * <p>Không làm gì nếu đơn không dùng mã nào ({@code booking.getPromotion() == null}).
+     * Cập nhật luôn dòng {@code coupon_usages} tương ứng cho khớp - đây là bản ghi
+     * "đã dùng bao nhiêu" hiển thị ở màn quản trị mã khuyến mãi, để nó không đứng
+     * yên với con số cũ trong khi đơn đã đổi.</p>
+     */
+    @Transactional
+    public void recalculateDiscount(Booking booking) {
+        Promotion promotion = booking.getPromotion();
+        if (promotion == null) {
+            return;
+        }
+        BigDecimal newDiscount = promotion.calculateDiscount(booking.getSubtotalAmount());
+        booking.setDiscountAmount(newDiscount);
+
+        couponUsageRepository.findByBookingId(booking.getId())
+                .ifPresent(usage -> usage.setDiscountAmount(newDiscount));
+
+        log.info("Đơn {}: tính lại tiền giảm theo mã {} - còn {} đ",
+                booking.getCode(), promotion.getCode(), newDiscount);
+    }
+
     // =====================================================================
     //  Phần dành cho khu vực quản trị (UC019)
     // =====================================================================

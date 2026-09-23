@@ -85,6 +85,10 @@
                                                th:field="*{maxDiscount}" th:errorclass="is-invalid">
                                         <div class="invalid-feedback" th:errors="*{maxDiscount}">Lỗi</div>
                                         <div class="form-text" th:text="#{admin.promotion.maxDiscount.hint}">Gợi ý</div>
+                                        <!--/* @AssertTrue isMaxDiscountValid gắn lỗi vào "maxDiscountValid" -
+                                             cùng khuôn với percentValueValid/periodValid ở trên. */-->
+                                        <div class="text-danger small mt-1" th:if="${#fields.hasErrors('maxDiscountValid')}"
+                                             th:errors="*{maxDiscountValid}">Lỗi trần giảm giá</div>
                                     </div>
 
                                     <div class="col-md-4">

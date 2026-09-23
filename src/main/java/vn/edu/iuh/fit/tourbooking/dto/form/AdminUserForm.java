@@ -53,8 +53,17 @@ public class AdminUserForm {
      * Mật khẩu mới. Ràng buộc độ dài chỉ áp dụng khi có nhập, việc "bắt buộc khi
      * tạo mới" do tầng service kiểm tra vì nó phụ thuộc vào {@code id} có null
      * hay không.
+     *
+     * <p><b>Cố ý dùng {@code @Pattern} thay vì {@code @Size}.</b> {@code @Size}
+     * không coi chuỗi rỗng là hợp lệ theo nghĩa "bỏ qua ràng buộc" - nó vẫn đo độ
+     * dài của chuỗi rỗng (0) và so với {@code min=6} nên luôn thất bại. Hậu quả:
+     * ô để trống lúc sửa tài khoản (đúng ý "giữ nguyên mật khẩu cũ" ghi ở Javadoc
+     * lớp) bị validator chặn ngay từ vòng {@code @Valid}, quản trị viên không sửa
+     * được bất cứ gì trên tài khoản nếu không đồng thời đặt lại mật khẩu.
+     * {@code ^$|.{6,50}} chấp nhận đúng hai trường hợp: rỗng hẳn, hoặc từ 6-50 ký
+     * tự bất kỳ.</p>
      */
-    @Size(min = 6, max = 50, message = "{validation.password.size}")
+    @Pattern(regexp = "^$|.{6,50}", message = "{validation.password.size}")
     private String newPassword;
 
     public boolean isNew() {

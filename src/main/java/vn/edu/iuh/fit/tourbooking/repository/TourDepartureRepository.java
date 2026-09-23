@@ -41,12 +41,20 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
     List<TourDeparture> findBookable(@Param("tourId") Long tourId, @Param("today") LocalDate today);
 
     /**
-     * Đợt gần nhất còn chỗ. Nút "Đặt tour" ở trang danh sách không cho chọn ngày,
-     * nên giỏ hàng tự chọn giúp khách đợt sớm nhất; ở trang chi tiết khách vẫn
-     * đổi được sang đợt khác.
+     * Đợt gần nhất còn <b>đủ</b> chỗ cho {@code minSeats} khách. Nút "Đặt tour" ở
+     * trang danh sách không cho chọn ngày, nên giỏ hàng tự chọn giúp khách đợt sớm
+     * nhất; ở trang chi tiết khách vẫn đổi được sang đợt khác.
+     *
+     * <p><b>Lọc theo {@code minSeats} chứ không chỉ lấy đợt gần nhất rồi để
+     * {@code CartService} tự báo lỗi.</b> Trước bản vá này, khách xin 10 chỗ mà
+     * đợt gần nhất chỉ còn 3 sẽ nhận lỗi "không đủ chỗ" dù đợt kế tiếp còn thừa
+     * chỗ - đúng ra phải tự động bỏ qua đợt không đủ và chọn đợt gần nhất mà thực
+     * sự đặt được.</p>
      */
-    default Optional<TourDeparture> findNextBookable(Long tourId) {
-        return findBookable(tourId, LocalDate.now()).stream().findFirst();
+    default Optional<TourDeparture> findNextBookable(Long tourId, int minSeats) {
+        return findBookable(tourId, LocalDate.now()).stream()
+                .filter(d -> d.hasEnoughSeats(minSeats))
+                .findFirst();
     }
 
     /**

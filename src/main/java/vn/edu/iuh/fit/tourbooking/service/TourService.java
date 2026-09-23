@@ -111,8 +111,18 @@ public class TourService {
      */
     @Transactional(readOnly = true)
     public Tour findDetail(Long id) {
-        return tourRepository.findDetailById(id)
+        Tour tour = tourRepository.findDetailById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("tour", id));
+        // Nhất quán với trang công khai /tours/{id} (xem TourController dòng
+        // "!tour.isActive() && !isAdmin"): tour ngừng bán không còn được xem là
+        // "tồn tại" đối với khách vãng lai, cả ở trang web lẫn ở web service. Trước
+        // bản vá này, GET /api/tours/{id} vẫn trả 200 kèm đầy đủ dữ liệu của một
+        // tour đã ngừng bán trong khi trang web cùng id lại trả 404 - hai đường vào
+        // cùng một dữ liệu cho hai câu trả lời khác nhau.
+        if (!tour.isActive()) {
+            throw ResourceNotFoundException.of("tour", id);
+        }
+        return tour;
     }
 
     /** Ném {@link ResourceNotFoundException} nếu không có tour nào mang mã số này. */

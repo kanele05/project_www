@@ -83,6 +83,20 @@ public class PromotionForm {
     }
 
     /**
+     * {@code maxDiscount} để trống nghĩa là không chặn trần (xem trường phía
+     * trên) nên không thể gắn {@code @DecimalMin} trực tiếp lên trường - annotation
+     * đó không phân biệt được "chưa nhập" với "nhập số âm". Thiếu ràng buộc này,
+     * nhập {@code 0} hoặc số âm khiến {@code Promotion.calculateDiscount} luôn trả
+     * về một số {@code <= 0}, và {@code PromotionService.check} kết luận sai lý do
+     * là "chưa đạt giá trị đơn tối thiểu" ({@code error.coupon.minOrder}) cho MỌI
+     * lần áp mã - kể cả đơn thừa sức đạt {@code minOrderAmount}.
+     */
+    @AssertTrue(message = "{validation.promotion.maxDiscount.positive}")
+    public boolean isMaxDiscountValid() {
+        return maxDiscount == null || maxDiscount.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    /**
      * {@code discountValue} chỉ có {@code @DecimalMin("0.01")}, không có trần -
      * loại {@link DiscountType#PERCENT} với giá trị {@code 200} từng lọt qua,
      * khiến {@code Promotion.calculateDiscount} ra {@code orderAmount * 2} rồi bị

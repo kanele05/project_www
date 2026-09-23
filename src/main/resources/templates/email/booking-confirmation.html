@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!--
+<!--/*
   Mẫu thư xác nhận đặt tour.
 
   Viết bằng bảng và CSS nội tuyến chứ không dùng Bootstrap: các phần mềm đọc thư
   (nhất là Outlook) không tải file CSS bên ngoài và hỗ trợ flexbox/grid rất kém.
   Đây là lý do bố cục ở đây trông cũ kỹ hơn hẳn phần còn lại của website.
--->
+*/-->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,7 @@
        style="max-width:640px; margin:0 auto; background-color:#ffffff;
               border-radius:8px; overflow:hidden;">
 
-    <!-- Tiêu đề -->
+    <!--/* Tiêu đề */-->
     <tr>
         <td style="background-color:#0d6efd; color:#ffffff; padding:20px 24px;">
             <h1 style="margin:0; font-size:20px;">IUH Tour Booking</h1>
@@ -33,7 +33,7 @@
             <p style="margin:0 0 20px;"
                th:text="#{email.booking.intro}">Cảm ơn bạn đã đặt tour.</p>
 
-            <!-- Thông tin đơn -->
+            <!--/* Thông tin đơn */-->
             <table role="presentation" cellpadding="8" cellspacing="0" width="100%"
                    style="background-color:#f8f9fa; border-radius:6px; margin-bottom:20px;">
                 <tr>
@@ -51,7 +51,7 @@
                 </tr>
             </table>
 
-            <!-- Các tour đã đặt -->
+            <!--/* Các tour đã đặt */-->
             <table role="presentation" cellpadding="8" cellspacing="0" width="100%"
                    style="border-collapse:collapse; margin-bottom:20px;">
                 <tr style="background-color:#e9ecef;">
@@ -88,7 +88,7 @@
                 </tr>
             </table>
 
-            <!-- Thông tin liên hệ -->
+            <!--/* Thông tin liên hệ */-->
             <p style="margin:0 0 6px; font-weight:bold;"
                th:text="#{email.booking.contact}">Thông tin liên hệ</p>
             <p style="margin:0 0 20px; color:#6c757d; font-size:14px;">

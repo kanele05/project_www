@@ -85,9 +85,17 @@ public class AdminTourController {
             return "redirect:/admin/tours";
 
         } catch (BusinessRuleException e) {
-            // Ví dụ mã tour bị trùng: gắn lỗi vào đúng ô đó rồi trả lại biểu mẫu
-            // kèm nguyên dữ liệu người dùng vừa nhập.
-            binding.rejectValue("code", "error", messages.of(e));
+            // Trước bản vá này, MỌI BusinessRuleException từ tourService.save đều
+            // bị gắn cứng vào ô "Mã tour" - kể cả lỗi ảnh sai định dạng/dung lượng
+            // (error.upload.*), khiến người dùng đọc thấy "Chỉ chấp nhận jpg, png,
+            // webp" ngay dưới ô mã tour, chẳng liên quan gì tới trường đó. Phân
+            // nhánh theo tiền tố khoá thông điệp: lỗi ảnh gắn vào đúng ô ảnh đại
+            // diện, còn lại (mã tour trùng...) mới gắn vào "code" như cũ.
+            if (e.getMessageKey() != null && e.getMessageKey().startsWith("error.upload.")) {
+                binding.rejectValue("thumbnailFile", "error", messages.of(e));
+            } else {
+                binding.rejectValue("code", "error", messages.of(e));
+            }
             return backToForm(form, model);
         }
     }

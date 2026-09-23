@@ -2,9 +2,12 @@ package vn.edu.iuh.fit.tourbooking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import vn.edu.iuh.fit.tourbooking.repository.CouponUsageRepository;
 import vn.edu.iuh.fit.tourbooking.repository.PasswordResetTokenRepository;
 import vn.edu.iuh.fit.tourbooking.repository.ReviewRepository;
 import vn.edu.iuh.fit.tourbooking.repository.UserRepository;
+import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
 
 /**
  * Nghiệp vụ tài khoản người dùng, dùng chung cho cả người dùng tự thao tác lẫn
@@ -43,6 +47,8 @@ public class UserService {
     private final ContactMessageRepository contactMessageRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
+    private final SessionRegistry sessionRegistry;
 
     /**
      * Đăng ký tài khoản mới.
@@ -71,7 +77,22 @@ public class UserService {
 
         User saved = userRepository.save(user);
         log.info("Đã đăng ký tài khoản mới: {}", saved.getEmail());
+
+        // Phát sự kiện thay vì gọi thẳng emailService ở đây: nếu giao dịch này bị
+        // roll back (ví dụ ràng buộc khác ném lỗi sau dòng save), thư chào mừng
+        // không được phép đã gửi đi cho một tài khoản chưa từng tồn tại. Nghe ở
+        // UserEmailListener bằng @TransactionalEventListener(AFTER_COMMIT).
+        eventPublisher.publishEvent(new UserRegisteredEvent(saved.getFullName(), saved.getEmail()));
         return saved;
+    }
+
+    /**
+     * Sự kiện "đã đăng ký tài khoản", dùng để gửi thư chào mừng ngoài giao dịch.
+     *
+     * <p>Mang theo đúng hai chuỗi thay vì cả entity {@code User}: xem lý do đầy
+     * đủ ở {@link vn.edu.iuh.fit.tourbooking.service.EmailService#sendWelcomeEmail}.</p>
+     */
+    public record UserRegisteredEvent(String fullName, String email) {
     }
 
     @Transactional(readOnly = true)
@@ -124,8 +145,21 @@ public class UserService {
     @Transactional
     public User updateProfile(Long userId, ProfileForm form) {
         User user = getById(userId);
+
+        // Chốt chặn thứ hai cho tính duy nhất của email, độc lập với @UniqueEmail
+        // ở tầng biểu mẫu. @UniqueEmail đọc excludeIdField NGAY LÚC BIND tham số
+        // request - nếu id bị ai đó gửi kèm một giá trị khác userId (xem
+        // AccountController @InitBinder chặn field "id"), phép kiểm ở biểu mẫu có
+        // thể loại trừ nhầm bản ghi. Kiểm lại ở đây, luôn dùng userId thật của
+        // phiên đăng nhập, để trường hợp xấu nhất vẫn dừng lại bằng một câu tiếng
+        // Việt thay vì một lỗi UNIQUE 500 từ CSDL.
+        String normalizedEmail = form.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmailAndIdNot(normalizedEmail, userId)) {
+            throw new BusinessRuleException("error.user.emailExists", normalizedEmail);
+        }
+
         user.setFullName(form.getFullName().trim());
-        user.setEmail(form.getEmail().trim().toLowerCase());
+        user.setEmail(normalizedEmail);
         user.setPhone(form.getPhone());
         user.setAddress(form.getAddress());
         return user;   // trong giao dịch nên Hibernate tự ghi lại khi commit
@@ -167,9 +201,19 @@ public class UserService {
      * <p>Ô mật khẩu để trống khi sửa nghĩa là <b>giữ nguyên</b> mật khẩu cũ.
      * Biểu mẫu không bao giờ mang chuỗi băm cũ lên trình duyệt (xem
      * {@code AdminUserForm}), nên cũng không có gì để vô tình ghi đè bằng rác.</p>
+     *
+     * <p><b>{@code currentUserId} là tài khoản quản trị viên đang thao tác.</b>
+     * Trước bản vá này, màn "sửa tài khoản" gán thẳng {@code role}/{@code enabled}
+     * từ biểu mẫu mà không hề đi qua hai phép chặn vốn đã có sẵn ở {@link #delete}
+     * và {@link #toggleEnabled} - một quản trị viên tự sửa hồ sơ của chính mình
+     * thành {@code CUSTOMER} kèm bỏ tick "Kích hoạt" là tự khoá mình ra khỏi khu
+     * vực quản trị ngay giữa lúc đang làm việc, hoặc hạ nốt quản trị viên đang bật
+     * cuối cùng xuống thường thì không còn ai vào được {@code /admin} nữa. Chỉ áp
+     * dụng khi <b>sửa</b> ({@code !creating}); tạo mới không thể tự nhắm vào chính
+     * mình vì tài khoản chưa tồn tại.</p>
      */
     @Transactional
-    public User saveFromAdmin(AdminUserForm form) {
+    public User saveFromAdmin(AdminUserForm form, Long currentUserId) {
         boolean creating = form.isNew();
 
         if (creating && (form.getNewPassword() == null || form.getNewPassword().isBlank())) {
@@ -177,6 +221,24 @@ public class UserService {
         }
 
         User user = creating ? new User() : getById(form.getId());
+        boolean roleOrEnabledChanged = false;
+
+        if (!creating) {
+            boolean willDemoteOrLock = form.getRole() != Role.ADMIN || !form.isEnabled();
+
+            if (willDemoteOrLock && user.getId().equals(currentUserId)) {
+                throw new BusinessRuleException("error.user.edit.selfDemote");
+            }
+
+            // Đang là admin bật, và biểu mẫu định hạ quyền hoặc khoá -> phải chắc
+            // chắn còn ít nhất một quản trị viên khác đang bật sau thao tác này.
+            if (user.isAdmin() && user.isEnabled() && willDemoteOrLock
+                    && userRepository.countByRoleAndEnabledTrue(Role.ADMIN) <= 1) {
+                throw new BusinessRuleException("error.user.edit.lastAdmin");
+            }
+
+            roleOrEnabledChanged = user.getRole() != form.getRole() || user.isEnabled() != form.isEnabled();
+        }
 
         user.setFullName(form.getFullName().trim());
         user.setEmail(form.getEmail().trim().toLowerCase());
@@ -191,6 +253,14 @@ public class UserService {
 
         User saved = userRepository.save(user);
         log.info("{} tài khoản {}", creating ? "Đã thêm" : "Đã cập nhật", saved.getEmail());
+
+        // 1.8: vai trò hoặc trạng thái bật/tắt vừa đổi - phiên đăng nhập cũ của
+        // người này (nếu có) đang cầm một CustomUserDetails với vai trò/trạng thái
+        // CŨ trong SecurityContext, sẽ còn hiệu lực cho tới khi phiên tự hết hạn
+        // nếu không chủ động đánh dấu expired ngay tại đây.
+        if (roleOrEnabledChanged) {
+            expireSessionsOf(saved.getId());
+        }
         return saved;
     }
 
@@ -276,6 +346,31 @@ public class UserService {
         }
 
         user.setEnabled(!user.isEnabled());
+
+        // 1.8: chỉ cần đá phiên khi vừa KHOÁ (chuyển sang !enabled) - mở lại tài
+        // khoản không phải một tình huống cần buộc đăng xuất khỏi đâu cả, và
+        // người bị khoá lúc trước gần như chắc chắn đã bị đá ra từ lần khoá đó rồi.
+        if (!user.isEnabled()) {
+            expireSessionsOf(user.getId());
+        }
         return user.isEnabled();
+    }
+
+    /**
+     * Đánh dấu mọi phiên đang mở của một người dùng là {@code expired} trong
+     * {@link SessionRegistry} (1.8).
+     *
+     * <p>{@code ConcurrentSessionFilter} (đăng ký tự động nhờ khai báo
+     * {@code sessionConcurrency} ở {@code SecurityConfig}) kiểm tra cờ này ở MỖI
+     * request tiếp theo của phiên đó - khớp thì tự invalidate phiên và đưa người
+     * dùng về {@code /login?expired}. Không đụng gì tới phiên của người khác:
+     * {@link CustomUserDetails#getId()} là khoá so khớp duy nhất.</p>
+     */
+    private void expireSessionsOf(Long userId) {
+        sessionRegistry.getAllPrincipals().stream()
+                .filter(principal -> principal instanceof CustomUserDetails cud
+                        && cud.getId().equals(userId))
+                .flatMap(principal -> sessionRegistry.getAllSessions(principal, false).stream())
+                .forEach(SessionInformation::expireNow);
     }
 }

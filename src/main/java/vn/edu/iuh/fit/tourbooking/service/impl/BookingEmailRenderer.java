@@ -52,7 +52,10 @@ public class BookingEmailRenderer {
         sb.append("Khách hàng  : ").append(booking.getCustomerName())
                 .append(" <").append(booking.getCustomerEmail()).append(">\n");
         sb.append("Điện thoại  : ").append(booking.getCustomerPhone()).append('\n');
-        sb.append("Trạng thái  : ").append(booking.getStatus().getDisplayName()).append('\n');
+        // messages.get(...getMessageKey()) chứ không phải getDisplayName(): xem
+        // lý do ở PaymentService.markPaid - getDisplayName() luôn trả tiếng Việt
+        // viết cứng trong enum, bất kể ngôn ngữ hiện tại của LocaleContextHolder.
+        sb.append("Trạng thái  : ").append(messages.get(booking.getStatus().getMessageKey())).append('\n');
         booking.getDetails().forEach(d ->
                 sb.append("  - ").append(d.getTourNameSnapshot())
                         .append(" | khởi hành ").append(d.getDeparture().getDepartureDate())

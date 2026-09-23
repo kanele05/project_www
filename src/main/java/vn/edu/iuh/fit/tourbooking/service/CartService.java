@@ -74,7 +74,11 @@ public class CartService {
         if (!tourRepository.existsById(tourId)) {
             throw new BusinessRuleException("error.cart.tourNotFound", tourId);
         }
-        TourDeparture departure = departureRepository.findNextBookable(tourId)
+        validateGuestNumbers(adults, children);
+        // minSeats = adults + children: đợt gần nhất mà không đủ chỗ cho đúng số
+        // khách khách đang xin thì bỏ qua, tìm tiếp đợt kế - xem Javadoc
+        // TourDepartureRepository.findNextBookable.
+        TourDeparture departure = departureRepository.findNextBookable(tourId, adults + children)
                 .orElseThrow(() -> new BusinessRuleException("error.cart.noDeparture"));
         return addByDeparture(session, departure.getId(), adults, children);
     }
@@ -101,6 +105,14 @@ public class CartService {
         CartItem existing = cart.getItem(departureId);
         int alreadyInCart = existing == null ? 0 : existing.getQuantity();
         int wanted = alreadyInCart + adults + children;
+
+        // validateGuestNumbers() ở đầu phương thức chỉ kiểm mỗi lượt thêm mới, KHÔNG
+        // biết gì về số khách đã có sẵn trong giỏ - hai lượt thêm 20 + 20 khách (mỗi
+        // lượt tự nó hợp lệ, dưới trần) cộng dồn thành một dòng 40 khách, vượt hẳn
+        // MAX_GUESTS_PER_ITEM. Phải kiểm lại trần một lần nữa trên tổng SAU khi cộng dồn.
+        if (wanted > MAX_GUESTS_PER_ITEM) {
+            throw new BusinessRuleException("error.cart.tooManyGuests", MAX_GUESTS_PER_ITEM);
+        }
         requireEnoughSeats(departure, wanted);
 
         cart.addOrMerge(new CartItem(departure, adults, children));

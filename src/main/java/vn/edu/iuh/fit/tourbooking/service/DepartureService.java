@@ -13,6 +13,7 @@ import vn.edu.iuh.fit.tourbooking.repository.BookingDetailRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourDepartureRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -70,10 +71,22 @@ public class DepartureService {
 
         TourDeparture departure;
         if (creating) {
+            // "Phải ở tương lai" chỉ bắt buộc lúc TẠO MỚI, hoặc lúc SỬA MÀ ĐỔI
+            // NGÀY (nhánh else bên dưới) - xem Javadoc DepartureForm.departureDate.
+            // Tạo mới thì chắc chắn chưa có khách nào, không có lý do gì cho ngày
+            // khởi hành nằm ở quá khứ.
+            requireFutureDate(form.getDepartureDate());
             departure = new TourDeparture(tour, form.getDepartureDate(), form.getReturnDate(),
                     form.getTotalSeats(), form.getPriceAdult(), form.getPriceChild());
         } else {
             departure = getOfTour(tourId, form.getId());
+
+            if (!form.getDepartureDate().equals(departure.getDepartureDate())) {
+                // Đổi sang một ngày khác thì ngày mới đó vẫn phải ở tương lai. Ngược
+                // lại - giữ nguyên ngày cũ, chỉ sửa giá/số chỗ/trạng thái của một đợt
+                // đã qua ngày (vẫn cần sửa được vì đã có khách đặt) - thì bỏ qua.
+                requireFutureDate(form.getDepartureDate());
+            }
 
             int soldSeats = departure.getBookedSeats();
             if (form.getTotalSeats() < soldSeats) {
@@ -118,6 +131,12 @@ public class DepartureService {
         TourDeparture departure = getOfTour(tourId, departureId);
         departure.setActive(!departure.isActive());
         return departure.isActive();
+    }
+
+    private void requireFutureDate(LocalDate departureDate) {
+        if (!departureDate.isAfter(LocalDate.now())) {
+            throw new BusinessRuleException("error.departure.departureDate.future");
+        }
     }
 
     private void requireUniqueDate(Long tourId, DepartureForm form) {

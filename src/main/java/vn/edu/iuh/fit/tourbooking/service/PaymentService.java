@@ -113,10 +113,37 @@ public class PaymentService {
                 .filter(p -> p.getStatus() == PaymentStatus.PENDING)
                 .forEach(p -> {
                     p.setStatus(PaymentStatus.FAILED);
-                    p.setNote("Đơn đã huỷ - khoản thu không còn hiệu lực.");
+                    p.setNote(messages.get("payment.note.cancelledByBookingCancel"));
                     log.info("Đơn {}: đóng khoản thu PENDING id={} do đơn bị huỷ",
                             booking.getCode(), p.getId());
                 });
+    }
+
+    /**
+     * Sinh lại một khoản thu {@code PENDING} khi một đơn đã huỷ được khôi phục.
+     *
+     * <p>Trước bản vá này, {@code BookingService.updateStatus} chỉ giữ lại chỗ
+     * lúc khôi phục mà không đụng gì tới {@link Payment}: khoản {@code PENDING}
+     * gốc đã bị {@link #cancelPendingForBooking} chuyển sang {@code FAILED} lúc
+     * huỷ, nên đơn khôi phục xong <b>có hiệu lực nhưng không còn khoản phải thu
+     * nào</b> - quản trị viên không có nút "Đã thu tiền" nào để bấm nữa, khoản
+     * tiền cứ thế biến mất khỏi mọi báo cáo. Sinh một dòng {@code PENDING} mới
+     * theo đúng tổng tiền <b>hiện tại</b> của đơn (không phải tổng lúc đặt lần
+     * đầu - đơn có thể đã bị sửa số khách trước khi huỷ).</p>
+     */
+    @Transactional
+    public Payment restorePendingForBooking(Booking booking) {
+        Payment payment = createPendingForBooking(booking);
+        log.info("Đơn {}: khôi phục lại khoản thu PENDING {} đ do đơn được mở lại",
+                booking.getCode(), payment.getAmount());
+        return payment;
+    }
+
+    /** Đơn đã có ít nhất một khoản thu PAID - dùng để chặn sửa số khách (1.6). */
+    @Transactional(readOnly = true)
+    public boolean hasPaidPayment(Long bookingId) {
+        return paymentRepository.findByBookingIdOrderByIdAsc(bookingId).stream()
+                .anyMatch(p -> p.getStatus() == PaymentStatus.PAID);
     }
 
     @Transactional(readOnly = true)
@@ -149,7 +176,12 @@ public class PaymentService {
             throw new BusinessRuleException("error.payment.bookingMismatch", paymentId, bookingCode);
         }
         if (payment.getStatus() != PaymentStatus.PENDING) {
-            throw new BusinessRuleException("error.payment.notPending", payment.getStatus().getDisplayName());
+            // messages.get(status.getMessageKey()) chứ không phải getDisplayName():
+            // getDisplayName() trả cứng câu tiếng Việt viết sẵn trong enum, nên một
+            // quản trị viên đang xem giao diện tiếng Anh vẫn nhận được thông báo lỗi
+            // tiếng Việt giữa các câu chữ còn lại đã dịch (gotcha kiểu #9 cũ).
+            throw new BusinessRuleException("error.payment.notPending",
+                    messages.get(payment.getStatus().getMessageKey()));
         }
 
         String normalized = (txnRef == null || txnRef.isBlank()) ? null : txnRef.trim();

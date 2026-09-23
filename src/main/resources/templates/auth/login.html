@@ -35,6 +35,11 @@
                          th:text="#{auth.login.loggedOut}">Đã đăng xuất</div>
                     <div th:if="${param.registered}" class="alert alert-success py-2 small"
                          th:text="#{auth.login.registered}">Đăng ký thành công</div>
+                    <!--/* Xem SecurityConfig.expiredSessionStrategy (1.8): quản trị viên
+                         vừa hạ quyền hoặc khoá tài khoản này ở một nơi khác - phiên đang
+                         dùng bị đánh dấu hết hạn, ConcurrentSessionFilter đưa về đây. */-->
+                    <div th:if="${param.expired}" class="alert alert-warning py-2 small"
+                         th:text="#{auth.login.sessionExpired}">Phiên đăng nhập đã hết hạn</div>
 
                     <!--
                       Biểu mẫu gửi tới chính /login - đường dẫn này do bộ lọc của

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import vn.edu.iuh.fit.tourbooking.validation.ValidPaymentMethod;
 
 /**
  * Biểu mẫu thông tin liên hệ khi đặt tour.
@@ -37,7 +38,21 @@ public class CheckoutForm {
     @Size(max = 255, message = "{validation.address.size}")
     private String customerAddress;
 
+    /**
+     * Hình thức thanh toán - giá trị gửi lên là câu chữ đã dịch của một trong ba
+     * lựa chọn ở {@code checkout.html}, không phải mã enum thô (xem Javadoc
+     * {@link vn.edu.iuh.fit.tourbooking.entity.PaymentMethod}).
+     *
+     * <p>{@code @Size(max = 30)} khớp đúng giới hạn cột {@code bookings.payment_method}
+     * (chốt chặn cuối chống lỗi cắt chuỗi 500 nếu {@code @ValidPaymentMethod} có bị
+     * qua mặt bằng cách nào đó), còn {@link ValidPaymentMethod} mới là chốt chặn
+     * chính: chỉ nhận đúng ba câu hợp lệ, một chuỗi tự chế bất kỳ đều bị từ chối
+     * ngay từ bước validate thay vì lặng lẽ rơi vào nhánh "chuyển khoản" mặc định
+     * của {@code PaymentService.resolveMethod}.</p>
+     */
     @NotBlank(message = "{validation.paymentMethod.required}")
+    @Size(max = 30, message = "{validation.paymentMethod.invalid}")
+    @ValidPaymentMethod
     private String paymentMethod;
 
     @Size(max = 500, message = "{validation.note.size}")

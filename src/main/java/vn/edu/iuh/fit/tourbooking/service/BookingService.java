@@ -252,6 +252,11 @@ public class BookingService {
                 }
                 departure.holdSeats(d.getTotalGuests());
             }
+            // Bổ sung B: khoản thu PENDING gốc đã bị đóng thành FAILED lúc huỷ
+            // (xem PaymentService.cancelPendingForBooking) - đơn khôi phục xong mà
+            // không sinh lại khoản phải thu thì còn hiệu lực nhưng không còn cách
+            // nào ghi nhận tiền (1.4). Sinh lại theo đúng tổng hiện tại của đơn.
+            paymentService.restorePendingForBooking(booking);
         }
 
         booking.setStatus(newStatus);
@@ -281,6 +286,14 @@ public class BookingService {
 
         if (booking.getStatus().isFinal()) {
             throw new BusinessRuleException("error.booking.finalStatus");
+        }
+        // Đơn đã có khoản thu PAID: chặn sửa số khách thay vì âm thầm đổi tổng
+        // tiền của một đơn đã thu tiền thật. Luồng hoàn tiền/thu thêm đúng nghĩa
+        // (hoàn một phần, thu bù chênh lệch...) là quyết định nghiệp vụ đang chờ
+        // quyết định của người phụ trách - tạm thời cách an toàn nhất là chặn hẳn
+        // và gợi ý liên hệ bộ phận kế toán để xử lý thủ công.
+        if (paymentService.hasPaidPayment(booking.getId())) {
+            throw new BusinessRuleException("error.booking.detailQuantity.hasPaidPayment");
         }
         if (adults < 1) {
             throw new BusinessRuleException("error.cart.needAdult");
@@ -318,6 +331,10 @@ public class BookingService {
         detail.setNumAdults(adults);
         detail.setNumChildren(children);
         detail.recalculateSubtotal();
+        // Tiền hàng đổi thì số tiền giảm của mã (nếu có) cũng phải tính lại theo
+        // đúng luật của Promotion - xem Javadoc PromotionService.recalculateDiscount.
+        // Phải chạy TRƯỚC recalculateTotal() để tổng đơn dùng đúng số giảm mới.
+        promotionService.recalculateDiscount(booking);
         booking.recalculateTotal();
         // Bổ sung B: khoản thu PENDING phải đi theo tổng đơn mới, không thì màn
         // chi tiết hiện hai con số vênh nhau (xem PaymentService.syncPendingAmount).

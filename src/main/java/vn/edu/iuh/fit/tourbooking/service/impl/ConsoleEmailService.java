@@ -26,6 +26,7 @@ public class ConsoleEmailService implements EmailService {
 
     private final AppProperties appProperties;
     private final BookingEmailRenderer renderer;
+    private final WelcomeEmailRenderer welcomeRenderer;
 
     @Override
     public void sendBookingConfirmation(Booking booking) {
@@ -47,6 +48,29 @@ public class ConsoleEmailService implements EmailService {
                 booking.getCustomerEmail(),
                 renderer.subject(booking),
                 renderer.plainSummary(booking),
+                html.length());
+    }
+
+    @Override
+    public void sendWelcomeEmail(String fullName, String email) {
+        String html = welcomeRenderer.htmlBody(fullName, email);
+
+        log.info("""
+
+                        ==================== [EMAIL] ====================
+                        Từ      : {} <{}>
+                        Đến     : {}
+                        Tiêu đề : {}
+                        -------------------------------------------------
+                        {}
+                        -------------------------------------------------
+                        (Đã dựng xong nội dung HTML, {} ký tự. Đặt app.mail.mode=smtp để gửi thật.)
+                        =================================================
+                        """,
+                appProperties.mail().fromName(), appProperties.mail().from(),
+                email,
+                welcomeRenderer.subject(),
+                welcomeRenderer.plainSummary(fullName, email),
                 html.length());
     }
 }

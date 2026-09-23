@@ -6,10 +6,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.session.SimpleRedirectSessionInformationExpiredStrategy;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import vn.edu.iuh.fit.tourbooking.security.ApiAccessDeniedHandler;
 import vn.edu.iuh.fit.tourbooking.security.ApiAuthenticationEntryPoint;
@@ -39,6 +43,35 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Sổ đăng ký phiên - nơi ánh xạ "principal nào đang có những phiên nào" (1.8).
+     *
+     * <p>Trước bản vá này, quản trị viên hạ quyền hoặc khoá một tài khoản chỉ đổi
+     * được bản ghi dưới CSDL; {@code CustomUserDetails} đã nạp sẵn trong
+     * {@code SecurityContext} của phiên đăng nhập cũ vẫn giữ nguyên vai trò/trạng
+     * thái {@code enabled} lúc đăng nhập - người bị khoá vẫn đặt được tour, người
+     * bị hạ quyền vẫn vào được {@code /admin} cho tới khi phiên tự hết hạn.
+     * {@link UserService} dùng bean này để chủ động đánh dấu phiên của người vừa
+     * bị đổi quyền/khoá là {@code expired}; {@code ConcurrentSessionFilter} (được
+     * Spring Security tự thêm vào khi khai {@code sessionConcurrency} bên dưới) sẽ
+     * chặn ngay yêu cầu KẾ TIẾP của phiên đó và buộc đăng nhập lại.</p>
+     */
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /**
+     * Bắt buộc phải có để {@link SessionRegistry} biết một phiên đã hết do
+     * timeout hay đăng xuất (chứ không chỉ do bị đánh dấu {@code expired} chủ
+     * động) - thiếu bean này thì sổ đăng ký phình dần với các phiên ma không bao
+     * giờ được dọn, và có thể đối chiếu nhầm khi cùng {@code userId} đăng nhập lại.
+     */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean
@@ -123,6 +156,20 @@ public class SecurityConfig {
                         // thì giỏ hàng bốc hơi ngay tại thời điểm đăng nhập - lỗi rất
                         // khó ngờ và chỉ lộ ra giữa buổi trình bày.
                         .sessionFixation(sf -> sf.changeSessionId())
+                        // maximumSessions(-1) = KHÔNG giới hạn số phiên đăng nhập đồng
+                        // thời của một tài khoản - mục đích duy nhất ở đây là đăng ký
+                        // sổ phiên (1.8), không phải chặn đăng nhập nhiều nơi. Giá trị
+                        // dương (ví dụ 1) sẽ đá văng phiên CŨ mỗi khi đăng nhập chỗ mới,
+                        // một hành vi hoàn toàn khác không nằm trong yêu cầu ở đây.
+                        .sessionConcurrency(concurrency -> concurrency
+                                .sessionRegistry(sessionRegistry())
+                                .maximumSessions(-1)
+                                // Phiên bị UserService đánh dấu expired thì yêu cầu kế
+                                // tiếp của nó được đưa thẳng về trang đăng nhập kèm một
+                                // câu giải thích, thay vì trang trắng mặc định của
+                                // Spring Security.
+                                .expiredSessionStrategy(new SimpleRedirectSessionInformationExpiredStrategy(
+                                        "/login?expired")))
                 )
                 .exceptionHandling(ex -> ex
                         // Chưa đăng nhập mà gọi web service thì nhận 401 kèm JSON,

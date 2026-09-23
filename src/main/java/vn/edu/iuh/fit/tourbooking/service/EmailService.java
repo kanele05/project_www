@@ -20,4 +20,17 @@ public interface EmailService {
      * và đợt khởi hành, vì phương thức này chạy ngoài giao dịch.</p>
      */
     void sendBookingConfirmation(Booking booking);
+
+    /**
+     * Gửi thư chào mừng sau khi đăng ký tài khoản thành công.
+     *
+     * <p>Nhận đúng hai chuỗi thay vì cả {@code User} entity: người gọi nằm trong
+     * {@code UserEmailListener}, chạy ở một giao dịch khác (hoặc ngoài giao dịch)
+     * so với lúc tạo tài khoản, nên đọc thuộc tính từ một entity đã tách khỏi
+     * ngữ cảnh lưu trữ (detached) là không an toàn. Hai chuỗi này không có gì để
+     * mà lazy-load, nên tránh được hẳn vấn đề đó.</p>
+     *
+     * <p><b>Không bao giờ</b> nhận hay in ra mật khẩu, kể cả mật khẩu đã băm.</p>
+     */
+    void sendWelcomeEmail(String fullName, String email);
 }

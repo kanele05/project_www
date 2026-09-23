@@ -161,7 +161,9 @@
                                              : @{/images/no-image.svg}" alt="">
                                 <input class="form-control form-control-sm mb-1" type="file"
                                        id="thumbnailFile" th:field="*{thumbnailFile}"
+                                       th:errorclass="is-invalid"
                                        accept="image/jpeg,image/png,image/webp">
+                                <div class="invalid-feedback" th:errors="*{thumbnailFile}">Lỗi</div>
                                 <p class="small text-muted" th:text="#{admin.tour.uploadHint}">Gợi ý</p>
 
                                 <label class="form-label" for="galleryFiles"

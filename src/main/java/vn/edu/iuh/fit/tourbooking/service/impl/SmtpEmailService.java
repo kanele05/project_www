@@ -29,6 +29,7 @@ public class SmtpEmailService implements EmailService {
     private final JavaMailSender mailSender;
     private final AppProperties appProperties;
     private final BookingEmailRenderer renderer;
+    private final WelcomeEmailRenderer welcomeRenderer;
 
     @Override
     public void sendBookingConfirmation(Booking booking) {
@@ -52,6 +53,28 @@ public class SmtpEmailService implements EmailService {
             // thể vì máy chủ thư trục trặc mà báo khách là đặt tour thất bại.
             // Ghi log để xử lý sau là đủ.
             log.error("Không gửi được thư xác nhận cho đơn {}: {}", booking.getCode(), e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendWelcomeEmail(String fullName, String email) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true,
+                    StandardCharsets.UTF_8.name());
+
+            helper.setFrom(appProperties.mail().from(), appProperties.mail().fromName());
+            helper.setTo(email);
+            helper.setSubject(welcomeRenderer.subject());
+            helper.setText(welcomeRenderer.htmlBody(fullName, email), true);
+
+            mailSender.send(message);
+            log.info("Đã gửi thư chào mừng tới {}", email);
+
+        } catch (jakarta.mail.MessagingException | UnsupportedEncodingException e) {
+            // Cũng cố tình KHÔNG ném lại lỗi: tài khoản đã được tạo xong, lỗi gửi
+            // thư không được phép làm hỏng việc đăng ký.
+            log.error("Không gửi được thư chào mừng tới {}: {}", email, e.getMessage());
         }
     }
 }

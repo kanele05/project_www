@@ -8,7 +8,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,6 +76,26 @@ public class AccountController {
         return userService.toProfileForm(principal.getId());
     }
 
+    /**
+     * Chặn request tự gắn giá trị vào trường {@code id} của {@code profileForm}.
+     *
+     * <p>Không có dòng này thì {@code WebDataBinder} bind {@code id} từ tham số
+     * request <b>trước khi</b> {@code @Valid} chạy, ghi đè lên giá trị vừa được
+     * {@link #profileForm} điền sẵn từ tài khoản đang đăng nhập. Một request tự
+     * chế {@code id=3&email=binh.tran@gmail.com} gửi bằng tài khoản khác (ví dụ
+     * {@code an.nguyen}) khiến {@code @UniqueEmail(excludeIdField="id")} loại trừ
+     * nhầm id 3 (đúng người đang sở hữu email đó) khỏi phép kiểm trùng - validator
+     * báo "còn dùng được", request đi tiếp tới {@link #updateProfile}, nơi
+     * {@code form.setId(principal.getId())} sửa lại id đúng nhưng đã quá muộn:
+     * ghi email trùng xuống CSDL đụng ràng buộc UNIQUE, ra thẳng trang 500.
+     * {@code setDisallowedFields} chặn ngay từ bước bind, nên {@code id} luôn giữ
+     * đúng giá trị đã điền sẵn suốt vòng đời request.</p>
+     */
+    @InitBinder("profileForm")
+    public void initProfileFormBinder(WebDataBinder binder) {
+        binder.setDisallowedFields("id");
+    }
+
     // ===================== Hồ sơ =====================
 
     @GetMapping("/profile")
@@ -95,9 +117,17 @@ public class AccountController {
             return "account/profile";
         }
 
-        userService.updateProfile(principal.getId(), form);
-        ra.addFlashAttribute("successMessage", getMessage("account.profile.updated"));
-        return "redirect:/account/profile";
+        try {
+            userService.updateProfile(principal.getId(), form);
+            ra.addFlashAttribute("successMessage", getMessage("account.profile.updated"));
+            return "redirect:/account/profile";
+
+        } catch (BusinessRuleException e) {
+            // Chốt chặn thứ hai của tính duy nhất email (xem UserService.updateProfile):
+            // gắn lỗi vào đúng ô email thay vì để lọt xuống một trang 500.
+            binding.rejectValue("email", "error", resolve(e));
+            return "account/profile";
+        }
     }
 
     // ===================== Đổi mật khẩu =====================
