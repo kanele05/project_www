@@ -1,11 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Chi tiết một đơn đặt tour.
 
-  Địa chỉ dùng MÃ ĐƠN chứ không dùng khoá chính tuần tự, và controller còn gọi
-  BookingService.getOwnedByCode để so chủ sở hữu - khách hàng khác mở đúng địa
-  chỉ này sẽ nhận 403 chứ không xem được.
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${booking.code})}"></head>
 <body class="d-flex flex-column min-vh-100">
@@ -33,7 +27,6 @@
 
     <div class="row g-4">
 
-        <!-- ===================== Các tour trong đơn ===================== -->
         <div class="col-lg-8">
             <div class="panel">
                 <div class="panel__pad">
@@ -50,13 +43,10 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <!-- booking.details và departure.tour đã được nạp sẵn bằng
-                                 join fetch ở BookingRepository.findDetailByCode. -->
+
                             <tr th:each="d : ${booking.details}">
                                 <td>
-                                    <!-- Hiển thị tên đã CHÉP vào đơn lúc đặt, không đọc
-                                         tên hiện tại của tour: hoá đơn phải giữ nguyên
-                                         thông tin tại thời điểm giao dịch. -->
+
                                     <a class="text-decoration-none"
                                        th:href="@{/tours/{id}(id=${d.departure.tour.id})}"
                                        th:text="${d.tourNameSnapshot}">Tên tour</a>
@@ -76,9 +66,7 @@
                             </tr>
                             </tbody>
                             <tfoot>
-                            <!--/* Chỉ hiện hai dòng này khi đơn thực sự có giảm giá:
-                                   đơn không dùng mã mà vẫn thấy "Giảm giá 0 đ" thì
-                                   khách lại tưởng mình bị sót ưu đãi. */-->
+
                             <tr th:if="${booking.discountAmount != null and booking.discountAmount.signum() > 0}">
                                 <td colspan="3" class="text-end small text-muted"
                                     th:text="#{booking.subtotal}">Tiền hàng</td>
@@ -107,7 +95,6 @@
             </div>
         </div>
 
-        <!-- ===================== Thông tin liên hệ ===================== -->
         <div class="col-lg-4">
             <div class="panel">
                 <div class="panel__pad">
@@ -138,14 +125,10 @@
                 </div>
             </div>
 
-            <!-- ===================== UC023: khách tự huỷ đơn (mục 12.3) ===================== -->
-            <!--/* Chỉ hiện khi đơn còn huỷ được (PENDING/CONFIRMED) - selfCancelPolicy chỉ
-                   được AccountController đẩy vào model đúng trong trường hợp đó. */-->
             <div class="panel mt-4" th:if="${selfCancelPolicy != null}">
                 <div class="panel__pad">
                     <h2 class="h6 mb-3" th:text="#{account.bookings.selfCancel.title}">Huỷ đơn</h2>
 
-                    <!-- Còn đủ ngày để tự huỷ: hiện rõ số tiền sẽ hoàn TRƯỚC khi khách bấm huỷ. -->
                     <div th:if="${selfCancelPolicy.timingOk}"
                          th:with="refundText=|${#numbers.formatInteger(selfCancelPolicy.refundAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">
                         <p class="small text-muted"
@@ -163,7 +146,6 @@
                         </form>
                     </div>
 
-                    <!-- Quá cận ngày khởi hành: không cho tự huỷ, chỉ hướng dẫn liên hệ. -->
                     <div th:unless="${selfCancelPolicy.timingOk}">
                         <p class="small text-danger mb-0"
                            th:text="#{account.bookings.selfCancel.tooLate}">
@@ -176,9 +158,6 @@
         </div>
     </div>
 
-    <!-- ===================== Danh sách hành khách ===================== -->
-    <!--/* BookingPassengerRepository.findByBookingId đã JOIN FETCH detail nên
-           an toàn dù open-in-view đang tắt (gotcha #43). */-->
     <div class="row g-4 mt-0">
         <div class="col-12">
             <div class="panel">
@@ -223,7 +202,6 @@
         </div>
     </div>
 
-    <!-- ===================== Bổ sung A/B: thanh toán + dòng thời gian ===================== -->
     <div class="row g-4 mt-0">
         <div class="col-lg-6">
             <div class="panel">

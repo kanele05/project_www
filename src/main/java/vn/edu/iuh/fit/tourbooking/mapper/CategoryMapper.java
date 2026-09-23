@@ -5,14 +5,9 @@ import org.springframework.stereotype.Component;
 import vn.edu.iuh.fit.tourbooking.dto.view.CategoryDto;
 import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 
-/**
- * Đổi entity {@link TourCategory} sang DTO.
- *
- * <p>{@code TourCategory} cố ý không map collection tour nào nên phép chuyển đổi
- * này an toàn tuyệt đối với {@code open-in-view = false}.</p>
- */
 @Component
 @RequiredArgsConstructor
+// Chuyển TourCategory sang DTO hiển thị, ghép URL ảnh và đường dẫn danh mục.
 public class CategoryMapper {
 
     private final ViewUrls urls;

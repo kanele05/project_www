@@ -4,14 +4,8 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 
-/**
- * Chuyển đổi {@link BookingStatus} &harr; chuỗi khi đọc/ghi CSDL.
- *
- * <p>Cùng lý do với {@link RoleConverter}: tránh việc Hibernate 6.2+ tự sinh
- * ràng buộc CHECK cho cột enum, vốn bị đề bài cấm. Xem phần chú thích chi tiết
- * ở lớp đó.</p>
- */
 @Converter(autoApply = true)
+// Chuyển đổi BookingStatus <-> chuỗi lưu trong CSDL (thay cho @Enumerated, tránh sinh CHECK constraint).
 public class BookingStatusConverter implements AttributeConverter<BookingStatus, String> {
 
     @Override

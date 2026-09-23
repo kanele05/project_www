@@ -16,18 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Một ngày trong lịch trình của tour: "Ngày 2 - Vịnh Hạ Long".
- *
- * <p>Trước đây toàn bộ lịch trình nằm gọn trong một cột văn bản
- * {@code tours.itinerary}. Cột đó vẫn giữ lại cho các tour cũ, nhưng dữ liệu mới
- * nên nhập vào bảng này: có tách ra thì mới hiện được lịch trình dạng gấp mở từng
- * ngày, mới lọc được "tour có ngày tự do", và mới sửa được một ngày mà không phải
- * chép tay lại cả đoạn văn bản.</p>
- *
- * <p>Ràng buộc duy nhất {@code (tour_id, day_no)}: một tour không thể có hai
- * "ngày 2".</p>
- */
+// Một ngày trong lịch trình của tour (ví dụ "Ngày 2 - Vịnh Hạ Long").
 @Entity
 @Table(
         name = "tour_itineraries",
@@ -49,7 +38,6 @@ public class TourItinerary {
             foreignKey = @ForeignKey(name = "fk_tour_itineraries_tour"))
     private Tour tour;
 
-    /** Ngày thứ mấy của hành trình, bắt đầu từ 1. */
     @Column(name = "day_no", nullable = false)
     private Integer dayNo;
 
@@ -59,11 +47,9 @@ public class TourItinerary {
     @Column(name = "description", length = 2000)
     private String description;
 
-    /** Các bữa ăn trong ngày, ví dụ "Sáng, Trưa, Tối". */
     @Column(name = "meals", length = 100)
     private String meals;
 
-    /** Nơi nghỉ đêm, ví dụ "Khách sạn 4 sao tại Hạ Long". */
     @Column(name = "accommodation", length = 150)
     private String accommodation;
 
@@ -81,10 +67,6 @@ public class TourItinerary {
         return id != null && id.equals(other.id);
     }
 
-    /**
-     * Hằng số thay vì {@code Objects.hash(id)}: bản ghi mới chưa có id, nếu
-     * hashCode đổi sau khi lưu thì đối tượng sẽ "biến mất" khỏi HashSet.
-     */
     @Override
     public int hashCode() {
         return getClass().hashCode();

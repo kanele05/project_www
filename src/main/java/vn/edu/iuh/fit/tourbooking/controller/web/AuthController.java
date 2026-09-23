@@ -12,15 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.iuh.fit.tourbooking.dto.form.RegisterForm;
 import vn.edu.iuh.fit.tourbooking.service.UserService;
 
-/**
- * Đăng nhập và đăng ký.
- *
- * <p>Việc kiểm tra mật khẩu do Spring Security lo (bộ lọc chặn
- * {@code POST /login} trước khi tới controller), nên ở đây chỉ có
- * {@code GET /login} để hiển thị biểu mẫu.</p>
- */
 @Controller
 @RequiredArgsConstructor
+// Đăng nhập/đăng ký: trang đăng nhập do Spring Security xử lý, controller lo phần đăng ký.
 public class AuthController {
 
     private final UserService userService;
@@ -36,15 +30,6 @@ public class AuthController {
         return "auth/register";
     }
 
-    /**
-     * Xử lý đăng ký.
-     *
-     * <p>{@code @Valid} chạy toàn bộ ràng buộc của {@link RegisterForm}, kể cả
-     * {@code @UniqueEmail} và {@code @PasswordsMatch}. Có lỗi thì trả về chính
-     * trang đăng ký kèm {@code BindingResult} để Thymeleaf tô đỏ đúng ô sai và
-     * giữ lại những gì người dùng đã nhập - <b>không</b> chuyển hướng, vì chuyển
-     * hướng sẽ làm mất sạch dữ liệu vừa gõ.</p>
-     */
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("registerForm") RegisterForm form,
                            BindingResult binding,
@@ -55,7 +40,6 @@ public class AuthController {
 
         userService.register(form);
 
-        // Đăng ký xong thì chuyển hướng (PRG) để F5 không tạo tài khoản thứ hai.
         ra.addFlashAttribute("successMessage", "registered");
         return "redirect:/login?registered";
     }

@@ -7,14 +7,8 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import vn.edu.iuh.fit.tourbooking.repository.UserRepository;
 
-/**
- * Phần thực thi của {@link UniqueEmail}.
- *
- * <p>Lớp validator ở Spring Boot cũng là một bean, nên tiêm thẳng repository vào
- * được. Ràng buộc đặt ở mức lớp (chứ không phải mức trường) vì nó cần đọc hai
- * trường cùng lúc: email và mã người dùng đang sửa.</p>
- */
 @RequiredArgsConstructor
+// Kiểm email trùng qua UserRepository, tự loại trừ id hiện tại khi sửa hồ sơ.
 public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, Object> {
 
     private final UserRepository userRepository;
@@ -35,8 +29,6 @@ public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, Ob
         BeanWrapper wrapper = new BeanWrapperImpl(form);
         Object email = wrapper.getPropertyValue(emailField);
 
-        // Ô trống thì để @NotBlank lo, ở đây không báo thêm lỗi thứ hai cho cùng
-        // một ô - hai dòng chữ đỏ chồng nhau chỉ làm người dùng rối.
         if (email == null || email.toString().isBlank()) {
             return true;
         }
@@ -51,8 +43,7 @@ public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, Ob
                 : userRepository.existsByEmailAndIdNot(email.toString(), excludeId);
 
         if (duplicated) {
-            // Gắn lỗi vào đúng ô email thay vì để ở mức cả biểu mẫu, nhờ vậy
-            // Thymeleaf tô đỏ được đúng ô người dùng cần sửa.
+
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(message)
                     .addPropertyNode(emailField)

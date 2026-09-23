@@ -1,14 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   Trang báo "không tìm thấy".
 
-   Spring Boot tự tìm khuôn mẫu tên error/<mã trạng thái> nên chỉ cần đặt đúng
-   tên file là xong, không phải viết controller nào cả. Khi không có file khớp,
-   nó rơi về error.html rồi cuối cùng là trang trắng mặc định ("Whitelabel Error
-   Page") - thứ để lộ tên lớp Java và không ai muốn nhìn thấy trong buổi demo.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(#{error.page.404.title})}"></head>
 <body class="d-flex flex-column min-vh-100">

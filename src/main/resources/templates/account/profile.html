@@ -54,12 +54,6 @@
                             <div class="invalid-feedback" th:errors="*{address}">Lỗi</div>
                         </div>
 
-                        <!--
-                          Biểu mẫu này KHÔNG có ô mật khẩu. Đó là chủ ý: không có ô
-                          thì chuỗi băm cũng không thể lọt ra HTML, dù có vô tình
-                          viết nhầm th:field. Đổi mật khẩu là một trang riêng, có
-                          bước xác nhận mật khẩu hiện tại.
-                        -->
                         <button class="btn btn-primary" type="submit"
                                 th:text="#{account.profile.submit}">Lưu thay đổi</button>
                     </form>

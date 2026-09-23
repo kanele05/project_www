@@ -7,15 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * Biểu mẫu đánh giá tour (UC018) - gửi từ trang chi tiết tour.
- *
- * <p>Không có {@code userId}: người đánh giá luôn lấy từ tài khoản đang đăng
- * nhập ({@code principal.getId()}), giống nguyên tắc ở {@code AccountController}.
- * Khoảng giá trị 1-5 sao kiểm ở đây (DTO) chứ không đặt CHECK trong CSDL, đúng
- * quy ước "ràng buộc nằm ở tầng Java" của đề bài.</p>
- */
 @Data
+// Biểu mẫu gửi đánh giá tour.
 public class ReviewForm {
 
     @NotNull

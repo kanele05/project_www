@@ -6,14 +6,8 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 
-/**
- * Biểu mẫu thêm / sửa danh mục tour.
- *
- * <p>Không có ô nhập slug: slug được sinh tự động từ tên bằng {@code SlugUtil}.
- * Bắt người dùng tự gõ slug chỉ tạo cơ hội gõ sai (dấu cách, chữ hoa, tiếng Việt
- * có dấu) và làm hỏng đường dẫn.</p>
- */
 @Data
+// Biểu mẫu thêm/sửa danh mục tour ở khu quản trị.
 public class CategoryForm {
 
     private Long id;
@@ -29,7 +23,6 @@ public class CategoryForm {
 
     private MultipartFile imageFile;
 
-    /** Đường dẫn ảnh hiện tại, chỉ để hiển thị bản xem trước. */
     private String currentImageUrl;
 
     public static CategoryForm from(TourCategory category) {

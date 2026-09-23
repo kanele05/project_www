@@ -14,14 +14,7 @@ import lombok.Setter;
 
 import java.util.Objects;
 
-/**
- * Danh mục tour, ví dụ "Du lịch biển", "Du lịch nước ngoài".
- *
- * <p>Không map {@code List<Tour>} ở đây. Lý do: mọi chỗ cần danh sách tour đều
- * cần phân trang hoặc lọc thêm, nên dùng {@code tourRepository.findByCategoryId(...)}
- * gọn và an toàn hơn. Việc chặn xoá danh mục còn tour cũng chỉ cần
- * {@code countByCategoryId()} chứ không cần nạp cả collection.</p>
- */
+// Danh mục tour (ví dụ "Du lịch biển"). Không map danh sách tour - lấy qua repository để phân trang.
 @Entity
 @Table(
         name = "tour_categories",
@@ -43,7 +36,6 @@ public class TourCategory extends Auditable {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    /** Dạng thân thiện với URL, ví dụ {@code du-lich-bien}, dùng cho {@code /categories/{slug}}. */
     @Column(name = "slug", nullable = false, length = 120)
     private String slug;
 
@@ -53,7 +45,6 @@ public class TourCategory extends Auditable {
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
-    /** Danh mục bị ẩn vẫn còn trong CSDL nhưng không hiện ở trang công khai. */
     @Column(name = "active", nullable = false)
     private boolean active = true;
 

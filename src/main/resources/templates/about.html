@@ -1,17 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   TRANG GIỚI THIỆU
 
-   Nội dung được viết như phần giới thiệu của một thương hiệu lữ hành, nhưng có
-   một khối ghi rõ đây là đồ án môn học chứ không phải doanh nghiệp có thật -
-   đặt ngay giữa trang chứ không giấu ở chân trang. Trang bán hàng đẹp là một
-   chuyện, nói với người đọc rằng công ty này có thật lại là chuyện khác.
-
-   Mọi con số dùng chung nguồn với trang chủ (HomeController gọi cùng một
-   TourService.siteStats), nên hai trang không bao giờ nói lệch nhau.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(#{about.title})}"></head>
 <body class="d-flex flex-column min-vh-100">
@@ -20,7 +8,6 @@
 
 <main class="flex-grow-1">
 
-    <!-- ===================== Dải tiêu đề ===================== -->
     <section class="page-head bg-jade">
         <div class="container">
             <div class="row">
@@ -44,7 +31,6 @@
         </div>
     </section>
 
-    <!-- ===================== Con số ===================== -->
     <section class="py-5">
         <div class="container">
             <div class="panel panel--float panel__pad">
@@ -78,7 +64,6 @@
         </div>
     </section>
 
-    <!-- ===================== Câu chuyện ===================== -->
     <section class="section--tight">
         <div class="container">
             <div class="row g-4 g-lg-5 align-items-center">
@@ -90,11 +75,6 @@
                     <p class="mb-0" th:text="#{about.story.p3}">Đoạn 3</p>
                 </div>
 
-                <!--/*
-                  Cột phải là một "bưu thiếp" dựng hoàn toàn bằng CSS. Dự án chưa có
-                  ảnh chụp nào; nhét một ảnh tải trên mạng vào đây thì vừa sai bản
-                  quyền vừa lạc tông, nên thay bằng hình dựng sẵn cùng bảng màu.
-                */-->
                 <div class="col-lg-6 reveal reveal-d2">
                     <div class="tour-hero-art tour-art art-3">
                         <span class="tour-art__label" th:text="#{about.postcard}">Việt Nam</span>
@@ -104,7 +84,6 @@
         </div>
     </section>
 
-    <!-- ===================== Giá trị cốt lõi ===================== -->
     <section class="section">
         <div class="container">
             <div th:replace="~{fragments/components :: sectionHead(
@@ -143,7 +122,6 @@
         </div>
     </section>
 
-    <!-- ===================== Các dòng tour ===================== -->
     <section class="section bg-sand">
         <div class="container">
             <div th:replace="~{fragments/components :: sectionHead(
@@ -165,7 +143,6 @@
         </div>
     </section>
 
-    <!-- ===================== Quy trình đặt tour ===================== -->
     <section class="section bg-jade">
         <div class="container">
             <div class="row g-4 g-lg-5">
@@ -210,7 +187,6 @@
         </div>
     </section>
 
-    <!-- ===================== Ghi chú trung thực + liên hệ ===================== -->
     <section class="section">
         <div class="container">
             <div class="row g-4 align-items-start">

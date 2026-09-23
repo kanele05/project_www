@@ -14,20 +14,14 @@ import vn.edu.iuh.fit.tourbooking.dto.form.ContactForm;
 import vn.edu.iuh.fit.tourbooking.service.ContactService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Gửi liên hệ công khai (UC021) - {@code AC01 Khách vãng lai}, không cần đăng nhập.
- */
 @Controller
 @RequiredArgsConstructor
+// Trang liên hệ công khai (UC021) - không cần đăng nhập, điền sẵn tour nếu mở từ trang chi tiết tour.
 public class ContactController {
 
     private final ContactService contactService;
     private final MessageHelper messages;
 
-    /**
-     * @param tourId có giá trị khi mở từ nút "Liên hệ về tour này" ở trang chi
-     *               tiết tour, điền sẵn cả tour lẫn ô ẩn {@code tourId}.
-     */
     @GetMapping("/contact")
     public String form(@RequestParam(required = false) Long tourId, Model model) {
         if (!model.containsAttribute("contactForm")) {

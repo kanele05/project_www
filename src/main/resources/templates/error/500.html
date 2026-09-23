@@ -1,14 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   Trang báo lỗi máy chủ.
 
-   Tuyệt đối KHÔNG in vết lỗi (stack trace) ra đây. Vết lỗi để lộ tên lớp, tên
-   bảng, đường dẫn thư mục trên máy chủ - toàn những thứ giúp người tấn công
-   dựng lại cấu trúc hệ thống. Chỗ đúng để xem vết lỗi là nhật ký máy chủ, và
-   ApiExceptionHandler đã ghi đầy đủ vào đó.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(#{error.page.500.title})}"></head>
 <body class="d-flex flex-column min-vh-100">

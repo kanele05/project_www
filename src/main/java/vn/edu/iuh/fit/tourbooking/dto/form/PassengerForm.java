@@ -8,16 +8,8 @@ import vn.edu.iuh.fit.tourbooking.entity.Gender;
 
 import java.time.LocalDate;
 
-/**
- * Một hành khách nhập ở bước thanh toán (mục 12.7).
- *
- * <p>Chỉ <b>họ tên</b> là bắt buộc - các cột còn lại của
- * {@code booking_passengers} đều để trống được. <b>Loại hành khách (người lớn /
- * trẻ em) không nằm ở đây</b>: vị trí trong {@link PassengerGroupForm#getAdults()}
- * hay {@link PassengerGroupForm#getChildren()} mới quyết định loại, để người dùng
- * không tự chọn được loại khác với số người lớn/trẻ em đã đặt ở giỏ hàng.</p>
- */
 @Data
+// Dữ liệu một hành khách nhập tại trang thanh toán.
 public class PassengerForm {
 
     @NotBlank(message = "{validation.fullName.required}")
@@ -26,7 +18,6 @@ public class PassengerForm {
 
     private Gender gender;
 
-    /** Không được ở tương lai - kiểm lại lần nữa ở service (mục 12.7, bước 2). */
     @PastOrPresent(message = "{validation.passenger.birthDate.future}")
     private LocalDate birthDate;
 

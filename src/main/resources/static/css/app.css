@@ -1,38 +1,8 @@
-/* ===========================================================================
-   HỆ THỐNG THIẾT KẾ - "Ngọc bích & Đất nung"
-   Nạp SAU Bootstrap nên mọi khai báo ở đây đều đè lên được.
+/* Hệ thống thiết kế "Ngọc bích & Đất nung" - nạp SAU Bootstrap để mọi khai báo ở đây đều đè lên được. */
 
-   Vì sao tự dựng bảng màu thay vì dùng nguyên Bootstrap: màu xanh mặc định
-   #0d6efd có mặt ở hàng triệu website, nhìn vào là biết ngay "chưa ai đụng tới
-   giao diện". Bảng màu dưới đây lấy cảm hứng từ sơn mài, gốm và ruộng bậc thang -
-   xanh ngọc bích trầm làm nền, cam đất nung làm điểm nhấn.
-
-   Cách làm: KHÔNG sửa file Bootstrap, chỉ gán lại các biến CSS mà Bootstrap 5.3
-   công bố (--bs-primary-rgb, --bs-btn-bg, ...). Nhờ vậy nâng cấp Bootstrap sau
-   này chỉ là đổi số phiên bản trong pom.xml, không phải sơn lại từ đầu.
-
-   BỐ CỤC FILE
-     1. Token       - toàn bộ hằng số thiết kế
-     2. Cầu nối Bootstrap
-     3. Nền & chữ
-     4. Mảnh dùng lại (nhãn nhỏ, khối, nút)
-     5. Thanh điều hướng
-     6. Trang chủ
-     7. Thẻ tour & nền nghệ thuật khi chưa có ảnh
-     8. Trang trong
-     9. Biểu mẫu, bảng, phân trang
-    10. Chân trang
-    11. Khu vực quản trị
-    12. Chuyển động
-    13. Lớp mềm & mượt
-    14. Trang chủ - bố cục mới
-   =========================================================================== */
-
-/* ===========================================================================
-   1. TOKEN
-   =========================================================================== */
+/* 1. Token màu, chữ, khoảng cách, bo góc, đổ bóng */
 :root {
-    /* --- Ngọc bích: nền chính, thanh điều hướng, khối đậm --- */
+
     --jade-950: #06251F;
     --jade-900: #0A3833;
     --jade-800: #0E4F47;
@@ -44,7 +14,6 @@
     --jade-200: #BEE0D8;
     --jade-100: #DCEFEA;
 
-    /* --- Đất nung: điểm nhấn, giá tiền, nút kêu gọi hành động --- */
     --clay-800: #7E3A16;
     --clay-700: #9C4A1E;
     --clay-600: #C2622D;
@@ -52,45 +21,26 @@
     --clay-300: #EDB48D;
     --clay-100: #F7E2D3;
 
-    /* --- Vàng nghệ: huy hiệu, ngôi sao, chi tiết nhỏ --- */
     --turmeric: #E0A458;
     --turmeric-300: #EFCB96;
     --turmeric-100: #F9EBD6;
 
-    /* --- Cát: nền trang, nền thẻ --- */
     --sand-50: #FDFAF5;
     --sand-100: #F6EFE4;
     --sand-200: #EFE5D6;
     --sand-300: #DFD2BD;
     --sand-400: #C8B79C;
 
-    /* --- Mực: chữ ---
-       Hai sắc nhạt đã được làm đậm thêm một nấc so với bản phác đầu sau khi đo
-       tương phản thật trên nền cát: #5F6E69 trên nền .bg-sand chỉ đạt 4,30 và
-       #7E8B86 trên nền trắng chỉ đạt 3,54 - đều dưới ngưỡng 4,5 mà WCAG mức AA
-       đòi hỏi cho chữ cỡ thường. Nhìn bằng mắt thì "vẫn đọc được", nhưng người
-       lớn tuổi hoặc màn hình chói nắng thì không. */
     --ink-900: #14201E;
     --ink-700: #33433F;
     --ink-500: #55635E;
     --ink-400: #6B7873;
 
-    /* --- Phông chữ ---
-       Playfair Display: kiểu chữ có chân, dùng cho tiêu đề lớn - tạo cảm giác
-       tạp chí du lịch thay vì bảng điều khiển phần mềm.
-       Be Vietnam Pro: chọn có chủ đích vì đây là bộ chữ được thiết kế riêng cho
-       tiếng Việt, dấu thanh không chồng lên dấu mũ ở "ế", "ộ", "ữ" - lỗi rất hay
-       gặp với các bộ chữ phương Tây.
-       Cả hai đều có danh sách dự phòng đầy đủ: máy không có mạng thì rơi về phông
-       hệ thống, trang vẫn đẹp chứ không vỡ. */
     --font-display: "Playfair Display", "Iowan Old Style", "Palatino Linotype",
                     Palatino, Georgia, "Times New Roman", serif;
     --font-body: "Be Vietnam Pro", "Segoe UI Variable Text", "Segoe UI",
                  system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 
-    /* --- Bo góc ---
-       Nới thêm một nấc so với bản đầu: góc càng tròn thì khối càng đọc ra "mềm".
-       Đây là toàn bộ nguồn bo góc của website, sửa ở đây là đổi khắp nơi. */
     --radius-sm: 10px;
     --radius-md: 16px;
     --radius-lg: 26px;
@@ -98,18 +48,6 @@
     --radius-2xl: 44px;
     --radius-pill: 999px;
 
-    /* --- Đổ bóng ---
-       Bóng ngả màu ngọc bích chứ không phải đen xám: bóng đen trên nền cát trông
-       bẩn, bóng cùng tông với nền thì mềm và sạch hơn hẳn.
-
-       Mỗi mức đổ bóng gồm HAI lớp chồng lên nhau, đây mới là chỗ tạo ra cảm giác
-       "đắt tiền":
-         - lớp tiếp xúc: lệch 1-4px, nhoè ít, rất nhạt - nó neo khối xuống mặt nền;
-         - lớp môi trường: lệch xa, nhoè rộng gấp nhiều lần, cũng rất nhạt - nó là
-           phần ánh sáng tán ra xung quanh.
-       Một lớp duy nhất buộc phải chọn: hoặc sắc gọn mà cứng, hoặc nhoè mà bẩn.
-       Hai lớp nhạt thì vừa mềm vừa sạch. Lưu ý mọi lớp đều CÓ độ lệch dọc - quầng
-       sáng lệch 0 chỉ là trang trí, mắt không đọc ra chiều sâu. */
     --shadow-xs: 0 1px 1px rgba(10, 56, 51, .04),
                  0 2px 6px rgba(10, 56, 51, .05);
     --shadow-sm: 0 1px 2px rgba(10, 56, 51, .05),
@@ -121,28 +59,12 @@
     --shadow-glow: 0 2px 6px rgba(124, 58, 22, .18),
                    0 18px 45px rgba(194, 98, 45, .28);
 
-    /* Vệt sáng mảnh ở mép trên, giả ánh sáng hắt từ trên xuống một mặt vật liệu.
-       Chỉ một pixel nhưng là thứ khiến thẻ trắng trông như có bề dày thật. */
     --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, .7);
 
-    /* Đường viền mảnh pha theo màu ngọc bích thay vì xám trung tính: viền xám
-       trên nền cát ấm luôn trông xỉn, viền cùng họ màu thì chìm đi đúng cách. */
-    /* Viền của khối trang trí (thẻ, bảng nền): chỉ cần đủ thấy, không có ngưỡng
-       bắt buộc nào. */
     --hairline: rgba(10, 56, 51, .09);
 
-    /* Viền của Ô NHẬP thì khác hẳn: với ô trắng nằm trên nền trắng, cái viền là
-       thứ DUY NHẤT cho người dùng biết "chỗ này gõ được", nên nó là thông tin chứ
-       không phải trang trí - WCAG 1.4.11 đòi tối thiểu 3:1 so với nền.
-       Pha .52 cho ra ~#849B98, đo được 3,0:1 trên nền trắng. Nhạt hơn nữa thì
-       nhìn mềm hơn thật, nhưng là mềm bằng cách giấu mất cái ô. */
     --hairline-strong: rgba(10, 56, 51, .52);
 
-    /* --- Nhịp chuyển động ---
-       ease-out: đường cong mũ, bung nhanh rồi hãm dần - dùng cho thứ đang xuất hiện.
-       ease-soft: hãm còn êm hơn nữa, gần như không có điểm dừng gãy - dùng cho rê
-       chuột, nâng thẻ, đổi màu. Đây là đường cong tạo cảm giác "mượt".
-       Tuyệt đối không dùng linear hay ease-in-out mặc định. */
     --ease-out: cubic-bezier(.22, 1, .36, 1);
     --ease-soft: cubic-bezier(.32, .72, 0, 1);
     --dur-fast: .18s;
@@ -151,11 +73,7 @@
     --dur-slower: 1.05s;
 }
 
-/* ===========================================================================
-   2. CẦU NỐI SANG BOOTSTRAP
-   Gán lại các biến Bootstrap công bố. Đây là toàn bộ chỗ "nối dây" giữa bảng màu
-   riêng và thư viện - sửa token ở mục 1 là cả website đổi theo.
-   =========================================================================== */
+/* 2. Cầu nối sang biến Bootstrap */
 :root {
     --bs-primary: var(--jade-600);
     --bs-primary-rgb: 27, 122, 107;
@@ -186,9 +104,6 @@
     --bs-tertiary-bg: var(--sand-200);
 }
 
-/* --- Nút ---
-   Bootstrap 5.3 khai báo màu nút bằng biến cục bộ ngay trong lớp .btn-*, nên
-   phải gán đè ở đúng lớp đó chứ đổi --bs-primary ở :root là không ăn. */
 .btn {
     --bs-btn-font-family: var(--font-body);
     --bs-btn-font-weight: 600;
@@ -207,11 +122,6 @@
     transform: translateY(1px);
 }
 
-/* ⚠️ .btn-sm phải được khai LẠI ở đây.
-   Khối .btn phía trên đặt --bs-btn-padding-x: 1.35rem, và nó đè lên giá trị
-   .5rem mà Bootstrap khai trong .btn-sm - hai lớp cùng độ đặc hiệu, file này nạp
-   sau. Hậu quả là "nút nhỏ" rộng y hệt nút thường: bốn nút trên thanh điều hướng
-   cộng lại vượt 371px trong chỗ 353px và cả thanh xuống thành hai dòng. */
 .btn-sm {
     --bs-btn-padding-x: .85rem;
     --bs-btn-padding-y: .35rem;
@@ -236,8 +146,6 @@
     box-shadow: 0 12px 26px rgba(18, 101, 91, .28);
 }
 
-/* Nút hành động chính của cả website: cam đất nung. Dùng rất tiết chế - mỗi màn
-   hình chỉ một nút - để mắt biết ngay phải bấm vào đâu. */
 .btn-accent {
     --bs-btn-bg: var(--clay-600);
     --bs-btn-border-color: var(--clay-600);
@@ -320,7 +228,6 @@
     --bs-btn-hover-border-color: var(--jade-700);
 }
 
-/* --- Thẻ --- */
 .card {
     --bs-card-bg: #fff;
     --bs-card-border-color: var(--sand-200);
@@ -328,7 +235,6 @@
     --bs-card-inner-border-radius: var(--radius-md);
 }
 
-/* --- Huy hiệu --- */
 .badge {
     font-weight: 600;
     letter-spacing: .02em;
@@ -371,7 +277,6 @@
     color: var(--ink-500) !important;
 }
 
-/* --- Thông báo --- */
 .alert {
     border: 0;
     border-left: 4px solid;
@@ -397,9 +302,7 @@
     color: #6B4A16;
 }
 
-/* ===========================================================================
-   3. NỀN & CHỮ
-   =========================================================================== */
+/* 3. Nền & chữ */
 body {
     font-family: var(--font-body);
     background-color: var(--sand-100);
@@ -433,18 +336,13 @@ a {
     color: var(--jade-900);
 }
 
-/* Thanh cuộn cùng tông, tránh vệt xám mặc định phá màu ở khối nền tối. */
 * {
     scrollbar-color: var(--sand-400) transparent;
     scrollbar-width: thin;
 }
 
-/* ===========================================================================
-   4. MẢNH DÙNG LẠI
-   =========================================================================== */
+/* 4. Mảnh dùng lại (nhãn nhỏ, khối, nút) */
 
-/* Nhãn nhỏ in hoa nằm trên mỗi tiêu đề khối - dấu hiệu nhận biết của giao diện
-   kiểu tạp chí, giúp mắt bám được cấu trúc trang mà không cần kẻ đường. */
 .eyebrow {
     display: inline-flex;
     align-items: center;
@@ -453,9 +351,7 @@ a {
     font-weight: 700;
     letter-spacing: .18em;
     text-transform: uppercase;
-    /* clay-700 chứ không phải clay-600: đo thật thì #C2622D trên nền cát chỉ đạt
-       3,62 - dưới ngưỡng 4,5 của WCAG AA, mà nhãn này lại là cỡ chữ nhỏ nhất
-       trang. #9C4A1E đạt 5,39 và nhìn vẫn ra đúng màu đất nung. */
+
     color: var(--clay-700);
     margin-bottom: .75rem;
 }
@@ -495,7 +391,6 @@ a {
     font-size: 1.05rem;
 }
 
-/* Nền cát đậm hơn một nấc, dùng để tách khối liền kề mà không cần kẻ viền. */
 .bg-sand {
     background: var(--sand-200);
 }
@@ -504,9 +399,6 @@ a {
     background: var(--sand-50);
 }
 
-/* Khối nền ngọc bích rất sâu, có hoa văn đường đồng mức mờ như bản đồ địa hình.
-   Hoa văn nhúng thẳng dạng data URI: bớt một yêu cầu mạng, và không có file ảnh
-   nào có thể bị quên khi mang dự án sang máy khác. */
 .bg-jade {
     position: relative;
     background:
@@ -536,32 +428,12 @@ a {
     color: rgba(246, 239, 228, .78);
 }
 
-/* ---------------------------------------------------------------------------
-   CỤM CHỮ ĐƯỢC TÔ NỀN
-
-   Bản đầu làm kiểu "bút dạ quang": một vệt cao 0.34em nằm sát đáy chữ. Trên phông
-   có chân cỡ 5rem thì vệt ấy cắt ngang thân chữ, trông như chữ bị nhuộm mất nửa
-   dưới - xấu, và với tiếng Việt còn tệ hơn vì dấu nặng của "ệ" thò xuống đúng
-   vùng đó.
-
-   Nay tô TRỌN cả cụm thành một khối bo góc. Hai điểm phải tính kỹ:
-
-   1. Khối phải cao hơn hộp dòng. Playfair Display có phần trên khoảng 1.08em và
-      phần dưới khoảng 0.26em, cộng lại vượt quá line-height 1.18em của tiêu đề.
-      Thêm dấu chồng tầng của "ữ" (móc + ngã) và dấu nặng của "ệ" nữa thì chữ tràn
-      ra ngoài hộp. Vì vậy dùng top/bottom ÂM để nới khối ra hai đầu; nếu để
-      inset: 0 thì dấu bị cắt cụt.
-   2. Nới bằng top/bottom của lớp giả chứ KHÔNG bằng padding dọc của chính thẻ:
-      padding dọc sẽ làm dòng có chữ tô cao hơn các dòng khác, cả khối tiêu đề
-      lệch nhịp ngay.
-   --------------------------------------------------------------------------- */
 .mark-stroke {
     position: relative;
     display: inline-block;
     padding-inline: .2em;
     white-space: nowrap;
-    /* Chữ vẫn màu kem, nằm trên nền cam đậm - đây là chữ cỡ rất lớn nên ngưỡng
-       tương phản cần đạt là 3:1, cặp màu này vượt xa. */
+
     color: var(--sand-50);
 }
 
@@ -570,32 +442,19 @@ a {
     position: absolute;
     left: 0;
     right: 0;
-    /* ⚠️ Số DƯƠNG - co khối vào trong, đây là chỗ dễ hiểu ngược nhất của cả file.
-       Chiều cao thẻ chính là line-height (1.6 ≈ 127px), rộng hơn phần chữ thật
-       (105,6px). Nếu để số âm như phản xạ thông thường thì khối phình ra bằng cả
-       chiều cao dòng và chạm luôn hai dòng kề - đúng lỗi đã phải sửa. Số dương
-       kéo mép khối vào ôm sát chữ, phần dư còn lại thành khoảng hở giữa các dòng.
-       Playfair là trường hợp chật nhất (phông dự phòng Georgia đặt dấu thấp hơn),
-       nên chỉnh theo Playfair là an toàn cho cả hai. */
+
     top: 0;
     bottom: .012em;
-    /* Dải dừng ở clay-600, KHÔNG kéo tới clay-500: đo tương phản chữ kem trên
-       #D97A45 chỉ được 2,96 - dưới ngưỡng 3:1 mà WCAG AA đòi cho chữ cỡ lớn.
-       #C2622D đạt 3,97 và dải vẫn đủ chuyển sắc để nhìn ra chiều sâu. */
+
     background: linear-gradient(100deg,
                 var(--clay-800) 0%,
                 var(--clay-700) 45%,
                 var(--clay-600) 100%);
     border-radius: .18em;
     box-shadow: 0 10px 30px rgba(194, 98, 45, .35);
-    /* -2 chứ không phải -1: trong cùng một mức z-index, ::after được vẽ SAU
-       ::before, nên để cả hai cùng -1 thì khối nền này phủ mất vệt sáng. */
+
     z-index: -2;
 
-    /* Trạng thái nghỉ là ĐÃ TÔ ĐẦY. Hiệu ứng quét chỉ bật khi có .anim-ready
-       (xem khối "HIỆU ỨNG VÀO CỦA HERO"): viết ngược lại - nghỉ ở scaleX(0) rồi
-       nhờ animation kéo lên 1 - thì máy nào không chạy animation sẽ mất trắng
-       khối màu này, đúng thứ đang muốn khoe. */
     transform-origin: left center;
 }
 
@@ -607,27 +466,22 @@ a {
     from { transform: scaleX(0); }
 }
 
-/* Vệt sáng lướt qua một lần sau khi khối đã tô xong - đủ để mắt bắt được chuyển
-   động mà không thành thứ nhấp nháy gây khó chịu. */
 .mark-stroke::before {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    /* Phải khớp từng con số với ::after, lệch một chút là vệt sáng thò ra ngoài
-       mép khối nền và lộ ngay thành một đường viền sáng. */
+
     top: 0;
     bottom: .012em;
     border-radius: .18em;
-    z-index: -1;              /* nằm trên khối nền (-2), vẫn dưới chữ */
+    z-index: -1;
     background: linear-gradient(105deg,
                 transparent 35%,
                 rgba(253, 250, 245, .38) 50%,
                 transparent 65%);
     background-size: 260% 100%;
-    /* Trạng thái nghỉ: vệt sáng nằm ngoài khung nên không nhìn thấy. Ở đây "không
-       nhìn thấy" mới là đúng, nên dùng delay thoải mái - máy không chạy animation
-       thì chỉ mất một vệt loáng, không mất nội dung nào. */
+
     background-position: 130% 0;
 }
 
@@ -639,7 +493,6 @@ a {
     to { background-position: -60% 0; }
 }
 
-/* Thẻ kính mờ dùng trên nền tối. */
 .glass {
     background: rgba(246, 239, 228, .09);
     border: 1px solid rgba(246, 239, 228, .18);
@@ -647,20 +500,11 @@ a {
     backdrop-filter: blur(8px);
 }
 
-/* ===========================================================================
-   5. THANH ĐIỀU HƯỚNG
-   =========================================================================== */
+/* 5. Thanh điều hướng */
 .site-nav {
     background: var(--jade-900);
     padding-block: .55rem;
-    /* ⚠️ z-index BẮT BUỘC, không phải cho đẹp.
-       Dải tiêu đề .page-head ngay bên dưới mang lớp .bg-jade, mà .bg-jade có
-       `isolation: isolate` để giữ khối tô nền z-index âm của nó. isolation tạo
-       ra một NGỮ CẢNH XẾP LỚP, và một ngữ cảnh như vậy được vẽ như thể z-index:0
-       - tức là cùng tầng với thanh điều hướng (z-index: auto) nhưng đứng SAU
-       trong cây HTML, nên nó vẽ đè lên. Hậu quả nhìn thấy: bấm "Danh mục" thì
-       menu xổ xuống bị dải tiêu đề cắt cụt ngay tại mép trên của nó.
-       1030 là tầng "fixed" của Bootstrap: trên dải tiêu đề, vẫn dưới hộp thoại. */
+
     position: relative;
     z-index: 1030;
     transition: background-color var(--dur-med) var(--ease-out),
@@ -668,10 +512,6 @@ a {
                 padding var(--dur-med) var(--ease-out);
 }
 
-/* Trên trang chủ, thanh điều hướng trong suốt để hero tràn lên tận đỉnh màn
-   hình; cuộn quá 40px thì .is-scrolled được app.js gắn vào và nền đặc lại để chữ
-   luôn đọc được. Không có bước này thì chữ trắng của thanh điều hướng sẽ đè lên
-   nền sáng của khối bên dưới. */
 .site-nav--overlay {
     position: absolute;
     top: 0;
@@ -719,8 +559,6 @@ a {
     box-shadow: 0 6px 16px rgba(194, 98, 45, .38);
 }
 
-/* Đệm ngang của mục điều hướng khai bằng biến vì gạch chân trượt bên dưới phải
-   khớp đúng con số đó; đổi một chỗ mà quên chỗ kia là gạch chân lệch khỏi chữ. */
 .site-nav {
     --nav-link-pad: .9rem;
 }
@@ -731,13 +569,10 @@ a {
     font-size: .95rem;
     padding-inline: var(--nav-link-pad);
     position: relative;
-    /* "Trang chủ" gãy thành hai dòng là thanh điều hướng đã hỏng: thà để nó tràn
-       ra cho mình nhìn thấy còn hơn tự gấp lại và trông như một bố cục có chủ ý. */
+
     white-space: nowrap;
 }
 
-/* Từ 992 tới 1399px chỗ vừa đủ chật: bóp đệm và cỡ chữ lại một nấc để thanh điều
-   hướng giữ đúng MỘT dòng. Ô tìm kiếm đã được ẩn ở khoảng này (xem layout.html). */
 @media (min-width: 992px) and (max-width: 1399.98px) {
     .site-nav {
         --nav-link-pad: .6rem;
@@ -757,7 +592,6 @@ a {
     color: #fff;
 }
 
-/* Gạch chân trượt ra khi rê chuột. */
 .site-nav .nav-link::after {
     content: "";
     position: absolute;
@@ -793,7 +627,6 @@ a {
     color: var(--jade-900);
 }
 
-/* Ô tìm kiếm trên thanh điều hướng, kiểu viên thuốc trong suốt. */
 .nav-search .form-control {
     background: rgba(246, 239, 228, .12);
     border: 1px solid rgba(246, 239, 228, .22);
@@ -814,10 +647,6 @@ a {
     color: #fff;
 }
 
-/* ⚠️ inline-flex chứ KHÔNG phải grid. Nút chọn ngôn ngữ dùng lại lớp này và bên
-   trong nó có HAI phần tử: cụm biểu tượng + chữ "VI", và mũi tên ::after mà
-   Bootstrap thêm vào cho .dropdown-toggle. Với display:grid thì hai phần tử ấy
-   thành hai HÀNG - mũi tên rơi xuống dòng dưới và nút cao gấp đôi. */
 .nav-icon-btn {
     width: 40px;
     height: 40px;
@@ -844,66 +673,18 @@ a {
     font-size: .68rem;
 }
 
-/* ===========================================================================
-   6. TRANG CHỦ
-   =========================================================================== */
-
-/* --- Hero ---
-   ⚠️ Lớp .hero (dải nền ngọc bích cao gần hết màn hình) ĐÃ BỊ GỠ ở vòng dựng lại
-   trang chủ: trang chủ nay dùng .home-hero ở mục 14, còn các trang trong vẫn
-   dùng .page-head như trước. Không còn khuôn mẫu nào gắn class="hero".
-
-   Hai lớp .hero-title và .hero-lead thì GIỮ LẠI - about, cart, tour/list và
-   tour/detail đang dùng chúng bên trong .page-head. Tên hơi lệch với chỗ dùng,
-   nhưng đổi tên là phải sửa bốn khuôn mẫu cho một việc thuần thẩm mỹ. */
+/* 6. Trang chủ */
 
 .hero-title {
-    /* Hạ trần từ 5rem xuống 4.5rem sau khi đo: tiêu đề ba dòng với line-height
-       1.52 (cần cho khối tô nền) làm ô tìm kiếm rơi xuống dưới nếp gấp trên màn
-       hình cao 800px. Ô tìm kiếm là việc đầu tiên khách muốn làm, không được
-       phải cuộn mới thấy. */
+
     font-size: clamp(2.4rem, 5.6vw, 4.5rem);
     color: var(--sand-50);
     margin-bottom: 1.25rem;
     text-wrap: balance;
-    /* ⚠️ Con số này bị ràng buộc bởi khối tô nền của .mark-stroke, đừng hạ xuống.
-       Đo thật ở cỡ 79px: riêng phần chữ kể cả dấu đã cao 105,6px, trong khi
-       line-height 1.18 chỉ cho mỗi dòng 93,6px - tức là hai dòng vốn đã chồm lên
-       nhau 12px, chỉ chưa lộ ra vì khoảng trống giữa các dấu. Vẽ một khối nền bọc
-       lấy chữ là khối ấy lấn ngay sang dòng trên.
-       1.52 cho mỗi dòng khoảng 121px: đủ chỗ cho khối nền cộng khoảng hở hai bên,
-       mà không đẩy ô tìm kiếm xuống dưới nếp gấp trên màn hình cao 720px. */
+
     line-height: 1.52;
 }
 
-/* ---------------------------------------------------------------------------
-   HIỆU ỨNG VÀO CỦA DẢI TIÊU ĐỀ TRANG TRONG
-
-   Tiêu đề rồi tới câu dẫn, lệch nhau một nhịp. (Bản cũ có năm thành phần vì hero
-   trang chủ nằm chung ở đây; nay trang chủ đã có hiệu ứng vào riêng ở mục 14.9.)
-
-   ⚠️ HAI ĐIỀU Ở ĐÂY LÀ CÓ CHỦ ĐÍCH, ĐỪNG "DỌN LẠI CHO GỌN".
-
-   (1) Mọi luật chuyển động đều nằm sau lớp .anim-ready, do app.js gắn vào thẻ
-       html. Máy không chạy được JavaScript sẽ không có lớp ấy, không có luật
-       animation nào áp dụng, và hero hiện đầy đủ ngay lập tức. Nội dung không
-       bao giờ phụ thuộc vào một hiệu ứng trang trí.
-
-   (2) Chỉ khai báo khung hình "from", không khai báo "to": mặc định "to" chính
-       là giá trị thật của phần tử. Nhờ vậy không cần fill-mode, và khi máy bật
-       "giảm chuyển động" (thời lượng bị ép về ~0) thì phần tử về đúng trạng
-       thái nhìn thấy chứ không kẹt ở khung hình đầu.
-
-   Bài học đằng sau: bản đầu viết kiểu thông thường (animation-delay + opacity 0
-   + fill-mode "both") và khi kiểm thử đã gặp một môi trường trình duyệt đăng ký
-   animation nhưng đồng hồ KHÔNG BAO GIỜ chạy - kết quả là TOÀN BỘ HERO nằm ở
-   opacity 0, mất sạch tiêu đề lẫn ô tìm kiếm.
-
-   Cảm giác so le có được nhờ cho mỗi phần tử một THỜI LƯỢNG khác nhau thay vì
-   dùng animation-delay: cùng xuất phát nhưng về đích lệch nhau, mắt đọc ra
-   thành một đợt sóng. (Dùng delay thì trong lúc chờ phần tử vẫn ở khung hình
-   đầu - lại quay về đúng cái bẫy trên.)
-   --------------------------------------------------------------------------- */
 .anim-ready .hero-title,
 .anim-ready .hero-lead {
     animation-name: heroRise;
@@ -924,7 +705,6 @@ a {
     margin-bottom: 1.75rem;
 }
 
-/* --- Dải cam kết ngay dưới hero --- */
 .assurance {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
@@ -972,9 +752,6 @@ a {
     line-height: 1.5;
 }
 
-/* --- Lưới danh mục kiểu tạp chí ---
-   Ô đầu tiên chiếm hai cột và hai hàng để phá thế lưới đều tăm tắp; đây là mẹo
-   bố cục khiến trang trông có bàn tay biên tập chứ không phải do máy sinh ra. */
 .cat-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1016,8 +793,6 @@ a {
     transform: scale(1.06);
 }
 
-/* Lớp phủ tối dần từ dưới lên: chữ trắng luôn đọc được dù hình bên dưới sáng hay
-   tối. Đây là điều kiện bắt buộc chứ không phải trang trí. */
 .cat-tile__veil {
     position: absolute;
     inset: 0;
@@ -1076,17 +851,6 @@ a {
     transform: translateX(0);
 }
 
-/* ---------------------------------------------------------------------------
-   Ô cuối cùng không được phép đứng lẻ loi trên một hàng riêng.
-
-   Lưới có 4 cột, ô đầu chiếm 2x2 tức 4 ô. Vậy hàng chỉ đầy khi số ô thường chia
-   hết cho 4, nghĩa là tổng số ô bằng 4k+1 thì hàng cuối đủ, còn 4k+2 (6, 10, 14)
-   thì ô cuối trơ ra một mình cạnh ba ô trống - đúng cảnh đang xảy ra với sáu
-   danh mục của dữ liệu mẫu. Kéo nó trải hết hàng vừa lấp chỗ trống vừa cho cả
-   khối một nhịp kết.
-
-   4k+3 (7, 11) thì hàng cuối còn hai ô: mỗi ô rộng gấp đôi là vừa khít.
-   --------------------------------------------------------------------------- */
 @media (min-width: 992px) {
     .cat-tile:nth-child(6):last-child,
     .cat-tile:nth-child(10):last-child,
@@ -1112,7 +876,6 @@ a {
     .cat-tile--wide .cat-tile__name { font-size: 1.2rem; }
 }
 
-/* --- Dải điểm đến --- */
 .dest-rail {
     display: flex;
     flex-wrap: wrap;
@@ -1152,7 +915,6 @@ a {
     color: var(--turmeric);
 }
 
-/* --- Các bước đặt tour --- */
 .step {
     position: relative;
     padding-left: 4.2rem;
@@ -1181,7 +943,6 @@ a {
     color: var(--turmeric);
 }
 
-/* --- Khối kêu gọi hành động cuối trang --- */
 .cta-band {
     position: relative;
     border-radius: var(--radius-xl);
@@ -1198,9 +959,7 @@ a {
     color: var(--sand-50);
 }
 
-/* ===========================================================================
-   7. THẺ TOUR
-   =========================================================================== */
+/* 7. Thẻ tour & nền nghệ thuật khi chưa có ảnh */
 .tour-card {
     background: #fff;
     border: 1px solid var(--sand-200);
@@ -1239,12 +998,6 @@ a {
     transform: scale(1.05);
 }
 
-/* --- Nền nghệ thuật khi tour chưa có ảnh ---
-   Dữ liệu mẫu chưa có ảnh chụp nào. Thay vì để lộ khung ảnh vỡ hoặc một chữ
-   "no image" xám xịt, mỗi tour được gán một trong sáu khung cảnh vẽ bằng gradient
-   - biển, núi rừng, đồi cát, vịnh, đêm, ruộng bậc thang. Khuôn mẫu chọn cảnh theo
-   phép chia lấy dư mã tour nên cùng một tour luôn ra cùng một cảnh, và các tour
-   cạnh nhau không trùng nhau. Khi quản trị viên tải ảnh thật lên, ảnh thay chỗ này. */
 .tour-art {
     position: absolute;
     inset: 0;
@@ -1254,8 +1007,6 @@ a {
     transition: transform var(--dur-slow) var(--ease-out);
 }
 
-/* Đường chân trời chung cho cả sáu cảnh - dựng bằng SVG nhúng, nằm đè lên
-   gradient để mỗi ô trông như một phong cảnh chứ không phải một vệt màu. */
 .tour-art::after {
     content: "";
     position: absolute;
@@ -1284,7 +1035,6 @@ a {
 .tour-art.art-4 { background: linear-gradient(165deg, #4A5B8C 0%, #14203A 100%); }
 .tour-art.art-5 { background: linear-gradient(165deg, #9C8A3C 0%, #3C4A22 100%); }
 
-/* Huy hiệu góc ảnh. */
 .tour-card__chip {
     position: absolute;
     top: .8rem;
@@ -1318,7 +1068,7 @@ a {
     font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--clay-700);   /* cùng lý do tương phản như .eyebrow */
+    color: var(--clay-700);
     margin-bottom: .45rem;
 }
 
@@ -1390,16 +1140,10 @@ a {
     line-height: 1.1;
 }
 
-/* ===========================================================================
-   8. TRANG TRONG
-   =========================================================================== */
+/* 8. Trang trong */
 
-/* Dải tiêu đề dùng chung cho mọi trang trong - thay cho việc mỗi trang tự chế
-   một kiểu tiêu đề khác nhau. */
 .page-head {
-    /* Đệm trên hạ từ 6-8rem xuống: con số cũ là để chừa chỗ cho thanh điều hướng
-       nằm ĐÈ lên dải này. Nay thanh điều hướng nằm theo dòng chảy ở mọi trang
-       trong (xem mục 14.1), chỗ trống ấy thành một mảng tối rỗng ở đầu trang. */
+
     padding: clamp(3rem, 5vw, 4.5rem) 0 clamp(2.5rem, 5vw, 4rem);
 }
 
@@ -1417,8 +1161,6 @@ a {
     color: var(--turmeric);
 }
 
-/* Thẻ trắng nổi lên đè một phần vào dải tiêu đề - tạo chiều sâu và buộc mắt đi
-   từ tiêu đề xuống nội dung. */
 .panel {
     background: #fff;
     border: 1px solid var(--sand-200);
@@ -1436,7 +1178,6 @@ a {
     padding: clamp(1.25rem, 3vw, 2rem);
 }
 
-/* Trích dẫn / lời chứng thực. */
 .quote {
     background: #fff;
     border: 1px solid var(--sand-200);
@@ -1482,7 +1223,6 @@ a {
     font-weight: 700;
 }
 
-/* Con số lớn. */
 .figure-stat {
     text-align: center;
 }
@@ -1506,7 +1246,6 @@ a {
 .bg-jade .figure-stat__value { color: var(--turmeric); }
 .bg-jade .figure-stat__label { color: rgba(246, 239, 228, .68); }
 
-/* Thẻ giá trị cốt lõi. */
 .value-card {
     background: var(--sand-50);
     border: 1px solid var(--sand-200);
@@ -1535,8 +1274,6 @@ a {
     box-shadow: 0 8px 20px rgba(14, 79, 71, .25);
 }
 
-/* Ghi chú trung thực: đây là đồ án môn học chứ không phải doanh nghiệp thật.
-   Để nổi bật chứ không giấu ở chân trang. */
 .disclosure {
     border: 1px dashed var(--clay-300);
     background: var(--clay-100);
@@ -1546,7 +1283,6 @@ a {
     font-size: .92rem;
 }
 
-/* --- Trang chi tiết tour --- */
 .tour-hero-img {
     width: 100%;
     max-height: 460px;
@@ -1596,8 +1332,6 @@ a {
     border-radius: var(--radius-sm);
 }
 
-/* Cột lọc bám theo màn hình khi cuộn danh sách tour dài. 90px là chiều cao thanh
-   điều hướng cộng một khoảng thở. */
 .filter-panel {
     position: sticky;
     top: 90px;
@@ -1607,9 +1341,7 @@ a {
     .filter-panel { position: static; }
 }
 
-/* ===========================================================================
-   9. BIỂU MẪU, BẢNG, PHÂN TRANG
-   =========================================================================== */
+/* 9. Biểu mẫu, bảng, phân trang */
 .form-control,
 .form-select {
     border-color: var(--sand-300);
@@ -1723,11 +1455,6 @@ a {
     color: #fff !important;
 }
 
-/* --- Bảng gợi ý tìm kiếm ---
-   Nằm đè lên nội dung trang chứ không đẩy trang xuống, nên phải position:
-   absolute. Thẻ form bao ngoài đã có position-relative để mốc toạ độ là chính ô
-   tìm kiếm chứ không phải cả cửa sổ. z-index phải cao hơn thanh điều hướng
-   (Bootstrap dùng 1030), nếu không bảng gợi ý sẽ bị chính navbar che mất. */
 .search-suggest {
     position: absolute;
     top: calc(100% + .5rem);
@@ -1753,17 +1480,11 @@ a {
     background: var(--jade-100);
 }
 
-/* --- Văn bản nhiều dòng ---
-   Mô tả và lịch trình được lưu kèm ký tự xuống dòng. Dùng th:text để nội dung
-   luôn được thoát ký tự (chặn chèn HTML), nên phải nhờ CSS giữ lại chỗ ngắt dòng
-   thay vì chèn thẻ <br>. */
 .preserve-lines {
     white-space: pre-line;
 }
 
-/* ===========================================================================
-   10. CHÂN TRANG
-   =========================================================================== */
+/* 10. Chân trang */
 .site-footer {
     background: var(--jade-950);
     color: rgba(246, 239, 228, .72);
@@ -1800,33 +1521,9 @@ a {
     margin-bottom: .85rem;
 }
 
-/* ===========================================================================
-   11. KHU VỰC QUẢN TRỊ
-   Cùng bảng màu nhưng đặc hơn, ít trang trí hơn: đây là bàn làm việc chứ không
-   phải trang bán hàng. Chữ và số phải nổi, mọi thứ khác lùi lại.
-
-   ⚠️ BỐ CỤC Ở ĐÂY KHÔNG DÙNG LƯỚI CỦA BOOTSTRAP NỮA.
-
-   Bản trước xếp bằng `container-fluid > row > col-lg-2 + col-lg-10`, và đó chính
-   là chỗ sinh ra bốn lỗi nhìn thấy được:
-
-     1. Nền trắng của menu bên trái nằm trên thẻ <aside>, mà <aside> chỉ cao bằng
-        nội dung của nó. Trang nào menu ngắn hơn nội dung - tức là mọi trang - đều
-        lộ ra một mảng trắng cụt lửng giữa chừng rồi đổi sang nền cát.
-     2. `top: 56px` được viết cứng trong khi thanh trên cao khoảng 72px, nên lúc
-        cuộn thì menu chui một phần xuống dưới thanh trên.
-     3. `col-lg-2` là 16,7% theo bề rộng màn hình: ở 1920px nó thành 320px thừa
-        thãi, ở 1024px chỉ còn 170px và nhãn "Quản lý danh mục" xuống dòng.
-     4. Phần nội dung không có bề rộng trần nên bảng số liệu kéo dài hết 1920px,
-        mắt phải quét ngang cả màn hình mới đọc xong một dòng.
-
-   Nay dùng CSS Grid với cột trái CỐ ĐỊNH theo pixel. Bề rộng menu là hằng số của
-   giao diện chứ không phải một tỉ lệ của màn hình, nên phải khai bằng px.
-   =========================================================================== */
+/* 11. Khu vực quản trị (CSS Grid, không dùng lưới Bootstrap) */
 :root {
-    /* Hai hằng số này ràng buộc nhau: menu dính (sticky) phải bắt đầu đúng ở mép
-       dưới thanh trên, nếu không sẽ chui xuống dưới nó khi cuộn. Khai một chỗ rồi
-       dùng lại, thay vì chép số 56/72 vào từng luật. */
+
     --admin-topbar-h: 64px;
     --admin-aside-w: 264px;
 }
@@ -1850,7 +1547,6 @@ a {
     margin-right: .15rem;
 }
 
-/* --- Khung hai cột --- */
 .admin-shell {
     width: 100%;
 }
@@ -1862,8 +1558,7 @@ a {
 }
 
 .admin-aside {
-    /* Nền và đường kẻ nằm trên CHÍNH thẻ dính này, không nằm trên thẻ bọc: nhờ vậy
-       dải màu luôn cao đúng bằng khung nhìn, không phụ thuộc nội dung dài ngắn. */
+
     position: sticky;
     top: var(--admin-topbar-h);
     height: calc(100vh - var(--admin-topbar-h));
@@ -1875,14 +1570,12 @@ a {
 }
 
 .admin-main {
-    /* Trần bề rộng: quá 1400px thì bảng biến thành một dải chữ kéo ngang cả màn
-       hình. Căn trái chứ không căn giữa - nội dung phải bám sát menu. */
+
     max-width: 1400px;
     min-width: 0;
     padding: clamp(1.25rem, 2.4vw, 2.25rem);
 }
 
-/* --- Menu bên trái --- */
 .admin-sidebar {
     display: flex;
     flex-direction: column;
@@ -1905,8 +1598,7 @@ a {
 }
 
 .admin-sidebar .list-group-item i {
-    /* Bề ngang cố định để mọi nhãn bắt đầu trên cùng một đường dọc, kể cả khi hai
-       biểu tượng có bề ngang thật khác nhau. */
+
     flex: 0 0 1.15rem;
     font-size: 1.02rem;
     color: var(--jade-500);
@@ -1928,7 +1620,6 @@ a {
     color: var(--turmeric);
 }
 
-/* --- Nhịp chữ của bàn làm việc --- */
 .admin-main h1 {
     font-size: clamp(1.5rem, 2.2vw, 1.9rem);
     line-height: 1.2;
@@ -1937,8 +1628,7 @@ a {
 
 .admin-main .card {
     border-radius: var(--radius-md);
-    /* Đổ bóng nhẹ hơn hẳn trang bán hàng: ở đây có hàng chục khối cùng lúc, bóng
-       dày làm cả màn hình trông lợn cợn. */
+
     box-shadow: var(--shadow-xs), var(--shadow-inset-top);
 }
 
@@ -1946,7 +1636,6 @@ a {
     padding: 1.15rem 1.25rem;
 }
 
-/* Thẻ số liệu của bảng điều khiển: con số là nội dung, nhãn lùi lại. */
 .admin-stat__label {
     font-size: .78rem;
     font-weight: 600;
@@ -1970,7 +1659,6 @@ a {
     color: var(--clay-700);
 }
 
-/* --- Bảng --- */
 .admin-main .table {
     --bs-table-bg: transparent;
     margin-bottom: 0;
@@ -2005,9 +1693,6 @@ a {
     border-radius: var(--radius-sm);
 }
 
-/* --- Dưới 992px: menu dọc đổi thành một dải chạy ngang ---
-   Xếp chồng lên nhau thì phải cuộn qua năm mục mới tới nội dung. Một dải cuộn
-   ngang chỉ cao một dòng và vẫn tới được cả năm mục. */
 @media (max-width: 991.98px) {
     .admin-grid {
         grid-template-columns: minmax(0, 1fr);
@@ -2041,14 +1726,8 @@ a {
     }
 }
 
-/* ===========================================================================
-   12. CHUYỂN ĐỘNG
-   =========================================================================== */
+/* 12. Chuyển động */
 
-/* Hiện dần khi cuộn tới. app.js gắn .is-visible bằng IntersectionObserver.
-   Trạng thái ẩn CHỈ bật khi lớp .reveal-ready có mặt trên thẻ html - lớp này do
-   chính app.js thêm vào. Nhờ vậy máy không chạy được JavaScript sẽ không bao giờ
-   rơi vào cảnh mọi nội dung tàng hình vĩnh viễn. */
 .reveal-ready .reveal {
     opacity: 0;
     transform: translateY(26px);
@@ -2070,8 +1749,6 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Tôn trọng lựa chọn "giảm chuyển động" của hệ điều hành: với người bị say chuyển
-   động thì hiệu ứng trượt không phải trang trí mà là khó chịu thật. */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -2088,33 +1765,13 @@ html {
     }
 }
 
-/* ===========================================================================
-   13. LỚP MỀM & MƯỢT
-   ---------------------------------------------------------------------------
-   Thêm ở vòng hoàn thiện giao diện. Mục này KHÔNG đổi bố cục, không đổi bảng
-   màu, không đổi cỡ chữ - chỉ chỉnh ba thứ: độ mềm của khối (bo góc, đổ bóng,
-   viền), độ mượt của chuyển động (đường cong, thời lượng), và những bề mặt do
-   trình duyệt vẽ mà hầu hết trang web bỏ quên.
+/* 13. Lớp mềm & mượt */
 
-   Vì sao mục cuối cùng: nó cố ý đè lên các mục trên bằng cùng độ đặc hiệu hoặc
-   cao hơn một chút, nên gỡ cả mục này ra là trang trở về đúng trạng thái trước
-   đó, không sót mảnh nào.
-   =========================================================================== */
-
-/* ---------------------------------------------------------------------------
-   13.1 Bề mặt của trình duyệt
-
-   Con trỏ nhập, thanh cuộn, vòng lấy nét, gạch chân liên kết, chữ số trong bảng:
-   năm thứ này mặc định mang hình hài của trình duyệt chứ không thuộc bảng màu
-   nào. Chỉnh chúng tốn vài dòng và là dấu hiệu rõ nhất phân biệt một trang được
-   DỰNG với một trang được lắp.
-   --------------------------------------------------------------------------- */
 :root {
     caret-color: var(--jade-600);
     accent-color: var(--jade-600);
 }
 
-/* Thanh cuộn cho nhân Chromium/WebKit. Firefox đã dùng scrollbar-color ở mục 3. */
 ::-webkit-scrollbar {
     width: 11px;
     height: 11px;
@@ -2136,10 +1793,6 @@ html {
     background-clip: content-box;
 }
 
-/* Vòng lấy nét bằng bàn phím.
-   Dùng :focus-visible chứ không phải :focus - bấm chuột vào nút thì không hiện
-   vòng, dùng phím Tab thì hiện. Giữ outline thật (không phải box-shadow) để
-   chế độ tương phản cao của hệ điều hành vẫn vẽ được nó. */
 :focus-visible {
     outline: 2px solid var(--jade-500);
     outline-offset: 3px;
@@ -2153,8 +1806,6 @@ html {
     outline-color: var(--turmeric);
 }
 
-/* Gạch chân của liên kết trong phần nội dung: hạ xuống khỏi chân chữ và làm mảnh
-   lại. Gạch chân sát chữ cắt ngang đuôi "g", "y" và cả dấu nặng của tiếng Việt. */
 main a:not(.btn):not(.nav-link):not(.page-link) {
     text-underline-offset: .22em;
     text-decoration-thickness: 1px;
@@ -2166,8 +1817,6 @@ main a:not(.btn):not(.nav-link):not(.page-link):hover {
     text-decoration-color: currentColor;
 }
 
-/* Chữ số đều bề ngang: cột giá và cột tiền trong bảng thẳng hàng theo chiều dọc
-   thay vì nhảy qua lại mỗi khi đổi con số. */
 .tour-card__price,
 .price,
 table td,
@@ -2175,13 +1824,6 @@ table th {
     font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------------------------
-   13.2 Vật liệu của khối
-
-   Thẻ và bảng nền trắng nhận thêm hai thứ: viền mảnh pha màu ngọc bích thay cho
-   viền cát, và một vệt sáng dày 1px ở mép trên. Vệt sáng đó là toàn bộ khác biệt
-   giữa "hình chữ nhật trắng" và "một mặt vật liệu có bề dày".
-   --------------------------------------------------------------------------- */
 .panel,
 .tour-card,
 .card {
@@ -2189,8 +1831,6 @@ table th {
     box-shadow: var(--shadow-sm), var(--shadow-inset-top);
 }
 
-/* Ô nhập cũng là vật liệu: lõm xuống thay vì nổi lên, nên vệt sáng đặt ở mép
-   dưới bằng cách đảo dấu. */
 .form-control,
 .form-select {
     border-color: var(--hairline-strong);
@@ -2205,15 +1845,6 @@ table th {
                 0 0 0 .25rem rgba(42, 148, 132, .16);
 }
 
-/* ---------------------------------------------------------------------------
-   13.3 Chuyển động
-
-   Toàn bộ chuyển động chạy trên transform và opacity - hai thuộc tính duy nhất
-   trình duyệt xử lý được trên GPU. Không bao giờ chuyển động top/left/width/
-   height: chúng buộc trình duyệt tính lại bố cục mỗi khung hình.
-   --------------------------------------------------------------------------- */
-
-/* Thẻ tour: nâng cao hơn một chút, chậm hơn một chút, và bóng nở theo. */
 .tour-card {
     transition: transform var(--dur-med) var(--ease-soft),
                 box-shadow var(--dur-med) var(--ease-soft),
@@ -2226,15 +1857,11 @@ table th {
     border-color: var(--jade-200);
 }
 
-/* Ảnh trong thẻ phóng chậm hơn hẳn phần khung: hai tốc độ khác nhau tạo ra một
-   lớp chiều sâu nhỏ, giống như nhìn qua khung cửa. */
 .tour-card__media img,
 .tour-art {
     transition: transform var(--dur-slower) var(--ease-soft);
 }
 
-/* Nút bấm: nhấn xuống thì lún lại một chút rồi bật về. Đây là phản hồi xúc giác
-   rẻ nhất mà giao diện web có được. */
 .btn {
     transition: background-color var(--dur-fast) var(--ease-soft),
                 border-color var(--dur-fast) var(--ease-soft),
@@ -2267,17 +1894,9 @@ table th {
     box-shadow: var(--shadow-xs);
 }
 
-/* Hiện dần khi cuộn tới: quãng đường ngắn lại, thời gian dài ra, thêm một chút
-   thu phóng. Đi ít mà lâu thì đọc ra "êm"; đi nhiều mà nhanh thì đọc ra "giật".
-
-   KHÔNG đụng tới cơ chế bảo hiểm ở mục 12: trạng thái ẩn vẫn chỉ bật khi có lớp
-   .reveal-ready do JavaScript gắn, và app.js vẫn có hẹn giờ hiện hết sau 2,5
-   giây. Một hiệu ứng trang trí không bao giờ được phép làm mất nội dung. */
 .reveal-ready .reveal {
     transform: translateY(18px) scale(.994);
-    /* .78s chứ không phải 1,05s: quãng đường đã ngắn lại thì kéo dài thêm nữa chỉ
-       làm khối "lết" theo sau con lăn chuột khi người dùng cuộn nhanh. Mềm là do
-       đường cong và quãng đường ngắn, không phải do chậm. */
+
     transition: opacity var(--dur-slow) var(--ease-out),
                 transform var(--dur-slow) var(--ease-out);
 }
@@ -2286,16 +1905,12 @@ table th {
     transform: none;
 }
 
-/* Thanh điều hướng đổi nền khi cuộn: cho nó đi cùng một đường cong với mọi thứ
-   còn lại thay vì nhảy cái rụp. */
 .site-nav {
     transition: background-color var(--dur-med) var(--ease-soft),
                 box-shadow var(--dur-med) var(--ease-soft),
                 backdrop-filter var(--dur-med) var(--ease-soft);
 }
 
-/* Người chọn "giảm chuyển động" thì mục 12 đã tắt hết thời lượng; ở đây chỉ cần
-   bảo đảm không còn phép biến hình nào đọng lại. */
 @media (prefers-reduced-motion: reduce) {
     .tour-card:hover,
     .btn:active,
@@ -2310,73 +1925,31 @@ table th {
     }
 }
 
-/* ===========================================================================
-   14. TRANG CHỦ - BỐ CỤC MỚI
-   ---------------------------------------------------------------------------
-   Trang chủ có bố cục riêng, không dùng chung một lớp nào với dải tiêu đề
-   .page-head của /about, /tours, /tours/{id} và /cart. Mọi lớp ở mục này đều
-   mang tiền tố .home-* nên chỉ trang chủ nhận, sửa ở đây không đụng tới trang
-   nào khác.
+/* 14. Trang chủ - bố cục mới */
 
-   Ý đồ: cả trang một tông SÁNG (nền cát), chữ mực, đúng một màu nhấn là cam đất
-   nung. Chỉ có HAI khối tối trong toàn trang - "bốn bước" và dải kêu gọi cuối -
-   đặt xa nhau để đọc ra như hai dấu chấm câu, chứ không phải nền trang nhảy qua
-   lại giữa sáng và tối.
-
-   Chuyển động ở đây có ba nguồn, chọn theo thứ tự "hỏng cái nào cũng không mất
-   nội dung":
-     1. animation-timeline: view() - trình duyệt tự tính theo vị trí cuộn, không
-        tốn một dòng JavaScript và không phải nghe sự kiện scroll nào. Trình duyệt
-        chưa hỗ trợ thì khối đứng yên.
-     2. transition + hai biến CSS do app.js đặt theo con trỏ - không có JavaScript
-        thì biến bằng 0 và khối nằm đúng chỗ đã khai.
-     3. animation chỉ khai khung hình "from" - xem chú thích dài ở mục 14.9.
-   =========================================================================== */
-
-/* ---------------------------------------------------------------------------
-   14.1 Thanh điều hướng nổi
-
-   Lớp này nằm ở MỌI trang (layout.html gắn cứng), không phải chỉ trang chủ. Đây
-   là chỗ giữ cho màu của thanh điều hướng nhất quán: bản trước chỉ trang chủ mới
-   có viên thuốc sáng, các trang còn lại rơi về nền ngọc bích đặc của mục 5, nên
-   mỗi lần bấm sang trang khác là cả thanh đổi màu đánh "phịch".
-
-   Nền của thẻ <nav> phải là TRONG SUỐT để đè được nền ngọc bích mà mục 5 đặt;
-   phần nhìn thấy nằm ở .container bên trong, chính nó mới là viên thuốc.
-   --------------------------------------------------------------------------- */
 .site-nav--float {
     padding-block: 1.1rem;
     background: transparent;
 }
 
 .site-nav--float > .container {
-    /* .92 chứ không phải .78: viên thuốc này nay đứng trên hai loại nền khác hẳn
-       nhau - nền cát của trang chủ và dải ngọc bích đậm ở đầu các trang trong.
-       Trong quá thì nó ngả màu theo nền phía sau và hai trang trông ra hai sắc
-       khác nhau, tức là hỏng đúng thứ đang muốn sửa. */
+
     background: rgba(253, 250, 245, .92);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     border: 1px solid var(--hairline);
-    /* xl chứ không phải pill: lúc mở menu trên điện thoại khối này cao vài trăm
-       pixel, bo tròn hoàn toàn sẽ thành hình viên thuốc dựng đứng. */
+
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md), var(--shadow-inset-top);
     padding: .42rem .55rem .42rem 1.15rem;
 }
 
-/* Máy không làm mờ được nền thì nền trong suốt 78% sẽ để chữ của hero chạy xuyên
-   qua thanh điều hướng - đục hẳn lại. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .site-nav--float > .container {
         background: var(--sand-50);
     }
 }
 
-/* Lúc cuộn, viên thuốc dính lại trên đỉnh màn hình. Nền của THẺ NAV (phần nằm
-   ngoài viên thuốc, dày khoảng 11px trên dưới) phải mờ dần chứ không để trong
-   suốt: để trong suốt thì nội dung trang trôi qua đúng khe hở ấy và ló ra một
-   vệt chữ đứt đoạn ở mép trên, trông y như lỗi dựng trang. */
 .site-nav--float.is-scrolled {
     background: linear-gradient(180deg,
                 rgba(246, 239, 228, .97) 0%,
@@ -2438,8 +2011,6 @@ table th {
     color: var(--ink-900);
 }
 
-/* ⚠️ Hai nút dưới đây là lỗi tương phản nếu để nguyên: .btn-outline-light là chữ
-   kem viền kem, .btn-light là nền kem - cả hai tàng hình trên viên thuốc sáng. */
 .site-nav--float .btn-outline-light {
     --bs-btn-color: var(--ink-900);
     --bs-btn-border-color: var(--hairline-strong);
@@ -2463,21 +2034,11 @@ table th {
     }
 }
 
-/* ---------------------------------------------------------------------------
-   14.2 Hero
-   --------------------------------------------------------------------------- */
 .home-hero {
     position: relative;
-    /* ⚠️ isolation: isolate là BẮT BUỘC, không phải dọn dẹp cho đẹp.
-       Khối tô nền của .mark-stroke (mục 4) nằm ở lớp giả với z-index: -2. Phần tử
-       z-index âm vẽ phía sau NGỮ CẢNH XẾP LỚP gần nhất; không có dòng này thì khối
-       ấy tụt xuống dưới cả nền của .home-hero và biến mất sạch - chữ kem của cụm từ
-       khoá nằm trơ trên nền cát, gần như không đọc được. Bản .bg-jade ở mục 4 có
-       sẵn isolation nên trước đây không lộ ra. */
+
     isolation: isolate;
-    /* overflow: clip chứ không phải hidden - hidden biến khối này thành một vùng
-       cuộn. Ở đây nó có việc thật: mấy tấm thẻ nghiêng bên phải chìa ra ngoài mép
-       màn hình, không cắt là cả trang mọc thanh cuộn ngang. */
+
     overflow: clip;
     padding-top: clamp(7.5rem, 13vh, 9.5rem);
     padding-bottom: clamp(2.75rem, 5vh, 4rem);
@@ -2500,7 +2061,6 @@ table th {
     }
 }
 
-/* --- Huy hiệu mở đầu --- */
 .home-badge {
     display: inline-flex;
     align-items: center;
@@ -2544,12 +2104,6 @@ table th {
     transform: translateX(3px);
 }
 
-/* --- Tiêu đề ---
-   ⚠️ line-height 1.52 và trần cỡ chữ ràng buộc với khối tô nền .mark-stroke ở
-   mục 4: khối ấy cao đúng bằng hộp dòng, hạ line-height xuống là nó lấn sang
-   dòng trên và cắt mất dấu thanh. Trần 3.5rem (bản cũ trên nền tối là 4.5rem) để
-   tiêu đề ba dòng vẫn chừa đủ chỗ cho ô tìm kiếm và hai nút nằm trên nếp gấp ở
-   màn hình cao 768px. */
 .home-hero__title {
     font-family: var(--font-display);
     font-size: clamp(2.25rem, 4.4vw, 3.5rem);
@@ -2560,17 +2114,10 @@ table th {
     margin-bottom: .75rem;
 }
 
-/* Mảnh cuối ("của riêng bạn") không được tách đôi. Cụm tô nền ở giữa đã mang
-   white-space: nowrap nên nó luôn chiếm trọn một dòng; để mảnh cuối tự ngắt thì
-   chữ "của" leo lên nằm cạnh cụm tô nền còn "riêng bạn" rơi xuống một mình -
-   dòng cụt một cách rất khó coi. */
 .home-hero__title > span:last-child {
     white-space: nowrap;
 }
 
-/* Câu nhấn một dòng, màu đất nung. Đây là chỗ DUY NHẤT trong hero dùng màu nhấn
-   cho chữ - rải thêm chỗ nữa là hết tác dụng. clay-700 chứ không phải clay-600:
-   đo trên nền cát thì #C2622D chỉ đạt 3,62, dưới ngưỡng 4,5 của WCAG AA. */
 .home-hero__accent {
     font-size: clamp(1.02rem, 1.4vw, 1.26rem);
     font-weight: 600;
@@ -2580,9 +2127,6 @@ table th {
     margin-bottom: 1.6rem;
 }
 
-/* --- Ô tìm kiếm kiểu thanh lệnh ---
-   Khối tối duy nhất của hero, và nó là việc đầu tiên khách muốn làm. Đảo màu
-   ngược hẳn phần còn lại chính là cách chỉ chỗ mà không cần vẽ mũi tên. */
 .home-search {
     display: flex;
     align-items: center;
@@ -2626,7 +2170,6 @@ table th {
     color: #fff;
 }
 
-/* --- Hai nút --- */
 .home-actions {
     display: flex;
     flex-wrap: wrap;
@@ -2672,28 +2215,11 @@ table th {
                 0 22px 44px rgba(10, 56, 51, .22);
 }
 
-/* ---------------------------------------------------------------------------
-   14.3 Băng ảnh chạy dọc bên phải hero
-
-   Một cột ảnh trôi từ TRÊN XUỐNG DƯỚI không ngừng, ảnh so le trái phải và nghiêng
-   nhẹ. Hai mép trên dưới mờ dần nên ảnh trôi vào rồi trôi ra chứ không bị cắt
-   ngang một cách thô.
-
-   Đây là TRANG TRÍ, và khối được đánh dấu aria-hidden vì thế: không có liên kết,
-   không có chữ nào mà chỗ khác chưa nói. Đúng những tour này được liệt kê đầy đủ
-   ngay ở khối "Tour nổi bật" phía dưới, kèm giá và nút đặt - một băng ảnh đang
-   trôi là chỗ tệ nhất để đặt một mục tiêu cần bấm trúng.
-
-   Ảnh lấy từ CSDL: tour nào đã có ảnh tải lên thì dùng ảnh thật, chưa có thì rơi
-   về nền gradient của mảnh tourArt (mục 7). Bao nhiêu tour nổi bật thì bấy nhiêu
-   tấm, app.js nhân bản cho đủ dài rồi nhân đôi để vòng lặp khép kín.
-   --------------------------------------------------------------------------- */
 .home-reel {
     position: relative;
     height: clamp(420px, 60vh, 560px);
     overflow: hidden;
-    /* Mờ dần hai đầu. Không có lớp này thì ảnh bị cắt phẳng lì ở mép khung và cả
-       băng đọc ra như một khung <iframe> đang cuộn. */
+
     -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 13%, #000 87%, transparent 100%);
     mask-image: linear-gradient(180deg, transparent 0, #000 13%, #000 87%, transparent 100%);
 }
@@ -2701,12 +2227,7 @@ table th {
 .home-reel__track {
     display: flex;
     flex-direction: column;
-    /* ⚠️ KHOẢNG CÁCH GIỮA CÁC ẢNH PHẢI LÀ margin-bottom, KHÔNG ĐƯỢC LÀ gap.
-       Băng có 2N ảnh (N gốc + N bản sao) và animation dịch đúng -50% chiều cao.
-       Với `gap` thì chiều cao băng là 2N·ảnh + (2N-1)·khoảng, nên một nửa của nó
-       là N·ảnh + (N-0,5)·khoảng - thiếu đúng NỬA một khoảng so với một lượt thật.
-       Mỗi vòng lặp băng giật lên một cái chừng 11px. Với margin-bottom thì chiều
-       cao là 2N·(ảnh + lề) và một nửa đúng bằng một lượt, không còn mối nối. */
+
 }
 
 .home-reel__item {
@@ -2729,16 +2250,6 @@ table th {
     object-fit: cover;
 }
 
-/* ⚠️ So le trái phải gắn bằng LỚP do máy chủ đặt, không phải :nth-child.
-   app.js nhân bản cả lượt để vòng lặp khép kín; số ảnh một lượt mà lẻ thì sang
-   lượt sau chẵn lẻ đảo hết, ảnh đang lệch phải bỗng nhảy sang trái đúng chỗ nối.
-   Bản sao mang theo lớp thì chuyện đó không xảy ra. (Cùng một cái bẫy với dải
-   địa danh ở mục 14.6.)
-
-   ⚠️ Và tên hai lớp ấy là `is-left` / `is-right` chứ KHÔNG phải kiểu BEM
-   `home-reel__item--left`. Lý do nằm ở phía Thymeleaf: nó coi `__...__` là cú
-   pháp tiền xử lý, nên một biểu thức chứa hai tên lớp kiểu BEM có đúng hai cụm
-   `__` khép thành cặp và cả biểu thức gãy. Xem chú thích dài ở index.html. */
 .home-reel__item.is-left {
     margin-right: auto;
     rotate: -3.4deg;
@@ -2749,13 +2260,6 @@ table th {
     rotate: 3.2deg;
 }
 
-/* Trôi xuống: đi từ -50% về 0. Băng đã được nhân đôi nên nửa dưới giống hệt nửa
-   trên, chạy hết một nửa là quay lại đúng chỗ cũ, mắt không thấy mối nối.
-   linear chứ không phải đường cong: đây là chuyển động đều vô hạn, bất kỳ phép
-   tăng giảm tốc nào cũng lộ ra thành một nhịp "thở" mỗi vòng.
-
-   Trạng thái nghỉ (không có .anim-ready, hoặc người dùng chọn giảm chuyển động)
-   là băng đứng yên ở translateY(0) - vẫn thấy ảnh, chỉ là không trôi. */
 .anim-ready .home-reel__track {
     animation: reelDown 38s linear infinite;
 }
@@ -2766,8 +2270,7 @@ table th {
 }
 
 @media (max-width: 991.98px) {
-    /* Dưới 992px băng nằm dưới phần chữ và rộng bằng cả khung: thấp lại và ảnh
-       nhỏ lại, nếu không một mình nó chiếm gần hết một màn hình. */
+
     .home-reel { height: 340px; }
     .home-reel__item { width: 52%; }
 }
@@ -2779,11 +2282,6 @@ table th {
     .home-reel__item.is-right { rotate: 2deg; }
 }
 
-/* ---------------------------------------------------------------------------
-   14.4 Dải số liệu ở chân hero
-   Bốn con số đọc từ CSDL, ngăn bằng đường mảnh thay vì nhét vào bốn cái thẻ: đây
-   là phần khung của hero chứ không phải bốn khối nội dung riêng.
-   --------------------------------------------------------------------------- */
 .home-metrics {
     background: var(--sand-50);
     border-top: 1px solid var(--hairline);
@@ -2830,27 +2328,14 @@ table th {
     .home-metric:nth-child(n+3) { border-top: 1px solid var(--hairline); }
 }
 
-/* ---------------------------------------------------------------------------
-   14.5 Dải cam kết
-   Ô đầu rộng gấp đôi ba ô còn lại: bốn ô bằng nhau đọc ra như một bảng liệt kê,
-   một ô to dẫn đầu đọc ra như một câu có trọng âm.
-   --------------------------------------------------------------------------- */
-
-/* Bản cũ kéo dải này thụt lên -3,5rem để đè lên chân hero tối màu. Nay giữa hero
-   và nó đã có dải số liệu, thụt lên là đè mất dải ấy. */
 .assurance {
     margin-top: 0;
 }
 
-/* Neo "#cach-dat" ở hero trỏ xuống khối bốn bước. Không chừa lề thì tiêu đề khối
-   nằm đúng dưới thanh điều hướng dính và bị che mất. */
 .section[id] {
     scroll-margin-top: 5.5rem;
 }
 
-/* 1200px chứ không phải 992px: ở 1024px thì năm cột chỉ còn 180px mỗi cột, câu
-   "Còn chỗ hay hết, biết ngay" gãy làm ba dòng và cả dải thành một rừng chữ hẹp.
-   Dưới ngưỡng này thì lưới auto-fit ở mục 6 tự xếp bốn cột đều nhau. */
 @media (min-width: 1200px) {
     .assurance {
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -2869,22 +2354,11 @@ table th {
     }
 }
 
-/* ---------------------------------------------------------------------------
-   14.6 Dải điểm đến chạy ngang
-
-   Mười bốn địa danh thật, mỗi cái là một liên kết tới /tours đã điền sẵn bộ lọc.
-   Hai hàng chạy ngược chiều nhau: một hàng thì đọc ra "băng chuyền", hai hàng
-   ngược chiều thì đọc ra chiều sâu.
-
-   app.js nhân đôi nội dung mỗi hàng để vòng lặp -50% nối liền không thấy mối.
-   Không có JavaScript thì hàng đứng yên và vẫn đọc đủ mười bốn địa danh.
-   --------------------------------------------------------------------------- */
 .marquee {
     position: relative;
     overflow: hidden;
     padding-block: .35rem;
-    /* Mờ dần hai mép để chữ không bị cắt ngang thân - cắt cụt giữa một con chữ
-       trông như lỗi dựng trang. */
+
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
@@ -2910,8 +2384,6 @@ table th {
     transition: color var(--dur-fast) var(--ease-soft);
 }
 
-/* Dấu gạch chéo ngăn cách: nó làm việc thật (tách hai địa danh), khác hẳn một
-   chấm tròn thêm vào cho đẹp. */
 .marquee__item::after {
     content: "/";
     font-weight: 400;
@@ -2922,17 +2394,6 @@ table th {
     color: var(--clay-700);
 }
 
-/* Một nửa số mục để rỗng ruột, chỉ còn nét viền: hai sắc độ đan nhau làm cả dải
-   có nhịp thay vì thành một bức tường chữ đặc.
-
-   ⚠️ Chọn bằng LỚP RIÊNG chứ không phải :nth-child(even), và đây là chỗ rất dễ
-   làm sai. app.js nhân bản cả lượt để vòng lặp khép kín; một lượt có bảy tên
-   (số lẻ) nên sang lượt sau thì chẵn lẻ đảo hết, mục đặc thành mục rỗng đúng
-   ngay chỗ nối - vòng lặp đang liền mạch bỗng nhấp nháy một cái. Lớp do máy chủ
-   gắn thì bản sao mang theo, chẵn lẻ không còn ý nghĩa gì nữa.
-
-   @supports là bắt buộc - color: transparent mà trình duyệt không vẽ được viền
-   chữ thì mất trắng một nửa số địa danh. */
 @supports (-webkit-text-stroke: 1px currentColor) {
     .marquee__item--ghost {
         color: transparent;
@@ -2959,7 +2420,6 @@ table th {
     animation-duration: 58s;
 }
 
-/* Dừng khi rê chuột: đang muốn đọc một địa danh mà nó chạy mất thì rất bực. */
 .marquee:hover .marquee__track,
 .marquee:focus-within .marquee__track {
     animation-play-state: paused;
@@ -2975,14 +2435,6 @@ table th {
     to   { transform: translateX(0); }
 }
 
-/* ---------------------------------------------------------------------------
-   14.7 Bốn bước - cột dọc có thanh tiến trình chạy theo cuộn
-
-   Vệt sáng dâng lên theo đúng vị trí cuộn, nên nó nói được một điều mà hình tĩnh
-   không nói được: bạn đang ở bước thứ mấy. Đó là lý do tồn tại của chuyển động
-   này. Gỡ đi thì chỉ mất một vệt sáng chứ không mất chữ nào - nền mờ của thanh
-   vẫn vẽ nguyên.
-   --------------------------------------------------------------------------- */
 .step-rail {
     position: relative;
     display: grid;
@@ -3014,13 +2466,6 @@ table th {
     padding-left: 0;
 }
 
-/* ⚠️ VÒNG SỐ PHẢI ĐỤC, KHÔNG ĐƯỢC TRONG SUỐT.
-   Mục 6 cho .bg-jade .step__num nền rgba(...,.08) - trong suốt 92%. Đặt trên một
-   nền phẳng thì không sao, nhưng ở đây có một sợi dây dọc chạy qua đúng tâm vòng
-   tròn: sợi dây hiện xuyên qua và GẠCH NGANG con số, đọc ra như lỗi in. Nền đục
-   đẩy sợi dây ra sau, vòng tròn thành một mắt xích thật trên dây.
-   Vẫn giữ lớp phủ kem .08 ở trên để sắc độ y như cũ, chỉ khác là bên dưới nó nay
-   có một lớp đục. */
 .bg-jade .step-rail .step__num {
     left: -4.4rem;
     background: linear-gradient(rgba(246, 239, 228, .08), rgba(246, 239, 228, .08)),
@@ -3047,13 +2492,6 @@ table th {
     .step-rail .step__num { left: -3.7rem; width: 44px; height: 44px; font-size: 1.15rem; }
 }
 
-/* ---------------------------------------------------------------------------
-   14.8 Cảm nhận - lưới lệch
-
-   Ba khối bằng nhau xếp ngang là bố cục mặc định mà cỗ máy nào cũng sinh ra. Một
-   khối lớn dẫn đầu (nền ngọc bích nhạt) cộng hai khối nhỏ xếp chồng thì mắt biết
-   nên đọc cái nào trước.
-   --------------------------------------------------------------------------- */
 .quote-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -3129,15 +2567,6 @@ table th {
     }
 }
 
-/* ---------------------------------------------------------------------------
-   14.9 Hiệu ứng vào của hero
-
-   Cùng kỹ thuật với mục 6 và vì đúng một lý do: chỉ khai khung hình "from",
-   không khai "to", không dùng fill-mode. Trình duyệt nào không chạy animation
-   thì phần tử nằm nguyên ở trạng thái thật - tức là NHÌN THẤY ĐƯỢC. Độ so le tạo
-   bằng THỜI LƯỢNG khác nhau chứ không bằng animation-delay, vì trong lúc chờ
-   delay thì phần tử vẫn kẹt ở khung hình đầu.
-   --------------------------------------------------------------------------- */
 .anim-ready .home-badge,
 .anim-ready .home-hero__title,
 .anim-ready .home-hero__accent,
@@ -3157,25 +2586,18 @@ table th {
     from { opacity: 0; transform: translateY(24px); }
 }
 
-/* ---------------------------------------------------------------------------
-   14.10 Giảm chuyển động
-   Mục 12 đã ép mọi thời lượng về ~0. Ở đây chỉ cần tắt hẳn hai thứ mà "rút ngắn
-   thời lượng" không giải quyết được: vòng lặp vô hạn và chuyển động theo cuộn.
-   --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
     .anim-ready .marquee__track {
         animation: none;
     }
 
     .marquee__track {
-        /* Không chạy nữa thì phải xuống dòng được, nếu không mười bốn địa danh
-           nằm trên một hàng dài mà không nhìn thấy hết. */
+
         flex-wrap: wrap;
         width: auto;
         gap: 1.2rem 2rem;
     }
 
-    /* Băng ảnh đứng yên ở translateY(0): vẫn thấy ảnh, chỉ là không trôi. */
     .anim-ready .home-reel__track,
     .anim-ready .step-rail__fill {
         animation: none;

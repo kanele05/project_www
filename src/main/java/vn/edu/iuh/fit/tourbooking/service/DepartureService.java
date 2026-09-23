@@ -16,17 +16,10 @@ import vn.edu.iuh.fit.tourbooking.repository.TourRepository;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Nghiệp vụ quản lý đợt khởi hành.
- *
- * <p>Đợt khởi hành là tài nguyên con của tour, không tồn tại độc lập - vì vậy
- * mọi phương thức ở đây đều nhận {@code tourId} và kiểm tra đợt có đúng thuộc
- * tour đó không. Nếu chỉ tra theo {@code departureId}, ai đó sửa số trên thanh
- * địa chỉ là chỉnh được đợt khởi hành của tour khác.</p>
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Nghiệp vụ quản lý đợt khởi hành - luôn kiểm đợt có đúng thuộc tourId truyền vào không.
 public class DepartureService {
 
     private final TourDepartureRepository departureRepository;
@@ -49,14 +42,7 @@ public class DepartureService {
         return departure;
     }
 
-    /**
-     * Thêm mới hoặc cập nhật một đợt khởi hành.
-     *
-     * <p>Khi sửa số chỗ, {@code availableSeats} được điều chỉnh theo <b>mức
-     * chênh lệch</b> chứ không gán bằng {@code totalSeats}: đợt này có thể đã có
-     * khách đặt, gán thẳng sẽ xoá sạch dấu vết số chỗ đã bán và làm bảng điều
-     * khiển hiện số liệu sai.</p>
-     */
+    // Tạo mới hoặc cập nhật một đợt: chặn ngày trùng, chặn đổi ngày/giảm chỗ khi đã có khách, ngày mới phải ở tương lai.
     @Transactional
     public TourDeparture save(Long tourId, DepartureForm form) {
         if (form.getReturnDate().isBefore(form.getDepartureDate())) {
@@ -71,10 +57,7 @@ public class DepartureService {
 
         TourDeparture departure;
         if (creating) {
-            // "Phải ở tương lai" chỉ bắt buộc lúc TẠO MỚI, hoặc lúc SỬA MÀ ĐỔI
-            // NGÀY (nhánh else bên dưới) - xem Javadoc DepartureForm.departureDate.
-            // Tạo mới thì chắc chắn chưa có khách nào, không có lý do gì cho ngày
-            // khởi hành nằm ở quá khứ.
+
             requireFutureDate(form.getDepartureDate());
             departure = new TourDeparture(tour, form.getDepartureDate(), form.getReturnDate(),
                     form.getTotalSeats(), form.getPriceAdult(), form.getPriceChild());
@@ -83,22 +66,16 @@ public class DepartureService {
             int soldSeats = departure.getBookedSeats();
 
             if (!form.getDepartureDate().equals(departure.getDepartureDate())) {
-                // Mục 12.6: đợt còn đơn CHƯA HUỶ (soldSeats > 0 - availableSeats
-                // đã cộng lại chỗ của mọi đơn đã huỷ nên đúng bằng "còn đơn chưa
-                // huỷ") thì KHOÁ hẳn việc đổi ngày khởi hành - khách đã đặt theo
-                // đúng ngày cũ, đổi ngày sau lưng là phá vỡ cam kết với họ. Gợi ý
-                // tạo đợt mới thay vì sửa đợt đang bán.
+
                 if (soldSeats > 0) {
                     throw new BusinessRuleException("error.departure.dateLockedHasBookings", soldSeats);
                 }
-                // Đổi sang một ngày khác thì ngày mới đó vẫn phải ở tương lai.
+
                 requireFutureDate(form.getDepartureDate());
             }
 
             if (form.getTotalSeats() < soldSeats) {
-                // Mục 12.6: không cho hạ tổng số chỗ xuống dưới số khách đã đặt -
-                // làm vậy thì availableSeats sẽ âm và có khách đã trả tiền nhưng
-                // không còn chỗ.
+
                 throw new BusinessRuleException("error.departure.seatsBelowSold", soldSeats);
             }
 
@@ -117,12 +94,7 @@ public class DepartureService {
         return saved;
     }
 
-    /**
-     * Xoá một đợt khởi hành.
-     *
-     * <p>Quy tắc chặn xoá thứ ba của đề bài: đợt đã có khách đặt thì không xoá
-     * được. Kiểm tra bằng Java ở đây chứ không dựa vào khoá ngoại.</p>
-     */
+    // Xoá một đợt khởi hành; chặn nếu đã có lượt đặt.
     @Transactional
     public void delete(Long tourId, Long departureId) {
         long inBooking = bookingDetailRepository.countByDepartureId(departureId);
@@ -132,7 +104,6 @@ public class DepartureService {
         departureRepository.delete(getOfTour(tourId, departureId));
     }
 
-    /** Đóng / mở bán một đợt - dùng khi không xoá được vì đã có khách đặt. */
     @Transactional
     public boolean toggleActive(Long tourId, Long departureId) {
         TourDeparture departure = getOfTour(tourId, departureId);
@@ -146,6 +117,7 @@ public class DepartureService {
         }
     }
 
+    // Chặn hai đợt của cùng một tour trùng ngày khởi hành.
     private void requireUniqueDate(Long tourId, DepartureForm form) {
         boolean duplicated = form.getId() == null
                 ? departureRepository.existsByTourIdAndDepartureDate(tourId, form.getDepartureDate())

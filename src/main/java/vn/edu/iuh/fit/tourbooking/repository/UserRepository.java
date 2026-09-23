@@ -11,31 +11,18 @@ import vn.edu.iuh.fit.tourbooking.entity.User;
 
 import java.util.Optional;
 
-/**
- * Truy vấn tài khoản người dùng.
- */
 @Repository
+// Truy vấn tài khoản người dùng.
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    /** Spring Security nạp tài khoản theo email (email đóng vai trò username). */
     Optional<User> findByEmail(String email);
 
-    /** Dùng cho ràng buộc {@code @UniqueEmail} lúc đăng ký. */
     boolean existsByEmail(String email);
 
-    /**
-     * Kiểm tra trùng email khi <b>sửa</b> hồ sơ: bỏ qua chính bản ghi đang sửa,
-     * nếu không người dùng sẽ không lưu được khi giữ nguyên email của mình.
-     */
     boolean existsByEmailAndIdNot(String email, Long id);
 
-    /**
-     * Đếm số quản trị viên đang hoạt động - dùng để chặn xoá quản trị viên cuối
-     * cùng, tránh tình huống không còn ai vào được khu vực quản trị.
-     */
     long countByRoleAndEnabledTrue(Role role);
 
-    /** Tìm kiếm ở màn quản trị: gõ tên, email hoặc số điện thoại đều ra. */
     @Query("""
             SELECT u FROM User u
             WHERE (:keyword IS NULL OR :keyword = ''

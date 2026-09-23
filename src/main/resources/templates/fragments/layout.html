@@ -1,61 +1,27 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   Các mảnh giao diện dùng chung: thẻ head, thanh điều hướng, chân trang, script.
 
-   Cố ý dùng th:replace/th:fragment thuần của Thymeleaf thay vì thư viện
-   layout-dialect: cơ chế chỉ gồm "chèn mảnh này vào chỗ kia", nhìn là hiểu và
-   giải thích được ngay khi vấn đáp, không cần biết thêm khái niệm decorator.
-
-   File này không phải một trang - mở trực tiếp sẽ không ra gì.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<!-- ======================= THẺ HEAD ======================= -->
 <head th:fragment="head(pageTitle)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0A3833">
     <title th:text="|${pageTitle} - #{app.name}|">IUH Tour Booking</title>
 
-    <!--/*
-      Token CSRF cho AJAX. Biểu mẫu thường được Thymeleaf tự chèn thẻ ẩn, nhưng
-      lời gọi $.ajax thì không có biểu mẫu nào để chèn vào - phải tự đọc từ đây
-      rồi gắn vào header (xem $.ajaxSetup trong app.js). CSRF vẫn bật cho /api/**
-      vì các web service đó xác thực bằng chính cookie phiên đăng nhập.
-    */-->
     <meta name="_csrf" th:content="${_csrf?.token}">
     <meta name="_csrf_header" th:content="${_csrf?.headerName}">
 
-    <!--/*
-      Vài câu chữ mà JavaScript cần tới. Vẫn nằm trong messages.properties như
-      mọi câu khác - viết thẳng chuỗi tiếng Việt vào file .js thì khi đổi sang
-      tiếng Anh sẽ có đúng những câu đó trơ ra không dịch được.
-    */-->
     <meta name="msg.currency" th:content="#{common.currency}">
     <meta name="msg.suggest.empty" th:content="#{search.suggest.empty}">
     <meta name="msg.error.generic" th:content="#{error.js.generic}">
     <meta name="msg.email.checking" th:content="#{api.email.checking}">
 
-    <!--/*
-      Phông chữ.
-        - Playfair Display: chữ có chân cho tiêu đề, tạo cảm giác tạp chí du lịch.
-        - Be Vietnam Pro: chọn có chủ đích vì được thiết kế riêng cho tiếng Việt,
-          dấu thanh không chồng lên dấu mũ ở "ế", "ộ", "ữ".
-      display=swap để chữ hiện ngay bằng phông hệ thống rồi mới đổi sang phông
-      tải về - không có khoảng thời gian trang trắng trơn.
-      Máy không có mạng thì hai thẻ này lặng lẽ thất bại và app.css rơi về danh
-      sách phông dự phòng; giao diện vẫn nguyên vẹn, chỉ khác kiểu chữ.
-    */-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap">
 
-    <!-- Webjars: thư viện front-end được quản lý bằng Maven thay vì chép tay vào
-         static/. Nhờ webjars-locator-lite mà đường dẫn không cần ghi số phiên bản. -->
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
@@ -63,20 +29,6 @@
 
 <body>
 
-<!-- =======================================================================
-     THANH ĐIỀU HƯỚNG
-
-     .site-nav--float là viên thuốc nổi chữ mực (mục 14.1 của app.css) và nó nằm
-     ở MỌI trang, không phải chỉ trang chủ. Trước đây chỉ trang chủ có nó còn các
-     trang khác dùng nền ngọc bích đặc của mục 5, nên bấm từ trang chủ sang trang
-     bất kỳ là thanh điều hướng đổi màu đánh "phịch" - hai thanh điều hướng khác
-     nhau trong cùng một website.
-
-     Tham số "overlay" nay chỉ còn quyết định MỘT chuyện: thanh điều hướng có nằm
-     đè lên nội dung hay không. Trang chủ truyền true (hero tràn lên tận đỉnh màn
-     hình và thanh dính lại khi cuộn); các trang khác truyền false và thanh nằm
-     theo dòng chảy bình thường. Màu sắc thì giống hệt nhau ở cả hai đường.
-     ======================================================================= -->
 <header th:fragment="header(overlay)">
     <nav class="navbar navbar-expand-lg site-nav site-nav--float"
          th:classappend="${overlay} ? 'site-nav--overlay'">
@@ -102,7 +54,6 @@
                         <a class="nav-link" th:href="@{/tours}" th:text="#{nav.tours}">Tất cả tour</a>
                     </li>
 
-                    <!--/* navCategories do GlobalModelAdvice bơm vào mọi trang công khai */-->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button"
                            data-bs-toggle="dropdown" th:text="#{nav.categories}">Danh mục</a>
@@ -124,19 +75,6 @@
 
                 <div class="d-flex align-items-center gap-2 flex-wrap py-2 py-lg-0">
 
-                    <!--/*
-                      Ô tìm kiếm có gợi ý bằng AJAX. autocomplete="off" để tắt danh
-                      sách gợi ý sẵn có của trình duyệt, nếu không nó đè lên bảng gợi
-                      ý của mình. Bảng gợi ý do app.js dựng và chèn vào #searchSuggest.
-                    */-->
-                    <!--/* d-xxl-block, tức chỉ hiện từ 1400px trở lên. Đã đo bằng
-                           số thật: thanh điều hướng đầy đủ cộng ô tìm kiếm cần
-                           khoảng 1134px, mà bề rộng .container đứng yên ở 1140px
-                           suốt dải 1200-1399px nên trừ đệm chỉ còn 1113px - thiếu
-                           đúng hai chục pixel và cả thanh gãy xuống hai dòng.
-                           Thanh điều hướng hai dòng trên máy để bàn là bố cục hỏng.
-                           Dưới ngưỡng này vẫn còn nguyên đường tìm kiếm ở hero và ở
-                           trang /tours, không mất chức năng nào. */-->
                     <form class="position-relative nav-search d-none d-xxl-block" role="search"
                           th:action="@{/tours}" method="get" id="navSearchForm">
                         <input class="form-control form-control-sm" type="search" name="q"
@@ -148,20 +86,13 @@
                     <a class="nav-icon-btn position-relative" th:href="@{/cart}"
                        th:title="#{nav.cart}" th:aria-label="#{nav.cart}">
                         <i class="bi bi-bag"></i>
-                        <!--/* Huy hiệu chỉ hiện khi giỏ có hàng. id để app.js cập nhật
-                               ngay sau khi thêm vào giỏ bằng AJAX, không phải tải lại trang. */-->
+
                         <span id="cartBadge"
                               th:classappend="${cart == null or cart.itemCount == 0} ? 'd-none'"
                               class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
                               th:text="${cart != null} ? ${cart.itemCount} : 0">0</span>
                     </a>
 
-                    <!--/* ========== Chọn ngôn ngữ ==========
-                         Trỏ tới /change-language chứ không gắn ?lang= vào chính địa chỉ
-                         hiện tại: địa chỉ hiện tại có thể đã mang sẵn từ khoá tìm kiếm và
-                         số trang, ghép thêm tham số bằng tay rất dễ làm mất chúng.
-                         Bộ điều khiển đọc Referer (đã kiểm tra cùng nguồn) nên quay lại
-                         đúng trang cũ kèm nguyên vẹn mọi tham số. */-->
                     <div class="dropdown">
                         <button class="nav-icon-btn dropdown-toggle" type="button" style="width:auto;padding-inline:.85rem"
                                 data-bs-toggle="dropdown" th:title="#{nav.language}">
@@ -176,11 +107,6 @@
                         </ul>
                     </div>
 
-                    <!--/* ========== Chưa đăng nhập ==========
-                         sec:authorize đến từ thư viện thymeleaf-extras-springsecurity6.
-                         Dùng nó để ẩn/hiện phần giao diện, nhưng KHÔNG bao giờ coi đó là
-                         bảo mật: ẩn một đường dẫn không làm nó biến mất. Việc chặn thật
-                         nằm ở SecurityConfig, đây chỉ là chuyện cho gọn mắt. */-->
                     <div sec:authorize="isAnonymous()" class="d-flex gap-2">
                         <a class="btn btn-outline-light btn-sm" th:href="@{/login}"
                            th:text="#{nav.login}">Đăng nhập</a>
@@ -188,7 +114,6 @@
                            th:text="#{nav.register}">Đăng ký</a>
                     </div>
 
-                    <!--/* ========== Đã đăng nhập ========== */-->
                     <div sec:authorize="isAuthenticated()" class="dropdown">
                         <button class="btn btn-light btn-sm dropdown-toggle" type="button"
                                 data-bs-toggle="dropdown">
@@ -223,10 +148,7 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <!--/* Đăng xuất phải là POST. Nếu để là đường dẫn GET thì chỉ
-                                       cần nhúng <img src="/logout"> vào một trang bất kỳ là đá
-                                       được người dùng ra ngoài - đúng kiểu tấn công CSRF mà
-                                       việc bật CSRF ở SecurityConfig đang phòng. */-->
+
                                 <form th:action="@{/logout}" method="post" class="px-2 py-1">
                                     <button class="btn btn-sm btn-outline-danger w-100" type="submit">
                                         <i class="bi bi-box-arrow-right"></i>
@@ -242,7 +164,6 @@
     </nav>
 </header>
 
-<!-- ======================= CHÂN TRANG ======================= -->
 <footer th:fragment="footer" class="site-footer mt-auto">
     <div class="container">
         <div class="row g-4 pb-4">
@@ -312,7 +233,6 @@
     </div>
 </footer>
 
-<!-- ======================= SCRIPT ======================= -->
 <th:block th:fragment="scripts">
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>

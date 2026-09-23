@@ -19,21 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * Một lần thanh toán của đơn hàng.
- *
- * <p>Quan hệ với {@link Booking} là <b>một - nhiều</b> chứ không phải một - một,
- * vì thực tế bán tour hay chia làm hai lần: đặt cọc lúc giữ chỗ, trả nốt trước
- * ngày khởi hành. Tổng các lần {@code PAID} mới là số tiền đã thu; so với
- * {@code booking.totalAmount} sẽ ra số còn nợ.</p>
- *
- * <p>{@code txnRef} là mã giao dịch phía ngân hàng / ví điện tử, dùng để đối soát
- * và để một thông báo thanh toán không bị ghi nhận hai lần. Tính duy nhất của nó
- * <b>kiểm bằng Java</b> ({@code PaymentRepository.findByTxnRef}) chứ không khai
- * báo {@code @UniqueConstraint}: SQL Server chỉ cho phép <i>một</i> dòng NULL
- * trong một ràng buộc UNIQUE, mà lần thanh toán nào chưa hoàn tất cũng để trống
- * cột này. Lý do không dùng chỉ mục có lọc ghi ở {@code database/02_schema.sql}.</p>
- */
+// Một lần thanh toán của đơn hàng (một đơn có thể có nhiều lần thanh toán: đặt cọc, trả nốt).
 @Entity
 @Table(
         name = "payments",
@@ -59,20 +45,15 @@ public class Payment extends Auditable {
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount = BigDecimal.ZERO;
 
-    /**
-     * Không dùng {@code @Enumerated}; xem {@code PaymentMethodConverter}.
-     */
     @Column(name = "method", nullable = false, length = 30)
     private PaymentMethod method = PaymentMethod.BANK_TRANSFER;
 
     @Column(name = "status", nullable = false, length = 20)
     private PaymentStatus status = PaymentStatus.PENDING;
 
-    /** Mã giao dịch của ngân hàng hoặc ví điện tử, dùng để đối soát. */
     @Column(name = "txn_ref", length = 50)
     private String txnRef;
 
-    /** Thời điểm thực nhận tiền; còn null khi lần thanh toán chưa hoàn tất. */
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
@@ -85,7 +66,7 @@ public class Payment extends Auditable {
         this.method = method;
     }
 
-    /** Ghi nhận đã thu tiền: đổi trạng thái và đóng mốc thời gian cùng lúc. */
+    // Đánh dấu khoản này đã thu tiền, ghi mã giao dịch và thời điểm thanh toán.
     public void markPaid(String txnRef) {
         this.status = PaymentStatus.PAID;
         this.txnRef = txnRef;

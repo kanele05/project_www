@@ -14,20 +14,10 @@ import vn.edu.iuh.fit.tourbooking.entity.Tour;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Biểu mẫu thêm / sửa tour ở khu vực quản trị.
- *
- * <p>Các ràng buộc số ({@code @Min}, {@code @DecimalMin}...) được đặt ở đây chứ
- * <b>không</b> đặt trên entity. Hai lý do: đề bài yêu cầu kiểm tra dữ liệu ở tầng
- * Model chứ không phải trong CSDL, mà Hibernate lại tự dịch các ràng buộc đặt
- * trên entity thành CHECK constraint khi sinh bảng; và về mặt thiết kế thì đây
- * mới đúng chỗ - đó là quy tắc của <i>biểu mẫu nhập liệu</i>, không phải bất biến
- * của bản ghi.</p>
- */
 @Data
+// Biểu mẫu thêm/sửa tour ở khu quản trị, kèm ảnh đại diện và thư viện ảnh.
 public class TourForm {
 
-    /** Null nghĩa là đang thêm mới. */
     private Long id;
 
     @NotBlank(message = "{validation.tour.code.required}")
@@ -78,18 +68,12 @@ public class TourForm {
     @NotNull(message = "{validation.tour.category.required}")
     private Long categoryId;
 
-    // --- Ảnh ---------------------------------------------------------------
-    // MultipartFile không phải dữ liệu để lưu, chỉ là file người dùng vừa chọn.
-    // Để trống khi sửa nghĩa là giữ nguyên ảnh cũ.
-
     private MultipartFile thumbnailFile;
 
     private List<MultipartFile> galleryFiles;
 
-    /** Đường dẫn ảnh hiện tại, chỉ để hiển thị bản xem trước trên biểu mẫu sửa. */
     private String currentThumbnail;
 
-    /** Đổ dữ liệu của một tour có sẵn vào biểu mẫu để sửa. */
     public static TourForm from(Tour tour) {
         TourForm form = new TourForm();
         form.setId(tour.getId());

@@ -12,16 +12,9 @@ import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 import vn.edu.iuh.fit.tourbooking.service.CategoryService;
 import vn.edu.iuh.fit.tourbooking.service.TourService;
 
-/**
- * Trang tour theo danh mục: {@code /categories/du-lich-bien-dao}.
- *
- * <p>Dùng lại đúng khuôn mẫu {@code tour/list} của trang danh sách, chỉ khác là
- * danh mục đã được cố định sẵn và có thêm phần tiêu đề giới thiệu danh mục.
- * Không chuyển hướng sang {@code /tours?categoryId=...} vì như vậy sẽ mất địa chỉ
- * dạng slug vốn dễ đọc và tốt cho tìm kiếm.</p>
- */
 @Controller
 @RequiredArgsConstructor
+// Trang công khai theo danh mục tour (lọc tour theo slug danh mục).
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -34,8 +27,6 @@ public class CategoryController {
                              Model model) {
         TourCategory category = categoryService.getBySlug(slug);
 
-        // Ép bộ lọc về đúng danh mục này, kể cả khi người dùng tự thêm
-        // ?categoryId=... khác vào địa chỉ.
         form.setCategoryId(category.getId());
 
         model.addAttribute("category", category);

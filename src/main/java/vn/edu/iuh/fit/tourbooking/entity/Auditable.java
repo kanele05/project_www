@@ -11,15 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-/**
- * Lớp cha chứa hai mốc thời gian mà hầu như bảng nào cũng cần.
- *
- * <p>Dùng {@code @MappedSuperclass} nên KHÔNG sinh ra bảng riêng: hai cột
- * {@code created_at} / {@code updated_at} được nhân bản vào từng bảng con.
- * Giá trị do Spring Data JPA Auditing tự điền (bật bằng {@code @EnableJpaAuditing}
- * ở lớp {@code TourBookingApplication}), nhờ vậy không phải nhớ gán tay ở service
- * và cũng không cần Trigger trong CSDL - điều mà đề bài không cho phép.</p>
- */
+// Lớp cha chứa hai mốc thời gian created_at/updated_at, do Spring Data JPA Auditing tự điền.
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter

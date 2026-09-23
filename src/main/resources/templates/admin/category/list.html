@@ -61,7 +61,7 @@
                                       th:text="${c.active} ? #{admin.status.active} : #{admin.status.inactive}">Trạng thái</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <!-- Mục 12.8: trang chi tiết CHỈ XEM, tách khỏi biểu mẫu sửa. -->
+
                                 <a class="btn btn-sm btn-outline-secondary"
                                    th:href="@{/admin/categories/{id}/view(id=${c.id})}"
                                    th:title="#{admin.action.view}">
@@ -78,8 +78,7 @@
                                         <i class="bi" th:classappend="${c.active} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                     </button>
                                 </form>
-                                <!-- Bấm xoá một danh mục còn tour sẽ bị tầng service chặn lại
-                                     kèm thông báo tiếng Việt, chứ không phải lỗi SQL. -->
+
                                 <form class="d-inline" method="post"
                                       th:action="@{/admin/categories/{id}/delete(id=${c.id})}"
                                       th:data-ajax-delete="@{/api/admin/categories/{id}(id=${c.id})}"

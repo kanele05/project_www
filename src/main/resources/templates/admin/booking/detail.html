@@ -32,7 +32,6 @@
 
             <div class="row g-4">
 
-                <!-- ===================== Các dòng trong đơn ===================== -->
                 <div class="col-lg-8">
                     <div class="card">
                         <div class="card-body">
@@ -58,12 +57,6 @@
                                     </div>
                                 </div>
 
-                                <!--
-                                  Sửa số khách: sau khi lưu, thành tiền của dòng, tổng tiền
-                                  của đơn và số chỗ còn trống của đợt khởi hành đều được tính
-                                  lại trong cùng một giao dịch.
-                                  Đơn đã hoàn thành hoặc đã huỷ thì khoá ô nhập lại.
-                                -->
                                 <form class="row g-2 align-items-end mt-2" method="post"
                                       th:action="@{/admin/bookings/{code}/details/{id}(code=${booking.code}, id=${d.id})}">
                                     <div class="col-4 col-md-3">
@@ -93,11 +86,6 @@
                                     </div>
                                 </form>
 
-                                <!-- ============ Mục 12.7: giữ bất biến hành khách ============ -->
-                                <!--/* Chỉ hiện khi BookingService vừa từ chối áp dụng vì tăng số
-                                       khách mà chưa đủ tên (AdminBookingController đẩy các
-                                       pendingXxx qua flash attribute) VÀ đúng dòng đang sửa -
-                                       hai dòng khác trong cùng đơn không bị ảnh hưởng. */-->
                                 <div class="mt-2 p-2 border rounded bg-body-tertiary"
                                      th:if="${pendingDetailId != null and pendingDetailId == d.id}">
                                     <p class="small fw-semibold mb-2"
@@ -156,25 +144,19 @@
                     </div>
                 </div>
 
-                <!-- ===================== Khách hàng và trạng thái ===================== -->
                 <div class="col-lg-4">
 
                     <div class="card mb-4">
                         <div class="card-body">
                             <h2 class="h6 mb-3" th:text="#{admin.booking.changeStatus}">Đổi trạng thái</h2>
 
-                            <!--/* Mục 12.1: COMPLETED và CANCELLED là trạng thái CUỐI - không
-                                   còn nhánh "khôi phục đơn đã huỷ". validNextStatuses chỉ chứa
-                                   các đích hợp lệ của đúng đơn đang xem (rỗng nếu đơn đã ở
-                                   trạng thái cuối). */-->
                             <form method="post" th:if="${not #lists.isEmpty(validNextStatuses)}"
                                   th:action="@{/admin/bookings/{code}/status(code=${booking.code})}">
                                 <select class="form-select form-select-sm mb-2" name="status">
                                     <option th:each="s : ${validNextStatuses}" th:value="${s}"
                                             th:text="#{${s.messageKey}}">Trạng thái</option>
                                 </select>
-                                <!--/* Bổ sung A: lý do (tuỳ chọn) được ghi vào đúng dòng
-                                       booking_status_history sinh ra từ lần đổi này. */-->
+
                                 <input class="form-control form-control-sm mb-2" type="text" name="reason"
                                        maxlength="255" th:placeholder="#{admin.booking.statusReasonPlaceholder}">
                                 <button class="btn btn-sm btn-primary w-100" type="submit"
@@ -227,9 +209,6 @@
                 </div>
             </div>
 
-            <!-- ===================== Danh sách hành khách ===================== -->
-            <!--/* BookingPassengerRepository.findByBookingId đã JOIN FETCH detail nên
-                   an toàn dù open-in-view đang tắt (gotcha #43). */-->
             <div class="row g-4 mt-0">
                 <div class="col-12">
                     <div class="card">
@@ -274,7 +253,6 @@
                 </div>
             </div>
 
-            <!-- ===================== Bổ sung A/B: thanh toán + dòng thời gian ===================== -->
             <div class="row g-4 mt-0">
                 <div class="col-lg-6">
                     <div class="card">
@@ -299,8 +277,7 @@
                                         <span class="badge" th:classappend="'bg-' + ${pay.status.badgeClass}"
                                               th:text="#{${pay.status.messageKey}}">Trạng thái</span>
                                     </div>
-                                    <!--/* Bổ sung B: chỉ khoản PENDING mới có nút đánh dấu đã thu -
-                                           kiểm trùng txnRef bằng Java ở PaymentService.markPaid. */-->
+
                                     <form class="d-flex gap-2 align-items-end mt-2" method="post"
                                           th:if="${pay.status.name() == 'PENDING'}"
                                           th:action="@{/admin/bookings/{code}/payments/{id}/mark-paid(code=${booking.code}, id=${pay.id})}">

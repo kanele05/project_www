@@ -21,22 +21,10 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Nghiệp vụ thanh toán (Bổ sung B, ghi vào UC007 - không phải use case riêng).
- *
- * <p>Bảng {@code payments} tồn tại từ Phase 7 nhưng chưa từng được ghi vào cho
- * tới khi vá theo {@code docs/report/SPEC_CHUNG.md} mục 9: checkout sinh sẵn
- * một dòng {@code PENDING}, quản trị viên đánh dấu đã thu tiền thì chuyển
- * {@code PAID}.</p>
- *
- * <p><b>{@code txnRef} không có ràng buộc UNIQUE dưới CSDL</b> - SQL Server chỉ
- * chấp nhận đúng một dòng NULL cho một cột UNIQUE, mà phần lớn các dòng
- * {@code PENDING} đều chưa có mã giao dịch (xem gotcha #41, và Javadoc của
- * {@link Payment#txnRef}). Tính duy nhất được kiểm ở đây, bằng Java.</p>
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Nghiệp vụ các lần thanh toán của đơn: sinh khoản PENDING, đồng bộ khi đổi số khách, đánh dấu đã thu, hoàn tiền.
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
@@ -44,13 +32,7 @@ public class PaymentService {
     private final EntityManager entityManager;
     private final MessageHelper messages;
 
-    /**
-     * Nhận diện hình thức thanh toán từ chuỗi hiển thị mà khách chọn ở trang
-     * thanh toán ({@code booking.paymentMethod} lưu nguyên văn câu đã dịch, xem
-     * {@code checkout.html}). So khớp với câu dịch hiện tại theo đúng ngôn ngữ
-     * của request - không đổi cấu trúc {@code CheckoutForm}/{@code checkout.html}
-     * chỉ để có một mã hình thức thanh toán "sạch".
-     */
+    // Suy ra enum PaymentMethod từ câu dịch hiển thị đã lưu trong booking.paymentMethod (so khớp theo ngôn ngữ hiện tại).
     private PaymentMethod resolveMethod(String displayText) {
         if (displayText == null) {
             return PaymentMethod.BANK_TRANSFER;
@@ -65,12 +47,7 @@ public class PaymentService {
         return PaymentMethod.BANK_TRANSFER;
     }
 
-    /**
-     * Sinh dòng thanh toán {@code PENDING} ngay khi đặt tour - gọi trong cùng
-     * giao dịch với {@code BookingService.placeOrder}: đơn hỏng thì dòng thanh
-     * toán cũng biến mất theo, không có chuyện tồn tại một khoản phải thu cho
-     * một đơn không có thật.
-     */
+    // Sinh khoản thu PENDING ngay khi đặt tour, cùng giao dịch với đơn.
     @Transactional
     public Payment createPendingForBooking(Booking booking) {
         Payment payment = new Payment(booking, booking.getTotalAmount(), resolveMethod(booking.getPaymentMethod()));
@@ -85,16 +62,7 @@ public class PaymentService {
         return paymentRepository.findByBookingIdOrderByIdAsc(bookingId);
     }
 
-    /**
-     * Đồng bộ lại khoản thu {@code PENDING} của một đơn cho khớp tổng tiền mới.
-     *
-     * <p>Gọi ngay sau {@code Booking.recalculateTotal()} trong
-     * {@code BookingService.updateDetailQuantity}: trước bản vá này, sửa số khách
-     * đổi tổng đơn nhưng khoản thu (sinh một lần duy nhất lúc đặt) đứng yên, màn
-     * chi tiết hiện hai con số vênh nhau và "Đã thu tiền" đóng khoản thiếu/thừa.
-     * Chỉ đụng khoản còn {@code PENDING} - khoản đã {@code PAID} là tiền đã thu
-     * thật, không được âm thầm sửa lại.</p>
-     */
+    // Đồng bộ số tiền của khoản PENDING theo tổng đơn mới nhất (gọi sau khi sửa số khách).
     @Transactional
     public void syncPendingAmount(Booking booking) {
         paymentRepository.findByBookingIdOrderByIdAsc(booking.getId()).stream()
@@ -106,15 +74,7 @@ public class PaymentService {
                 });
     }
 
-    /**
-     * Đóng mọi khoản thu còn {@code PENDING} của một đơn vừa bị huỷ.
-     *
-     * <p>Trước bản vá này, huỷ đơn không đụng tới khoản {@code PENDING} sinh ra
-     * lúc đặt - nút "Đã thu tiền" của một đơn đã huỷ vẫn bấm được, ghi nhận thu
-     * tiền cho một đơn không còn hiệu lực. Không có trạng thái "đã huỷ" riêng cho
-     * {@link Payment}; dùng lại {@link PaymentStatus#FAILED} (khoản không còn
-     * được thu) thay vì thêm một hằng số enum mới.</p>
-     */
+    // Chuyển các khoản PENDING sang FAILED khi đơn bị huỷ (PaymentStatus không có trạng thái "đã huỷ" riêng).
     @Transactional
     public void cancelPendingForBooking(Booking booking) {
         paymentRepository.findByBookingIdOrderByIdAsc(booking.getId()).stream()
@@ -127,14 +87,12 @@ public class PaymentService {
                 });
     }
 
-    /** Đơn đã có ít nhất một khoản thu PAID - dùng để chặn sửa số khách (1.6). */
     @Transactional(readOnly = true)
     public boolean hasPaidPayment(Long bookingId) {
         return paymentRepository.findByBookingIdOrderByIdAsc(bookingId).stream()
                 .anyMatch(p -> p.getStatus() == PaymentStatus.PAID);
     }
 
-    /** Tổng các khoản ĐÃ THANH TOÁN của một đơn - dùng để tính số tiền hoàn (mục 12.2/12.3). */
     @Transactional(readOnly = true)
     public BigDecimal paidTotal(Long bookingId) {
         return paymentRepository.findByBookingIdOrderByIdAsc(bookingId).stream()
@@ -143,19 +101,7 @@ public class PaymentService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Hoàn tiền khi huỷ đơn đã có khoản ĐÃ THANH TOÁN (mục 12.2) - <b>không đổi
-     * schema</b>: dòng PAID gốc được giữ nguyên làm lịch sử tiền vào, phương thức
-     * này chỉ THÊM một dòng {@code REFUNDED} mới với số tiền hoàn (luôn dương).
-     *
-     * <p>Không làm gì nếu đơn chưa từng có khoản PAID nào, hoặc {@code refundPercent}
-     * bằng 0 (ví dụ khách tự huỷ nhưng chưa hề thanh toán đồng nào thì không có gì
-     * để hoàn) - tránh sinh ra một dòng {@code REFUNDED} với số tiền 0 vô nghĩa.</p>
-     *
-     * @param refundPercent tỉ lệ hoàn, 0-100. Quản trị viên huỷ luôn truyền 100
-     *                       (mục 12.2); khách tự huỷ truyền theo chính sách 12.3.
-     * @param note           lý do + tỉ lệ, đã dịch sẵn theo ngôn ngữ hiện tại
-     */
+    // Hoàn một phần trăm số tiền đã thu (nếu có), ghi thành một khoản REFUNDED riêng - không sửa khoản PAID gốc.
     @Transactional
     public void refundIfPaid(Booking booking, int refundPercent, String note) {
         if (refundPercent <= 0) {
@@ -188,35 +134,7 @@ public class PaymentService {
                 .orElseThrow(() -> ResourceNotFoundException.of("khoản thanh toán", id));
     }
 
-    /**
-     * Quản trị viên đánh dấu đã thu tiền.
-     *
-     * <p>Kiểm trùng {@code txnRef} bằng Java - đúng lý do đã giải thích ở
-     * Javadoc lớp này. Mã trống thì bỏ qua phép kiểm: nhiều lần thanh toán tiền
-     * mặt hoàn toàn có thể không có mã giao dịch nào cả.</p>
-     *
-     * <p><b>Ba phép kiểm bổ sung:</b> (1) {@code paymentId} phải thuộc đúng
-     * {@code bookingCode} trên URL - không thì
-     * {@code POST /admin/bookings/TB-A/payments/7/mark-paid} với khoản 7 thuộc
-     * TB-B sẽ đánh dấu nhầm khoản của TB-B; (2) khoản phải đang {@code PENDING} -
-     * không thì gọi lại trên khoản đã {@code PAID} sẽ ghi đè {@code paid_at}/
-     * {@code txn_ref} đã đối soát; (3) <b>đơn cha không được đang/vừa
-     * {@code CANCELLED}</b> (mục "NGHIÊM TRỌNG - 1", kịch bản A đã tái hiện bằng
-     * thao tác thật: khách tự huỷ trùng lúc admin bấm "Đã thu tiền" từng khiến
-     * khoản thu bị ghi đè PAID rồi FAILED, mất dấu tiền đã thu).</p>
-     *
-     * <p><b>Khoá đơn cha TRƯỚC khi đụng khoản thu</b> - đúng thứ tự khoá "đơn
-     * trước" đã thống nhất với {@code BookingService} (xem
-     * {@code BookingService.lockBookingByCode}): mọi phương thức có thể huỷ đơn
-     * này (giải phóng chỗ, đóng khoản PENDING, hoàn tiền) đều khoá đúng dòng
-     * {@code bookings} này trước tiên, nên bên thua ở đây cũng phải đợi rồi đọc
-     * lại đúng trạng thái mới nhất. {@code Payment} không có {@code @Version}
-     * riêng nên toàn bộ tính đúng đắn dựa hẳn vào khoá của đơn cha - tải
-     * {@link Payment} SAU khi đã giữ được khoá (không tải trước) để tránh đọc
-     * nhầm bản cũ trong cache cấp một (gotcha #60).</p>
-     *
-     * @param bookingCode mã đơn lấy từ URL, dùng để khoá đơn cha và đối chiếu quyền sở hữu khoản thu
-     */
+    // Đánh dấu một khoản đã thu tiền: khoá đơn (PESSIMISTIC_WRITE + refresh), kiểm đúng đơn/đúng trạng thái PENDING và mã giao dịch chưa dùng.
     @Transactional
     public void markPaid(Long paymentId, String bookingCode, String txnRef) {
         Booking booking = bookingRepository.findByCodeForUpdate(bookingCode)
@@ -227,17 +145,13 @@ public class PaymentService {
             throw new BusinessRuleException("error.payment.bookingCancelled", bookingCode);
         }
 
-        // Tải Payment SAU khi đã khoá đơn cha - xem Javadoc phía trên.
         Payment payment = getById(paymentId);
 
         if (!payment.getBooking().getCode().equals(bookingCode)) {
             throw new BusinessRuleException("error.payment.bookingMismatch", paymentId, bookingCode);
         }
         if (payment.getStatus() != PaymentStatus.PENDING) {
-            // messages.get(status.getMessageKey()) chứ không phải getDisplayName():
-            // getDisplayName() trả cứng câu tiếng Việt viết sẵn trong enum, nên một
-            // quản trị viên đang xem giao diện tiếng Anh vẫn nhận được thông báo lỗi
-            // tiếng Việt giữa các câu chữ còn lại đã dịch (gotcha kiểu #9 cũ).
+
             throw new BusinessRuleException("error.payment.notPending",
                     messages.get(payment.getStatus().getMessageKey()));
         }

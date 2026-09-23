@@ -74,11 +74,6 @@
                                     <div class="invalid-feedback" th:errors="*{address}">Lỗi</div>
                                 </div>
 
-                                <!--
-                                  Ô mật khẩu là ô CHỈ GHI: nó không bao giờ được điền sẵn giá
-                                  trị vì AdminUserForm không mang chuỗi băm cũ lên trình duyệt.
-                                  Để trống khi sửa nghĩa là giữ nguyên mật khẩu hiện tại.
-                                -->
                                 <div class="mb-3">
                                     <label class="form-label" for="newPassword"
                                            th:text="#{admin.user.newPassword}">Mật khẩu</label>

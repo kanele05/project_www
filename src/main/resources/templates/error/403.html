@@ -1,14 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   Trang báo "không đủ quyền".
 
-   Đây là trang khách hàng nhìn thấy khi cố mở /admin - việc chặn do
-   SecurityConfig làm, còn file này chỉ lo phần trình bày. Cố tình KHÔNG nói rõ
-   trang đó có tồn tại hay không và cần vai trò gì: mô tả càng chi tiết thì càng
-   giúp người dò tìm vẽ được bản đồ khu vực quản trị.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(#{error.page.403.title})}"></head>
 <body class="d-flex flex-column min-vh-100">

@@ -1,12 +1,5 @@
 <!DOCTYPE html>
-<!--/*
-  Mẫu thư chào mừng sau khi đăng ký tài khoản.
 
-  Cùng cách làm với booking-confirmation.html: bảng + CSS nội tuyến, không dùng
-  Bootstrap, vì phần mềm đọc thư không tải CSS ngoài và hỗ trợ flexbox/grid kém.
-
-  Cố ý KHÔNG có mật khẩu ở bất kỳ đâu trong mẫu này, kể cả dạng đã băm.
-*/-->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +12,6 @@
        style="max-width:640px; margin:0 auto; background-color:#ffffff;
               border-radius:8px; overflow:hidden;">
 
-    <!--/* Tiêu đề */-->
     <tr>
         <td style="background-color:#0A3833; color:#ffffff; padding:20px 24px;">
             <h1 style="margin:0; font-size:20px;">IUH Tour Booking</h1>
@@ -34,7 +26,6 @@
             <p style="margin:0 0 20px;"
                th:text="#{email.welcome.intro}">Cảm ơn bạn đã đăng ký tài khoản.</p>
 
-            <!--/* Thông tin tài khoản */-->
             <table role="presentation" cellpadding="8" cellspacing="0" width="100%"
                    style="background-color:#f8f9fa; border-radius:6px; margin-bottom:20px;">
                 <tr>

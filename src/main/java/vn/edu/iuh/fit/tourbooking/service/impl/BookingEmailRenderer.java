@@ -8,30 +8,14 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Dựng nội dung thư xác nhận đặt tour.
- *
- * <p>Nội dung thư được render bằng chính Thymeleaf đang dùng cho website
- * ({@code templates/email/booking-confirmation.html}) chứ không ghép chuỗi HTML
- * trong mã Java. Nhờ vậy sửa mẫu thư không phải biên dịch lại, và khi làm đa
- * ngôn ngữ thì thư cũng tự chuyển ngữ theo cùng bộ {@code messages.properties}.</p>
- *
- * <p>Tách riêng khỏi hai bản cài đặt {@code EmailService} vì cả hai đều cần dựng
- * nội dung giống hệt nhau - bản in ra màn hình cũng phải dựng thật để lỗi trong
- * mẫu thư lộ ra ngay lúc phát triển, chứ không đợi tới lúc bật SMTP mới biết.</p>
- */
 @Component
 @RequiredArgsConstructor
+// Dựng tiêu đề, nội dung HTML (qua Thymeleaf) và bản tóm tắt văn bản của thư xác nhận đặt tour.
 public class BookingEmailRenderer {
 
     private final SpringTemplateEngine templateEngine;
     private final MessageHelper messages;
 
-    /**
-     * Tiêu đề thư, cũng lấy từ {@code messages.properties} như mọi câu chữ khác -
-     * ghép chuỗi trong Java thì bản tiếng Anh sẽ có đúng dòng tiêu đề trơ ra
-     * không dịch được.
-     */
     public String subject(Booking booking) {
         return messages.get("email.booking.subject", booking.getCode());
     }
@@ -42,19 +26,14 @@ public class BookingEmailRenderer {
         return templateEngine.process("email/booking-confirmation", context);
     }
 
-    /**
-     * Bản tóm tắt dạng chữ thuần, dùng cho nhật ký khi chạy ở chế độ console -
-     * đổ cả trang HTML ra log thì không ai đọc nổi.
-     */
+    // Ghép các dòng chi tiết đơn thành một đoạn văn bản thuần để ghi log/gửi thư dạng chữ.
     public String plainSummary(Booking booking) {
         StringBuilder sb = new StringBuilder();
         sb.append("Mã đơn      : ").append(booking.getCode()).append('\n');
         sb.append("Khách hàng  : ").append(booking.getCustomerName())
                 .append(" <").append(booking.getCustomerEmail()).append(">\n");
         sb.append("Điện thoại  : ").append(booking.getCustomerPhone()).append('\n');
-        // messages.get(...getMessageKey()) chứ không phải getDisplayName(): xem
-        // lý do ở PaymentService.markPaid - getDisplayName() luôn trả tiếng Việt
-        // viết cứng trong enum, bất kể ngôn ngữ hiện tại của LocaleContextHolder.
+
         sb.append("Trạng thái  : ").append(messages.get(booking.getStatus().getMessageKey())).append('\n');
         booking.getDetails().forEach(d ->
                 sb.append("  - ").append(d.getTourNameSnapshot())

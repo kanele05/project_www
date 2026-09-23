@@ -19,17 +19,10 @@ import vn.edu.iuh.fit.tourbooking.service.CategoryService;
 import vn.edu.iuh.fit.tourbooking.service.TourService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Quản lý tour.
- *
- * <p>Đây là khu vực được làm kỹ nhất; ba khu còn lại (danh mục, người dùng, đơn
- * hàng) dùng lại đúng khuôn mẫu này: danh sách có tìm kiếm và phân trang, một
- * biểu mẫu chung cho cả thêm lẫn sửa, và các thao tác thay đổi dữ liệu đều là
- * POST rồi chuyển hướng.</p>
- */
 @Controller
 @RequestMapping("/admin/tours")
 @RequiredArgsConstructor
+// Khu quản trị: thêm/sửa/xoá/bật-tắt tour, quản lý ảnh đại diện và thư viện ảnh.
 public class AdminTourController {
 
     private final TourService tourService;
@@ -49,17 +42,6 @@ public class AdminTourController {
         return "admin/tour/list";
     }
 
-    /**
-     * Một biểu mẫu dùng chung cho cả thêm mới lẫn sửa.
-     *
-     * <p>Hai màn hình gần như giống hệt nhau; tách làm hai khuôn mẫu chỉ tạo ra
-     * hai bản sao phải sửa song song mỗi lần thêm một trường mới.</p>
-     */
-    /**
-     * Trang chi tiết CHỈ XEM (mục 12.8 - đề bài đòi "xem chi tiết từng tour/loại").
-     * Tách khỏi {@link #form}: không có ô nhập nào, chỉ hiện thông tin, ảnh,
-     * lịch trình, các đợt khởi hành (số chỗ còn/đã bán), số đơn và số đánh giá.
-     */
     @GetMapping("/{id}/view")
     public String view(@PathVariable Long id, Model model) {
         model.addAttribute("detail", tourService.adminDetail(id));
@@ -73,7 +55,7 @@ public class AdminTourController {
                     id == null ? new TourForm() : TourForm.from(tourService.getForEdit(id)));
         }
         if (id != null) {
-            // Thư viện ảnh nằm ngoài biểu mẫu vì nó được thêm/xoá từng ảnh một.
+
             model.addAttribute("tour", tourService.getForEdit(id));
         }
         model.addAttribute("categories", categoryService.findAll());
@@ -96,12 +78,7 @@ public class AdminTourController {
             return "redirect:/admin/tours";
 
         } catch (BusinessRuleException e) {
-            // Trước bản vá này, MỌI BusinessRuleException từ tourService.save đều
-            // bị gắn cứng vào ô "Mã tour" - kể cả lỗi ảnh sai định dạng/dung lượng
-            // (error.upload.*), khiến người dùng đọc thấy "Chỉ chấp nhận jpg, png,
-            // webp" ngay dưới ô mã tour, chẳng liên quan gì tới trường đó. Phân
-            // nhánh theo tiền tố khoá thông điệp: lỗi ảnh gắn vào đúng ô ảnh đại
-            // diện, còn lại (mã tour trùng...) mới gắn vào "code" như cũ.
+
             if (e.getMessageKey() != null && e.getMessageKey().startsWith("error.upload.")) {
                 binding.rejectValue("thumbnailFile", "error", messages.of(e));
             } else {
@@ -117,7 +94,7 @@ public class AdminTourController {
             tourService.delete(id);
             ra.addFlashAttribute("successMessage", messages.get("admin.tour.deleted"));
         } catch (BusinessRuleException e) {
-            // Bị chặn vì tour đã có khách đặt - kèm luôn gợi ý ngừng bán.
+
             ra.addFlashAttribute("errorMessage", messages.of(e));
         }
         return "redirect:/admin/tours";
@@ -139,9 +116,6 @@ public class AdminTourController {
         return "redirect:/admin/tours/form?id=" + id;
     }
 
-    // ---------------------------------------------------------------------
-
-    /** Trả lại biểu mẫu kèm những thứ nó cần để render. */
     private String backToForm(TourForm form, Model model) {
         model.addAttribute("categories", categoryService.findAll());
         if (form.getId() != null) {

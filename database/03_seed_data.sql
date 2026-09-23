@@ -1,31 +1,7 @@
-/* ===========================================================================
-   03_seed_data.sql - Dữ liệu mẫu cho TourBookingDB
-
-   Chạy sau 02_schema.sql. Script có thể chạy lại nhiều lần: phần đầu xoá sạch
-   dữ liệu cũ và đặt lại bộ đếm IDENTITY.
-
-   ---------------------------------------------------------------------------
-   HAI ĐIỂM CẦN LƯU Ý
-   ---------------------------------------------------------------------------
-   1. Mọi chuỗi tiếng Việt đều có tiền tố N'...'. Thiếu chữ N, SQL Server sẽ
-      hiểu literal là VARCHAR theo code page hiện hành và mọi dấu tiếng Việt
-      biến thành dấu ? trước cả khi kịp lưu vào cột NVARCHAR.
-
-   2. Ngày khởi hành và ngày đặt tính TƯƠNG ĐỐI so với GETDATE() chứ không ghi
-      cứng. Nếu ghi cứng, chỉ vài tháng sau là toàn bộ đợt khởi hành nằm ở quá
-      khứ và website không còn tour nào đặt được - hỏng buổi trình bày.
-
-   Mật khẩu của cả bốn tài khoản mẫu đều là 123456 (đã băm bằng BCrypt).
-
-   Cách chạy:
-     sqlcmd -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' \
-            -d TourBookingDB -C -i database/03_seed_data.sql
-   =========================================================================== */
-
+-- Dữ liệu mẫu cho TourBookingDB - xoá sạch rồi chèn lại, ngày tháng tính tương đối theo GETDATE().
 USE TourBookingDB;
 GO
 
-/* --- Xoá dữ liệu cũ, theo thứ tự ngược chiều khoá ngoại --- */
 DELETE FROM booking_passengers;
 DELETE FROM coupon_usages;
 DELETE FROM payments;
@@ -36,8 +12,7 @@ DELETE FROM password_reset_tokens;
 DELETE FROM tour_itineraries;
 DELETE FROM booking_details;
 DELETE FROM bookings;
-/* promotions phải xoá SAU bookings: từ khi đơn hàng có cột promotion_id thì
-   bookings là bảng con của promotions, xoá ngược lại là lỗi khoá ngoại 547. */
+
 DELETE FROM promotions;
 DELETE FROM tour_departures;
 DELETE FROM tour_images;
@@ -64,10 +39,6 @@ DBCC CHECKIDENT ('tour_categories',  RESEED, 0) WITH NO_INFOMSGS;
 DBCC CHECKIDENT ('users',            RESEED, 0) WITH NO_INFOMSGS;
 GO
 
-/* ===========================================================================
-   1. users - 1 quản trị viên + 3 khách hàng
-   Cột password là chuỗi băm BCrypt của "123456". Không bao giờ lưu mật khẩu thô.
-   =========================================================================== */
 SET IDENTITY_INSERT users ON;
 
 INSERT INTO users (id, full_name, email, password, phone, address, role, enabled, created_at, updated_at)
@@ -88,9 +59,6 @@ VALUES
 SET IDENTITY_INSERT users OFF;
 GO
 
-/* ===========================================================================
-   2. tour_categories - 6 danh mục
-   =========================================================================== */
 SET IDENTITY_INSERT tour_categories ON;
 
 INSERT INTO tour_categories (id, name, slug, description, image_url, active, created_at, updated_at)
@@ -117,15 +85,6 @@ VALUES
 SET IDENTITY_INSERT tour_categories OFF;
 GO
 
-/* ===========================================================================
-   3. tours - 20 chương trình tour
-
-   Cột search_text là bản đã bỏ dấu của tên + điểm đến + nơi khởi hành + mã tour.
-   Ứng dụng tự dựng lại cột này mỗi lần lưu tour (xem Tour.buildSearchText());
-   ở đây ghi sẵn để website tìm kiếm được ngay sau khi nạp dữ liệu mẫu.
-
-   Hai cột description và itinerary được điền ở bước 4 ngay bên dưới.
-   =========================================================================== */
 SET IDENTITY_INSERT tours ON;
 
 INSERT INTO tours (id, code, name, slug, short_description, departure_location, destination,
@@ -235,14 +194,6 @@ VALUES
 SET IDENTITY_INSERT tours OFF;
 GO
 
-/* ===========================================================================
-   3b. Ảnh đại diện (thumbnail) - ảnh THẬT lấy từ Wikimedia Commons, đi kèm mã
-   nguồn tại static/images/tours/ (không phải uploads/tours/, thư mục đó là
-   runtime và bị .gitignore). Đường dẫn bắt đầu bằng "/" để phân biệt với ảnh
-   quản trị viên tải lên qua /admin/tours (đường dẫn tương đối, ví dụ
-   "tours/abc123.jpg") - cùng quy ước đã dùng cho TourCategory.imageUrl.
-   Xem static/images/tours/NGUON_ANH.md để biết tác giả và giấy phép từng ảnh.
-   =========================================================================== */
 UPDATE tours SET thumbnail = CASE id
     WHEN 1  THEN N'/images/tours/tour01_phu-quoc.jpg'
     WHEN 2  THEN N'/images/tours/tour02_nha-trang.jpg'
@@ -267,13 +218,6 @@ UPDATE tours SET thumbnail = CASE id
 END;
 GO
 
-/* ===========================================================================
-   4. Mô tả chi tiết và lịch trình
-
-   Sinh theo công thức thay vì gõ tay 20 đoạn văn: nội dung của chúng chỉ khác
-   nhau ở tên điểm đến và số ngày. Dùng hàm dựng sẵn của SQL Server (STRING_AGG,
-   CONCAT...) - đề bài chỉ cấm TẠO Function/Procedure/Trigger trong CSDL.
-   =========================================================================== */
 UPDATE tours
 SET description =
         short_description + CHAR(13) + CHAR(10) + CHAR(13) + CHAR(10) +
@@ -285,10 +229,6 @@ SET description =
         N'gồm chi phí cá nhân, đồ uống và tiền tip cho hướng dẫn viên.';
 GO
 
-/* Lưu ý cú pháp: câu lệnh ghép chuỗi phải nằm ở lớp truy vấn con "cac_dong",
-   rồi STRING_AGG mới gộp trên đúng MỘT cột của lớp đó. Nếu viết CASE thẳng vào
-   trong STRING_AGG, SQL Server báo lỗi 8124 vì biểu thức gộp khi đó vừa tham
-   chiếu cột của bảng ngoài (t.destination) vừa tham chiếu cột của bảng trong (d.n). */
 UPDATE t
 SET itinerary = x.noi_dung
 FROM tours t
@@ -315,16 +255,6 @@ CROSS APPLY (
 ) AS x;
 GO
 
-/* ===========================================================================
-   5. tour_departures - mỗi tour 3 đợt (tổng 60 đợt)
-
-   Ngày khởi hành cách hôm nay 14 / 30 / 50 ngày nên dữ liệu mẫu luôn còn tour
-   để đặt, chạy script lúc nào cũng đúng. Đợt sau nhích giá 5% cho giống mùa cao
-   điểm; giá trẻ em bằng 70% giá người lớn.
-
-   Mã đợt được tính là (tour_id - 1) * 3 + thu_tu để các đơn hàng mẫu ở bước 6
-   trỏ tới đúng đợt mà không cần truy vấn ngược.
-   =========================================================================== */
 SET IDENTITY_INSERT tour_departures ON;
 
 INSERT INTO tour_departures (id, tour_id, departure_date, return_date, total_seats,
@@ -335,11 +265,11 @@ SELECT (t.id - 1) * 3 + d.thu_tu,
        DATEADD(DAY, d.cach_ngay, CAST(GETDATE() AS DATE)),
        DATEADD(DAY, d.cach_ngay + t.duration_days - 1, CAST(GETDATE() AS DATE)),
        d.so_cho,
-       d.so_cho,                                   -- ban đầu còn nguyên số chỗ
+       d.so_cho,
        ROUND(t.base_price * d.he_so_gia, 2),
        ROUND(t.base_price * d.he_so_gia * 0.7, 2),
        1,
-       0,                                          -- version khởi tạo
+       0,
        SYSDATETIME(), SYSDATETIME()
 FROM tours t
 CROSS JOIN (VALUES (1, 14, 30, 1.00),
@@ -349,15 +279,6 @@ CROSS JOIN (VALUES (1, 14, 30, 1.00),
 SET IDENTITY_INSERT tour_departures OFF;
 GO
 
-/* ===========================================================================
-   5b. Lùi MỘT đợt về quá khứ cho đơn mẫu HOÀN TẤT (Nhẹ - 5, mục 12.1/12.2)
-
-   Đơn số 3 (bước 6 bên dưới) ở trạng thái COMPLETED nhưng đợt id 16 (Sa Pa,
-   thứ tự 1, "cách_ngay" = 14) vẫn nằm ở TƯƠNG LAI - vô lý cả về nghiệp vụ lẫn
-   máy trạng thái (mục 12.1: chỉ được HOÀN TẤT khi ngày khởi hành đã tới). Lùi
-   ĐÚNG MỘT đợt (không phải cả 60) về quá khứ, để 59 đợt còn lại vẫn giữ nguyên
-   tính chất "luôn còn tour đặt được" của toàn bộ file.
-   =========================================================================== */
 UPDATE tour_departures
 SET departure_date = DATEADD(DAY, -20, CAST(GETDATE() AS DATE)),
     return_date = DATEADD(DAY, -20 + (SELECT duration_days FROM tours WHERE id = tour_departures.tour_id) - 1,
@@ -365,21 +286,6 @@ SET departure_date = DATEADD(DAY, -20, CAST(GETDATE() AS DATE)),
 WHERE id = 16;
 GO
 
-/* ===========================================================================
-   6. bookings - 5 đơn mẫu đủ bốn trạng thái
-
-   Mã đơn được ghép từ ngày đặt để trông giống mã do ứng dụng sinh ra
-   (CodeGenerator.bookingCode(): TB + yyyyMMdd + 6 ký tự ngẫu nhiên).
-   Bốn cột customer_* chép từ bảng users - đúng như ứng dụng làm lúc thanh toán.
-
-   ⚠️ BẪY DỮ LIỆU MẪU (SPEC_CHUNG.md mục 12.4): cột thứ ba của bảng VALUES bên
-   dưới là số GIỜ trước hiện tại (không phải số ngày như các bước khác trong file
-   này) - BookingExpiryScheduler tự huỷ đơn PENDING chưa thanh toán quá
-   app.booking.pending-expiry-hours (mặc định 24 giờ) ngay từ lần khởi động đầu
-   tiên. Hai đơn PENDING mẫu (id 2 và 4) phải đặt trong vòng vài giờ gần đây,
-   KHÔNG được để vài ngày trước như trước đây (5 và 2 ngày) - nếu không đúng bộ
-   hẹn giờ sẽ huỷ sạch chúng trước khi ai kịp xem qua dữ liệu mẫu.
-   =========================================================================== */
 SET IDENTITY_INSERT bookings ON;
 
 INSERT INTO bookings (id, code, user_id, booking_date, customer_name, customer_email,
@@ -391,17 +297,17 @@ SELECT b.id,
        u.id,
        DATEADD(HOUR, -b.cach_gio, SYSDATETIME()),
        u.full_name, u.email, u.phone, u.address,
-       0,                                          -- tổng tiền tính lại ở bước 8
-       NULL, 0,                                    -- mã giảm giá gán ở bước 15
+       0,
+       NULL, 0,
        b.trang_thai,
        b.ghi_chu,
        N'Chuyển khoản ngân hàng',
        SYSDATETIME(), SYSDATETIME()
 FROM (VALUES
         (1, 2, 12 * 24, 'CONFIRMED', N'HK4M2P', CAST(NULL AS NVARCHAR(500))),
-        (2, 3,  5,       'PENDING',   N'QT7B9X', NULL),  -- 5 giờ trước: còn nguyên trong hạn 24 giờ
+        (2, 3,  5,       'PENDING',   N'QT7B9X', NULL),
         (3, 4, 40 * 24, 'COMPLETED', N'LM3D8R', NULL),
-        (4, 2,  3,       'PENDING',   N'VP6K2N', NULL),  -- 3 giờ trước: còn nguyên trong hạn 24 giờ
+        (4, 2,  3,       'PENDING',   N'VP6K2N', NULL),
         (5, 3, 20 * 24, 'CANCELLED', N'ZC5H7J', N'Khách báo bận, xin huỷ đơn.')
      ) AS b(id, user_id, cach_gio, trang_thai, hau_to, ghi_chu)
 JOIN users u ON u.id = b.user_id;
@@ -409,12 +315,6 @@ JOIN users u ON u.id = b.user_id;
 SET IDENTITY_INSERT bookings OFF;
 GO
 
-/* ===========================================================================
-   7. booking_details - 6 dòng chi tiết (đơn số 4 đặt cùng lúc 2 tour)
-
-   Tên tour và đơn giá lấy từ đợt khởi hành ngay lúc này rồi CHÉP vào dòng chi
-   tiết. Về sau quản trị viên có sửa giá đợt đó thì hoá đơn cũ vẫn giữ số cũ.
-   =========================================================================== */
 SET IDENTITY_INSERT booking_details ON;
 
 INSERT INTO booking_details (id, booking_id, departure_id, tour_name_snapshot,
@@ -423,12 +323,12 @@ SELECT x.id, x.booking_id, x.departure_id, t.name,
        x.nguoi_lon, x.tre_em,
        d.price_adult, d.price_child,
        d.price_adult * x.nguoi_lon + d.price_child * x.tre_em
-FROM (VALUES (1, 1,  1, 2, 1),    -- Phú Quốc, đợt 1
-             (2, 2,  4, 2, 0),    -- Nha Trang, đợt 1
-             (3, 3, 16, 4, 2),    -- Sa Pa, đợt 1
-             (4, 4, 25, 2, 2),    -- Mộc Châu, đợt 1
-             (5, 4, 40, 1, 0),    -- Thái Lan, đợt 1
-             (6, 5, 10, 3, 0)     -- Hạ Long, đợt 1 (đơn này đã huỷ)
+FROM (VALUES (1, 1,  1, 2, 1),
+             (2, 2,  4, 2, 0),
+             (3, 3, 16, 4, 2),
+             (4, 4, 25, 2, 2),
+             (5, 4, 40, 1, 0),
+             (6, 5, 10, 3, 0)
      ) AS x(id, booking_id, departure_id, nguoi_lon, tre_em)
 JOIN tour_departures d ON d.id = x.departure_id
 JOIN tours t           ON t.id = d.tour_id;
@@ -436,9 +336,6 @@ JOIN tours t           ON t.id = d.tour_id;
 SET IDENTITY_INSERT booking_details OFF;
 GO
 
-/* ===========================================================================
-   8. Tính lại tổng tiền của đơn
-   =========================================================================== */
 UPDATE b
 SET b.total_amount = x.tong
 FROM bookings b
@@ -447,12 +344,6 @@ JOIN (SELECT booking_id, SUM(subtotal) AS tong
       GROUP BY booking_id) AS x ON x.booking_id = b.id;
 GO
 
-/* ===========================================================================
-   9. Trừ số chỗ đã bán
-
-   Đơn đã huỷ KHÔNG bị trừ chỗ - huỷ đơn thì chỗ phải được trả lại. Giữ đúng bất
-   biến này ngay từ dữ liệu mẫu để các con số trên màn hình quản trị luôn khớp.
-   =========================================================================== */
 UPDATE d
 SET d.available_seats = d.total_seats - x.so_khach
 FROM tour_departures d
@@ -463,13 +354,6 @@ JOIN (SELECT bd.departure_id, SUM(bd.num_adults + bd.num_children) AS so_khach
       GROUP BY bd.departure_id) AS x ON x.departure_id = d.id;
 GO
 
-/* ===========================================================================
-   10. tour_itineraries - lịch trình từng ngày cho 3 tour đầu
-
-   Số ngày lấy thẳng từ tours.duration_days nên không bao giờ lệch: tour 3 ngày
-   sinh đúng 3 dòng. Danh sách (1)..(5) chỉ là nguồn số ngày, điều kiện
-   n.day_no <= t.duration_days cắt phần thừa.
-   =========================================================================== */
 INSERT INTO tour_itineraries (tour_id, day_no, title, description, meals, accommodation)
 SELECT t.id,
        n.day_no,
@@ -497,13 +381,6 @@ JOIN (VALUES (1), (2), (3), (4), (5)) AS n(day_no) ON n.day_no <= t.duration_day
 WHERE t.id <= 3;
 GO
 
-/* ===========================================================================
-   11. booking_passengers - 19 hành khách của 6 dòng chi tiết
-
-   Số người từng loại PHẢI khớp num_adults / num_children của dòng chi tiết -
-   đây chính là bất biến mà tầng service kiểm khi lưu. Cột tuoi chỉ dùng để tính
-   ngày sinh tương đối, không có trong bảng.
-   =========================================================================== */
 INSERT INTO booking_passengers (detail_id, full_name, passenger_type, gender,
                                 birth_date, id_number, phone, single_room, note)
 SELECT p.detail_id, p.ho_ten, p.loai, p.gioi_tinh,
@@ -511,45 +388,34 @@ SELECT p.detail_id, p.ho_ten, p.loai, p.gioi_tinh,
             ELSE DATEADD(YEAR, -p.tuoi, CAST(SYSDATETIME() AS DATE)) END,
        p.so_giay_to, p.dien_thoai, p.phong_don, p.ghi_chu
 FROM (VALUES
-    -- Dòng 1: 2 người lớn + 1 trẻ em
+
     (1, N'Nguyễn Văn An',      'ADULT', 'MALE',   34, N'079201001234', N'0901234567', 0, CAST(NULL AS NVARCHAR(255))),
     (1, N'Trần Thị Bích Ngọc', 'ADULT', 'FEMALE', 32, N'079202001235', NULL,          0, NULL),
     (1, N'Nguyễn Bảo Anh',     'CHILD', 'FEMALE',  8, NULL,            NULL,          0, N'Bé 8 tuổi, cần ghế riêng trên xe'),
-    -- Dòng 2: 2 người lớn
+
     (2, N'Trần Văn Bình',      'ADULT', 'MALE',   41, N'079203001236', N'0912345678', 0, NULL),
     (2, N'Lê Thị Hồng',        'ADULT', 'FEMALE', 39, N'079204001237', NULL,          0, NULL),
-    -- Dòng 3: 4 người lớn + 2 trẻ em
+
     (3, N'Lê Minh Cường',      'ADULT', 'MALE',   45, N'079205001238', N'0923456789', 0, NULL),
     (3, N'Phạm Thị Mai',       'ADULT', 'FEMALE', 43, N'079206001239', NULL,          0, NULL),
     (3, N'Lê Minh Khang',      'ADULT', 'MALE',   28, N'079207001240', NULL,          1, N'Yêu cầu phòng đơn'),
     (3, N'Đặng Thị Kiều Ửng',  'ADULT', 'FEMALE', 26, N'079208001241', NULL,          0, N'Ăn chay trường'),
     (3, N'Lê Bảo Ngọc',        'CHILD', 'FEMALE', 10, NULL,            NULL,          0, NULL),
     (3, N'Lê Gia Huy',         'CHILD', 'MALE',    6, NULL,            NULL,          0, N'Dị ứng hải sản'),
-    -- Dòng 4: 2 người lớn + 2 trẻ em
+
     (4, N'Nguyễn Văn An',      'ADULT', 'MALE',   34, N'079201001234', N'0901234567', 0, NULL),
     (4, N'Trần Thị Bích Ngọc', 'ADULT', 'FEMALE', 32, N'079202001235', NULL,          0, NULL),
     (4, N'Nguyễn Bảo Anh',     'CHILD', 'FEMALE',  8, NULL,            NULL,          0, NULL),
     (4, N'Nguyễn Minh Quân',   'CHILD', 'MALE',    5, NULL,            NULL,          0, NULL),
-    -- Dòng 5: 1 người lớn
+
     (5, N'Nguyễn Văn An',      'ADULT', 'MALE',   34, N'079201001234', N'0901234567', 1, N'Đi công tác kết hợp, ở phòng đơn'),
-    -- Dòng 6: 3 người lớn (đơn này đã huỷ)
+
     (6, N'Trần Văn Bình',      'ADULT', 'MALE',   41, N'079203001236', N'0912345678', 0, NULL),
     (6, N'Lê Thị Hồng',        'ADULT', 'FEMALE', 39, N'079204001237', NULL,          0, NULL),
     (6, N'Trần Quốc Toản',     'ADULT', 'MALE',   37, N'079209001242', NULL,          0, NULL)
 ) AS p(detail_id, ho_ten, loai, gioi_tinh, tuoi, so_giay_to, dien_thoai, phong_don, ghi_chu);
 GO
 
-/* ===========================================================================
-   12. payments - các lần thanh toán
-
-   Đơn 1 đặt cọc 50% rồi còn nợ; đơn 3 đã trả đủ làm hai lần; đơn 2 mới tạo yêu
-   cầu thanh toán qua ví; đơn 4 chưa trả đồng nào; đơn 5 đã huỷ nên tiền được
-   hoàn lại.
-
-   Chú ý: hai dòng PENDING đều để trống txn_ref. Nếu ràng buộc duy nhất trên cột
-   đó là UNIQUE thường thì dòng thứ hai đã bị từ chối (SQL Server chỉ cho một
-   NULL) - đó là lý do schema dùng chỉ mục duy nhất CÓ LỌC.
-   =========================================================================== */
 INSERT INTO payments (booking_id, amount, method, status, txn_ref, paid_at, note,
                       created_at, updated_at)
 SELECT b.id,
@@ -566,24 +432,15 @@ FROM (VALUES
     (2, NULL, 'MOMO',          'PENDING',  NULL,                0,  N'Khách chọn thanh toán qua ví MoMo'),
     (3, 0.5,  'BANK_TRANSFER', 'PAID',     N'VCB2026070500342', 3,  N'Đặt cọc 50%'),
     (3, 0.5,  'CASH',          'PAID',     N'PT-2026-0451',     72, N'Trả nốt tại văn phòng'),
-    -- Nhẹ - 5: đơn 4 (PENDING) trước đây KHÔNG có dòng payments nào - một đơn
-    -- không bao giờ thu tiền/hoàn tất được. Thêm một khoản PENDING hợp lý.
+
     (4, NULL, 'BANK_TRANSFER', 'PENDING',  NULL,                0,  N'Chờ chuyển khoản trước ngày khởi hành'),
-    -- Nhẹ - 5: đơn 5 (CANCELLED) trước đây chỉ có dòng REFUNDED mà không có
-    -- dòng PAID gốc - mục 12.2 chỉ hoàn tiền khi đơn ĐÃ có khoản đã thu; giữ
-    -- nguyên dòng PAID làm lịch sử tiền vào, REFUNDED là khoản THÊM VÀO sau.
+
     (5, NULL, 'BANK_TRANSFER', 'PAID',     N'VCB2026071200987', 1,  N'Đã thu đủ trước khi khách xin huỷ'),
     (5, NULL, 'BANK_TRANSFER', 'REFUNDED', N'VCB2026071200988', 5,  N'Đã hoàn tiền sau khi khách xin huỷ')
 ) AS x(booking_id, ty_le, hinh_thuc, trang_thai, ma_gd, sau_gio, ghi_chu)
 JOIN bookings b ON b.id = x.booking_id;
 GO
 
-/* ===========================================================================
-   13. booking_status_history - nhật ký đổi trạng thái
-
-   Dòng đầu của mỗi đơn có from_status = NULL: lúc vừa tạo thì chưa có trạng thái
-   cũ nào. Các dòng sau do quản trị viên (tài khoản id = 1) thao tác.
-   =========================================================================== */
 INSERT INTO booking_status_history (booking_id, from_status, to_status,
                                     changed_by_id, reason, changed_at)
 SELECT b.id, h.tu, h.den, h.nguoi, h.ly_do, DATEADD(HOUR, h.sau_gio, b.booking_date)
@@ -601,12 +458,6 @@ FROM (VALUES
 JOIN bookings b ON b.id = h.booking_id;
 GO
 
-/* ===========================================================================
-   14. promotions - 4 mã giảm giá
-
-   Mã cuối cùng đã hết hạn dù vẫn còn bật: giữ lại để thấy Promotion.isRunning()
-   loại nó ra đúng như mong đợi, chứ không phải cứ active = 1 là dùng được.
-   =========================================================================== */
 SET IDENTITY_INSERT promotions ON;
 
 INSERT INTO promotions (id, code, name, description, discount_type, discount_value,
@@ -637,12 +488,6 @@ VALUES
 SET IDENTITY_INSERT promotions OFF;
 GO
 
-/* ===========================================================================
-   15. coupon_usages - hai lượt dùng mã đã phát sinh
-
-   discount_amount là bản sao số tiền đã giảm lúc đặt, tính theo đúng công thức
-   của Promotion.calculateDiscount (phần trăm thì chặn trần max_discount).
-   =========================================================================== */
 INSERT INTO coupon_usages (promotion_id, user_id, booking_id, discount_amount, used_at)
 SELECT p.id, b.user_id, b.id,
        CASE WHEN p.discount_type = N'PERCENT'
@@ -656,10 +501,6 @@ JOIN bookings   b ON b.id   = x.booking_id
 JOIN promotions p ON p.code = x.ma;
 GO
 
-/* Ghi mã và số tiền giảm ngược lại vào đơn, rồi TRỪ vào tổng tiền.
-   Thứ tự bắt buộc: bước 8 đã đặt total_amount = tiền hàng, bước 15 tính số tiền
-   giảm dựa trên đúng con số đó; tới đây mới trừ. Đảo thứ tự là tính giảm giá
-   trên một con số đã bị giảm rồi. */
 UPDATE b
 SET b.promotion_id    = cu.promotion_id,
     b.discount_amount = cu.discount_amount,
@@ -668,8 +509,6 @@ FROM bookings b
 JOIN coupon_usages cu ON cu.booking_id = b.id;
 GO
 
-/* Số lượt đã dùng của mỗi mã phải khớp số dòng trong coupon_usages - đây là con
-   số mà PromotionService cộng dồn khi đặt tour thật. */
 UPDATE p
 SET p.used_count = x.so_luot
 FROM promotions p
@@ -677,14 +516,6 @@ JOIN (SELECT promotion_id, COUNT(*) AS so_luot
       FROM coupon_usages GROUP BY promotion_id) AS x ON x.promotion_id = p.id;
 GO
 
-/* ===========================================================================
-   16. reviews - 5 đánh giá
-
-   Dòng đầu là đánh giá "đã xác thực": có booking_id trỏ tới đơn số 3 đang ở
-   trạng thái COMPLETED, đúng quy tắc mà tầng service áp dụng cho đánh giá gửi từ
-   website. Bốn dòng còn lại để booking_id NULL - đây là dữ liệu minh hoạ do quản
-   trị viên nhập, cột này cho phép NULL chính vì trường hợp đó.
-   =========================================================================== */
 INSERT INTO reviews (tour_id, user_id, booking_id, rating, title, content, approved,
                      admin_reply, replied_at, created_at, updated_at)
 SELECT d.tour_id, r.user_id, r.booking_id, r.diem, r.tieu_de, r.noi_dung, r.duyet,
@@ -709,7 +540,7 @@ FROM (VALUES
      0, NULL, 1)
 ) AS r(tour_id_truc_tiep, booking_id, user_id, diem, tieu_de, noi_dung, duyet, tra_loi, cach_ngay)
 CROSS APPLY (
-    /* Đánh giá có đơn thì lấy đúng tour của đơn đó; không thì dùng tour chỉ định sẵn. */
+
     SELECT COALESCE(r.tour_id_truc_tiep,
                     (SELECT TOP 1 dep.tour_id
                      FROM booking_details bd
@@ -718,12 +549,6 @@ CROSS APPLY (
 ) AS d;
 GO
 
-/* ===========================================================================
-   17. contact_messages - 4 liên hệ gửi từ trang công khai
-
-   Một thư gắn với tour cụ thể (khách bấm "Tư vấn tour này"), một thư đã xử lý
-   xong bởi quản trị viên, hai thư còn mới để thấy huy hiệu đếm trên khu quản trị.
-   =========================================================================== */
 INSERT INTO contact_messages (full_name, email, phone, subject, content, status,
                               tour_id, handled_by_id, reply_note, handled_at,
                               created_at, updated_at)
@@ -753,13 +578,6 @@ FROM (VALUES
        nguoi_xu_ly, tra_loi, cach_ngay);
 GO
 
-/* ===========================================================================
-   18. password_reset_tokens - 2 vé đã hết giá trị
-
-   CỐ Ý không seed vé nào còn dùng được: một vé đặt lại mật khẩu còn hiệu lực nằm
-   trong file dữ liệu mẫu là một cái chìa khoá bỏ quên trước cửa. Hai dòng dưới
-   đây chỉ để thấy hai nhánh "đã dùng" và "hết hạn".
-   =========================================================================== */
 INSERT INTO password_reset_tokens (user_id, token, expires_at, used_at, created_at, updated_at)
 VALUES
  (2, N'seed-token-da-su-dung-0000000000000001',
@@ -771,9 +589,6 @@ VALUES
      DATEADD(DAY, -2, SYSDATETIME()), SYSDATETIME());
 GO
 
-/* ===========================================================================
-   19. Kiểm chứng
-   =========================================================================== */
 SELECT N'Người dùng'      AS bang, COUNT(*) AS so_dong FROM users
 UNION ALL SELECT N'Danh mục',        COUNT(*) FROM tour_categories
 UNION ALL SELECT N'Tour',            COUNT(*) FROM tours
@@ -790,8 +605,6 @@ UNION ALL SELECT N'Đánh giá',        COUNT(*) FROM reviews
 UNION ALL SELECT N'Liên hệ',         COUNT(*) FROM contact_messages
 UNION ALL SELECT N'Vé đổi mật khẩu', COUNT(*) FROM password_reset_tokens;
 
-/* Bất biến quan trọng nhất của bảng hành khách: đếm theo loại phải khớp đúng
-   num_adults / num_children của dòng chi tiết. Câu này PHẢI trả về 0 dòng. */
 SELECT bd.id AS dong_chi_tiet_lech
 FROM booking_details bd
 LEFT JOIN (SELECT detail_id,
@@ -801,14 +614,11 @@ LEFT JOIN (SELECT detail_id,
 WHERE ISNULL(p.nguoi_lon, 0) <> bd.num_adults
    OR ISNULL(p.tre_em, 0)    <> bd.num_children;
 
-/* Tiếng Việt phải hiện đúng dấu - nếu ra dấu ? là đã thiếu tiền tố N ở đâu đó */
 SELECT TOP 3 name, destination FROM tours ORDER BY id;
 
-/* Tìm không dấu: cả hai câu đều phải trả về đúng 1 tour */
 SELECT COUNT(*) AS tim_da_lat  FROM tours WHERE search_text LIKE '%da lat%';
 SELECT COUNT(*) AS tim_phu_quoc FROM tours WHERE search_text LIKE '%phu quoc%';
 
-/* Số chỗ đã bị trừ đúng chưa */
 SELECT id, total_seats, available_seats
 FROM tour_departures
 WHERE available_seats < total_seats

@@ -7,15 +7,9 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Dựng nội dung thư chào mừng sau khi đăng ký tài khoản.
- *
- * <p>Cùng cách làm với {@link BookingEmailRenderer}: nội dung dựng bằng chính
- * Thymeleaf đang dùng cho website ({@code templates/email/welcome.html}), để cả
- * bản in console lẫn bản gửi SMTP dùng chung một nơi sinh HTML.</p>
- */
 @Component
 @RequiredArgsConstructor
+// Dựng tiêu đề, nội dung HTML (qua Thymeleaf) và bản tóm tắt văn bản của thư chào mừng.
 public class WelcomeEmailRenderer {
 
     private final SpringTemplateEngine templateEngine;
@@ -32,12 +26,6 @@ public class WelcomeEmailRenderer {
         return templateEngine.process("email/welcome", context);
     }
 
-    /**
-     * Bản tóm tắt dạng chữ thuần cho nhật ký khi chạy ở chế độ console.
-     *
-     * <p>Cố ý <b>không</b> có mật khẩu trong bản tóm tắt này, kể cả khi tương
-     * lai ai đó thêm trường mới vào form đăng ký.</p>
-     */
     public String plainSummary(String fullName, String email) {
         return "Họ tên : " + fullName + "\nEmail  : " + email;
     }

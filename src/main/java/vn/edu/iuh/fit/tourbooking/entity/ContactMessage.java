@@ -17,17 +17,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Một liên hệ gửi từ biểu mẫu công khai.
- *
- * <p>Người gửi <b>không bắt buộc có tài khoản</b>, nên bảng lưu thẳng họ tên /
- * email / điện thoại thay vì trỏ sang {@link User}. Nếu khách đang đăng nhập thì
- * biểu mẫu chỉ điền sẵn giúp, dữ liệu vẫn được chép vào đây - liên hệ là chứng từ
- * tại thời điểm gửi, giống nguyên tắc ở {@link Booking}.</p>
- *
- * <p>{@code tour} để null được: khách có thể hỏi chung, hoặc bấm "Tư vấn tour này"
- * từ trang chi tiết thì mới có tour cụ thể.</p>
- */
+// Một liên hệ gửi từ biểu mẫu công khai (người gửi không bắt buộc có tài khoản).
 @Entity
 @Table(
         name = "contact_messages",
@@ -60,23 +50,19 @@ public class ContactMessage extends Auditable {
     @Column(name = "content", nullable = false, length = 2000)
     private String content;
 
-    /** Không dùng {@code @Enumerated}; xem {@code ContactStatusConverter}. */
     @Column(name = "status", nullable = false, length = 20)
     private ContactStatus status = ContactStatus.NEW;
 
-    /** Tour mà khách đang hỏi, nếu liên hệ gửi đi từ trang chi tiết tour. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id",
             foreignKey = @ForeignKey(name = "fk_contact_messages_tour"))
     private Tour tour;
 
-    /** Nhân viên đã tiếp nhận. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "handled_by_id",
             foreignKey = @ForeignKey(name = "fk_contact_messages_user"))
     private User handledBy;
 
-    /** Nội dung đã trả lời khách, lưu để người sau đọc lại được. */
     @Column(name = "reply_note", length = 1000)
     private String replyNote;
 
@@ -90,7 +76,7 @@ public class ContactMessage extends Auditable {
         this.content = content;
     }
 
-    /** Đánh dấu đã xử lý: đổi trạng thái, ghi người xử lý và mốc thời gian cùng lúc. */
+    // Đánh dấu liên hệ đã xử lý xong: ghi người xử lý, câu trả lời và thời điểm.
     public void resolve(User staff, String replyNote) {
         this.status = ContactStatus.RESOLVED;
         this.handledBy = staff;

@@ -19,21 +19,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Một lần mã giảm giá được dùng thật: mã nào, ai dùng, cho đơn nào, giảm bao nhiêu.
- *
- * <p>Không có bảng này thì {@code Promotion.usedCount} chỉ là một con số không ai
- * đối chiếu được, và không cách nào chặn "mỗi người một lượt".</p>
- *
- * <p>Ràng buộc duy nhất trên {@code booking_id}: <b>mỗi đơn chỉ áp một mã</b> - đây
- * là quyết định thiết kế, cộng dồn nhiều mã lên một đơn là nguồn gốc của những hoá
- * đơn không ai giải thích nổi.</p>
- *
- * <p>{@code discountAmount} chép lại số tiền đã giảm tại thời điểm đặt, không tính
- * lại từ {@link Promotion}: quản trị viên sửa giá trị mã về sau thì đơn cũ vẫn
- * phải giữ nguyên số đã giảm - cùng nguyên tắc với các cột bản sao ở
- * {@link BookingDetail}.</p>
- */
+// Một lần mã giảm giá được dùng thật: mã nào, ai dùng, cho đơn nào, giảm bao nhiêu.
 @Entity
 @Table(
         name = "coupon_usages",

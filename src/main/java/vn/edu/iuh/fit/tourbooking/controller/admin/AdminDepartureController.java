@@ -18,29 +18,16 @@ import vn.edu.iuh.fit.tourbooking.service.DepartureService;
 import vn.edu.iuh.fit.tourbooking.service.TourService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Quản lý đợt khởi hành - <b>tài nguyên con của tour</b>.
- *
- * <p>Đường dẫn luôn có {@code /admin/tours/{tourId}/departures/...} chứ không
- * phải một khu riêng {@code /admin/departures}. Lý do: đợt khởi hành không có
- * nghĩa nếu tách khỏi tour, và cách đặt đường dẫn như thế này khiến việc kiểm
- * tra "đợt này có đúng của tour kia không" trở thành bắt buộc chứ không phải
- * chuyện dễ quên.</p>
- */
 @Controller
 @RequestMapping("/admin/tours/{tourId}/departures")
 @RequiredArgsConstructor
+// Khu quản trị: thêm/sửa/xoá/bật-tắt đợt khởi hành của một tour.
 public class AdminDepartureController {
 
     private final DepartureService departureService;
     private final TourService tourService;
     private final MessageHelper messages;
 
-    /**
-     * Danh sách các đợt của một tour, kèm biểu mẫu thêm/sửa ngay bên dưới.
-     *
-     * @param editId nếu có thì biểu mẫu chuyển sang chế độ sửa đợt đó
-     */
     @GetMapping
     public String list(@PathVariable Long tourId,
                        @RequestParam(required = false) Long editId,

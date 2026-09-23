@@ -38,25 +38,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Đổ dữ liệu mẫu cho môi trường phát triển.
- *
- * <p>Chỉ chạy với profile {@code dev} và chỉ khi bảng còn rỗng, nên khởi động
- * lại ứng dụng nhiều lần cũng không nhân bản dữ liệu.</p>
- *
- * <p><b>Vì sao seed bằng Java thay vì file SQL:</b> mật khẩu phải là chuỗi băm
- * BCrypt, mà BCrypt có muối ngẫu nhiên nên không thể viết sẵn trong file SQL
- * (viết cứng một chuỗi băm thì mọi tài khoản dùng chung muối, và không ai đọc
- * file SQL mà biết mật khẩu gốc là gì). File {@code database/03_seed_data.sql}
- * được sinh ra <i>từ</i> dữ liệu này để nộp kèm báo cáo.</p>
- */
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
+// Đổ dữ liệu mẫu khi CSDL còn rỗng: 4 người dùng, 6 danh mục, 20 tour, đợt khởi hành, và vài đơn hàng tình huống thật.
 public class DataSeeder implements CommandLineRunner {
 
-    /** Mật khẩu dùng chung cho mọi tài khoản mẫu - chỉ để tiện thử nghiệm. */
     private static final String DEMO_PASSWORD = "123456";
 
     private final UserRepository userRepository;
@@ -68,6 +56,7 @@ public class DataSeeder implements CommandLineRunner {
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // Điểm vào: bỏ qua nếu đã có dữ liệu, ngược lại đổ tuần tự người dùng -> danh mục -> tour -> đợt khởi hành -> đơn hàng.
     @Override
     @Transactional
     public void run(String... args) {
@@ -89,10 +78,6 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Tài khoản thử nghiệm - quản trị: admin@tourbooking.vn / {} ; khách: an.nguyen@gmail.com / {}",
                 DEMO_PASSWORD, DEMO_PASSWORD);
     }
-
-    // =====================================================================
-    // Người dùng
-    // =====================================================================
 
     private List<User> seedUsers() {
         String hashed = passwordEncoder.encode(DEMO_PASSWORD);
@@ -116,10 +101,6 @@ public class DataSeeder implements CommandLineRunner {
         return userRepository.saveAll(List.of(admin, an, binh, cuong));
     }
 
-    // =====================================================================
-    // Danh mục
-    // =====================================================================
-
     private List<TourCategory> seedCategories() {
         List<TourCategory> list = List.of(
                 category("Du lịch biển đảo",
@@ -140,23 +121,11 @@ public class DataSeeder implements CommandLineRunner {
 
     private TourCategory category(String name, String description) {
         TourCategory c = new TourCategory(name, SlugUtil.toSlug(name), description);
-        // .svg chứ không .jpg: sáu file minh hoạ danh mục là hình vẽ vector nằm
-        // trong static/images/categories. Trước đây trỏ tới .jpg không tồn tại nên
-        // lưới danh mục ở trang chủ toàn khung ảnh vỡ.
+
         c.setImageUrl("/images/categories/" + c.getSlug() + ".svg");
         return c;
     }
 
-    // =====================================================================
-    // Tour
-    // =====================================================================
-
-    /**
-     * Mô tả gọn một tour mẫu.
-     *
-     * @param categoryIndex vị trí danh mục trong danh sách trả về từ {@link #seedCategories()}
-     * @param price         giá tham khảo, đơn vị đồng
-     */
     private record TourSeed(String code, String name, int categoryIndex, String from,
                             String destination, int days, int nights, long price,
                             String transportation, boolean featured, String summary) {
@@ -230,18 +199,6 @@ public class DataSeeder implements CommandLineRunner {
                     "Resort 4 sao sát biển, đồi cát bay và làng chài Mũi Né.")
     );
 
-    /**
-     * Ảnh đại diện thật cho từng tour, theo đúng thứ tự khai báo ở
-     * {@link #TOUR_SEEDS} (PQ, NT, CD, HL, QN, SP, HG, DL, MC, HUE, NB, TN, YT,
-     * TL, SG, HQ, NB nhật, MT, CT, MN - khớp id 1-20 trong
-     * {@code database/03_seed_data.sql}). Đường dẫn bắt đầu bằng "/": đây là
-     * ảnh seed TĨNH trong {@code static/images/tours/}, không phải ảnh quản trị
-     * viên tải lên qua {@code /admin/tours} (đường dẫn tương đối, nằm trong
-     * {@code uploads/tours/} lúc chạy) - các khuôn mẫu hiển thị (xem
-     * {@code fragments/components.html}) phân biệt hai trường hợp bằng dấu "/"
-     * ở đầu chuỗi, cùng quy ước với {@code TourCategory.imageUrl}. Nguồn ảnh và
-     * giấy phép của từng file: {@code static/images/tours/NGUON_ANH.md}.
-     */
     private static final List<String> TOUR_THUMBNAILS = List.of(
             "/images/tours/tour01_phu-quoc.jpg",
             "/images/tours/tour02_nha-trang.jpg",
@@ -265,6 +222,7 @@ public class DataSeeder implements CommandLineRunner {
             "/images/tours/tour20_mui-ne.jpg"
     );
 
+    // Dựng 20 tour mẫu từ TOUR_SEEDS, gắn ảnh thật theo đúng thứ tự TOUR_THUMBNAILS.
     private List<Tour> seedTours(List<TourCategory> categories) {
         List<Tour> tours = new ArrayList<>();
         int index = 0;
@@ -291,6 +249,7 @@ public class DataSeeder implements CommandLineRunner {
         return tourRepository.saveAll(tours);
     }
 
+    // Dựng đoạn mô tả tour mẫu từ dữ liệu seed.
     private String buildDescription(TourSeed seed) {
         return """
                 %s
@@ -303,6 +262,7 @@ public class DataSeeder implements CommandLineRunner {
                 seed.from(), seed.transportation().toLowerCase());
     }
 
+    // Dựng lịch trình từng ngày mẫu (ngày đầu/cuối khác ngày giữa) từ dữ liệu seed.
     private String buildItinerary(TourSeed seed) {
         StringBuilder sb = new StringBuilder();
         for (int day = 1; day <= seed.days(); day++) {
@@ -322,10 +282,7 @@ public class DataSeeder implements CommandLineRunner {
         return sb.toString();
     }
 
-    // =====================================================================
-    // Đợt khởi hành - mỗi tour ba đợt, cách nhau khoảng nửa tháng
-    // =====================================================================
-
+    // Mỗi tour có 3 đợt khởi hành mẫu (14/30/50 ngày tới), giá tăng dần theo đợt.
     private List<TourDeparture> seedDepartures(List<Tour> tours) {
         List<TourDeparture> all = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -335,14 +292,13 @@ public class DataSeeder implements CommandLineRunner {
         for (Tour tour : tours) {
             for (int i = 0; i < offsets.length; i++) {
                 LocalDate go = today.plusDays(offsets[i]);
-                // Tour n ngày thì ngày về là ngày đi cộng (n - 1).
+
                 LocalDate back = go.plusDays(tour.getDurationDays() - 1L);
 
-                // Đợt sau nhích giá 5% mỗi đợt cho giống mùa cao điểm.
                 BigDecimal adult = tour.getBasePrice()
                         .multiply(BigDecimal.valueOf(100 + 5L * i))
                         .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-                // Trẻ em tính 70% giá người lớn.
+
                 BigDecimal child = adult.multiply(BigDecimal.valueOf(0.7))
                         .setScale(2, java.math.RoundingMode.HALF_UP);
 
@@ -352,38 +308,15 @@ public class DataSeeder implements CommandLineRunner {
         return departureRepository.saveAll(all);
     }
 
-    // =====================================================================
-    // Đơn đặt tour mẫu
-    // =====================================================================
-
-    /**
-     * Mục "VỪA - 3" (đã tái hiện: đơn giả bị bộ hẹn giờ mục 12.4 huỷ sạch sau 1
-     * phút, 0 hành khách dù đơn có dòng chi tiết, không dòng {@code payments}
-     * nào, đơn HOÀN TẤT trỏ đợt còn 14 ngày nữa mới đi). Năm đơn mẫu này nay
-     * đồng bộ với {@code database/03_seed_data.sql}:
-     * <ul>
-     *   <li>Hai đơn CHỜ XÁC NHẬN đặt <b>vài giờ</b> trước (không phải vài ngày) -
-     *       {@code app.booking.pending-expiry-hours} mặc định 24 giờ, và
-     *       {@code BookingExpiryScheduler} chạy lần đầu chỉ sau 1 phút khởi động.</li>
-     *   <li>Mọi dòng chi tiết đều có đủ hành khách khớp {@code numAdults}/
-     *       {@code numChildren} - đúng bất biến mục 12.7.</li>
-     *   <li>Mỗi đơn có ít nhất một dòng {@code payments} hợp lý theo đúng trạng
-     *       thái của nó (xem {@link #seedPayment}).</li>
-     *   <li>Đơn HOÀN TẤT trỏ tới một đợt khởi hành đã lùi về <b>quá khứ</b>
-     *       ({@link #rewindOneDepartureToPast}) và đã có khoản ĐÃ THANH TOÁN đủ
-     *       100% - đúng điều kiện mục 12.1 để một đơn được ở trạng thái này.</li>
-     * </ul>
-     */
+    // Năm đơn mẫu đủ tình huống: đã xác nhận đặt cọc, chờ thanh toán, đã hoàn thành, hai dòng tour, đã huỷ + hoàn tiền.
     private void seedBookings(List<User> users, List<TourDeparture> departures) {
         User admin = users.get(0);
         User an = users.get(1);
         User binh = users.get(2);
         User cuong = users.get(3);
 
-        // Chỉ số 0, 3, 6... là đợt khởi hành đầu tiên của tour thứ 1, 2, 3...
         TourDeparture completedDeparture = rewindOneDepartureToPast(departures.get(15));
 
-        // --- Đơn 1: CONFIRMED, đặt cọc 50%, còn nợ 50% ----------------------
         Booking b1 = createBooking(an, BookingStatus.CONFIRMED, LocalDateTime.now().minusDays(12),
                 detail(departures.get(0), 2, 1));
         attachPassengers(b1.getDetails().get(0),
@@ -396,7 +329,6 @@ public class DataSeeder implements CommandLineRunner {
         seedPayment(b1, new BigDecimal("0.5"), PaymentMethod.BANK_TRANSFER, PaymentStatus.PENDING,
                 null, null, "Còn lại, thu trước ngày khởi hành");
 
-        // --- Đơn 2: PENDING, đặt 5 GIỜ trước - còn nguyên trong hạn 24 giờ --
         Booking b2 = createBooking(binh, BookingStatus.PENDING, LocalDateTime.now().minusHours(5),
                 detail(departures.get(3), 2, 0));
         attachPassengers(b2.getDetails().get(0), List.of("Trần Văn Bình", "Lê Thị Hồng"), List.of());
@@ -405,7 +337,6 @@ public class DataSeeder implements CommandLineRunner {
         seedPayment(b2, BigDecimal.ONE, PaymentMethod.MOMO, PaymentStatus.PENDING,
                 null, null, "Khách chọn thanh toán qua ví MoMo");
 
-        // --- Đơn 3: COMPLETED, trỏ đúng đợt vừa lùi về quá khứ, đã thu đủ ---
         Booking b3 = createBooking(cuong, BookingStatus.COMPLETED, LocalDateTime.now().minusDays(40),
                 detail(completedDeparture, 4, 2));
         attachPassengers(b3.getDetails().get(0),
@@ -420,7 +351,6 @@ public class DataSeeder implements CommandLineRunner {
         seedPayment(b3, new BigDecimal("0.5"), PaymentMethod.CASH, PaymentStatus.PAID,
                 "SEED-PT-0001", b3.getBookingDate().plusDays(3), "Trả nốt tại văn phòng");
 
-        // --- Đơn 4: PENDING, đặt 3 GIỜ trước, hai dòng chi tiết -------------
         Booking b4 = createBooking(an, BookingStatus.PENDING, LocalDateTime.now().minusHours(3),
                 detail(departures.get(24), 2, 2),
                 detail(departures.get(39), 1, 0));
@@ -432,8 +362,6 @@ public class DataSeeder implements CommandLineRunner {
         seedPayment(b4, BigDecimal.ONE, PaymentMethod.BANK_TRANSFER, PaymentStatus.PENDING,
                 null, null, "Chờ chuyển khoản trước ngày khởi hành");
 
-        // --- Đơn 5: CANCELLED - đã thu đủ RỒI mới huỷ (mục 12.2: giữ dòng PAID
-        // làm lịch sử tiền vào, thêm một dòng REFUNDED mới) ------------------
         Booking b5 = createBooking(binh, BookingStatus.CANCELLED, LocalDateTime.now().minusDays(20),
                 detail(departures.get(9), 3, 0));
         attachPassengers(b5.getDetails().get(0),
@@ -447,13 +375,7 @@ public class DataSeeder implements CommandLineRunner {
                 "SEED-REFUND-0001", LocalDateTime.now().minusDays(19), "Đã hoàn tiền 100% sau khi khách xin huỷ");
     }
 
-    /**
-     * Lùi <b>đúng một</b> đợt khởi hành (không phải cả 60 đợt) về quá khứ, dùng
-     * riêng cho đơn mẫu HOÀN TẤT - mục 12.1 chỉ cho một đơn sang trạng thái này
-     * khi ngày khởi hành đã tới. {@link #seedDepartures} luôn sinh đợt ở tương
-     * lai (+14/+30/+50 ngày) để trang danh sách/chi tiết tour lúc nào cũng còn
-     * tour đặt được, nên phải chỉnh riêng một đợt sau khi đã seed xong.
-     */
+    // Đẩy lùi ngày một đợt khởi hành về quá khứ, phục vụ đơn mẫu ở trạng thái COMPLETED.
     private TourDeparture rewindOneDepartureToPast(TourDeparture departure) {
         LocalDate pastDeparture = LocalDate.now().minusDays(20);
         departure.setDepartureDate(pastDeparture);
@@ -465,13 +387,6 @@ public class DataSeeder implements CommandLineRunner {
         return new BookingDetail(departure, adults, children);
     }
 
-    /**
-     * Gắn đủ hành khách cho một dòng chi tiết - giữ đúng bất biến mục 12.7
-     * ("số hành khách theo loại luôn khớp numAdults/numChildren") ngay từ dữ
-     * liệu mẫu. Số tên truyền vào phải khớp chính xác số người lớn/trẻ em của
-     * dòng ({@code detail}) - đây là seed nội bộ nên không cần chống chịu dữ
-     * liệu sai như tầng service.
-     */
     private void attachPassengers(BookingDetail detail, List<String> adultNames, List<String> childNames) {
         for (String name : adultNames) {
             BookingPassenger p = new BookingPassenger(name, PassengerType.ADULT);
@@ -485,16 +400,7 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    /**
-     * Sinh một dòng {@code payments} cho đơn mẫu - đúng tinh thần Bổ sung B
-     * (SPEC_CHUNG.md mục 9): mỗi đơn phải có ít nhất một khoản thu để chức năng
-     * "Đã thu tiền" / hoàn tiền / thống kê có dữ liệu thật để thao tác, thay vì
-     * một đơn không bao giờ thu tiền/hoàn tất được.
-     *
-     * @param ratio   tỉ lệ trên {@code booking.totalAmount} (vd 0.5 = 50%, 1 = toàn bộ)
-     * @param txnRef  mã giao dịch, để {@code null} nếu khoản còn PENDING hoặc trả tiền mặt chưa có mã
-     * @param paidAt  thời điểm thu tiền, để {@code null} nếu chưa PAID/REFUNDED
-     */
+    // Sinh một khoản thanh toán mẫu bằng tỉ lệ của tổng đơn (ví dụ 0.5 = đặt cọc 50%).
     private void seedPayment(Booking booking, BigDecimal ratio, PaymentMethod method, PaymentStatus status,
                              String txnRef, LocalDateTime paidAt, String note) {
         BigDecimal amount = booking.getTotalAmount().multiply(ratio).setScale(0, RoundingMode.HALF_UP);
@@ -506,21 +412,11 @@ public class DataSeeder implements CommandLineRunner {
         paymentRepository.save(payment);
     }
 
-    /** Một dòng {@code booking_status_history} - Bổ sung A (SPEC_CHUNG.md mục 9). */
     private void seedHistory(Booking booking, BookingStatus from, BookingStatus to, User changedBy, String reason) {
         bookingStatusHistoryRepository.save(new BookingStatusHistory(booking, from, to, changedBy, reason));
     }
 
-    /**
-     * Tạo một đơn mẫu (chưa lưu) và trừ chỗ tương ứng - trừ đơn đã huỷ, vì huỷ
-     * đơn thì chỗ phải được trả lại. Giữ đúng bất biến này ngay từ dữ liệu mẫu
-     * để các con số trên màn hình quản trị luôn cộng khớp.
-     *
-     * <p><b>Cố ý chưa gọi {@code bookingRepository.save}</b>: bên gọi cần gắn
-     * hành khách vào từng {@link BookingDetail} trước (mục 12.7) rồi mới lưu
-     * MỘT lần duy nhất, để {@code cascade = ALL} kéo theo cả chi tiết lẫn hành
-     * khách trong cùng một lượt ghi.</p>
-     */
+    // Dựng một đơn mẫu từ thông tin người dùng và các dòng chi tiết truyền vào.
     private Booking createBooking(User user, BookingStatus status, LocalDateTime bookingDate, BookingDetail... details) {
         Booking booking = new Booking();
         booking.setCode(CodeGenerator.uniqueBookingCode(bookingRepository::existsByCode));

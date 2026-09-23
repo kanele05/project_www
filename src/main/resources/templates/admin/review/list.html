@@ -1,11 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Kiểm duyệt đánh giá tour (UC020).
 
-  ReviewRepository.findBy{Approved,All}...OrderByCreatedAtDesc đều nạp sẵn tour
-  và user bằng @EntityGraph, nên tour.name / user.fullName ở đây an toàn dù
-  open-in-view đang tắt (gotcha #43).
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/fragments/admin-layout :: head(#{admin.review.title})}"></head>
 <body>
@@ -24,7 +18,6 @@
 
             <div th:replace="~{fragments/components :: alerts}"></div>
 
-            <!-- Bộ lọc trạng thái: Chờ duyệt / Đã duyệt / Tất cả - mặc định Chờ duyệt. -->
             <ul class="nav nav-pills mb-3">
                 <li class="nav-item" th:each="s : ${statuses}">
                     <a class="nav-link" th:classappend="${s == status} ? 'active'"
@@ -87,7 +80,7 @@
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <!-- Duyệt / Bỏ duyệt - đổi cờ approved, không xoá gì cả. -->
+
                                 <form class="d-inline" method="post" th:if="${not r.approved}"
                                       th:action="@{/admin/reviews/{id}/approve(id=${r.id})}">
                                     <button class="btn btn-sm btn-outline-success" type="submit"
@@ -117,7 +110,7 @@
                                 </form>
                             </td>
                         </tr>
-                        <!-- Hàng gấp mở chứa biểu mẫu trả lời - ẩn theo mặc định. -->
+
                         <tr class="collapse" th:id="'reply-' + ${r.id}">
                             <td colspan="7" class="bg-light-subtle">
                                 <form class="d-flex gap-2 align-items-start py-2" method="post"

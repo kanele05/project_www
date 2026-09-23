@@ -35,12 +35,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <!--
-                      Chỉ đọc các cột nằm ngay trên bảng bookings. KHÔNG duyệt
-                      booking.details ở đây: quan hệ đó là LAZY, mà open-in-view
-                      đang tắt nên chạm vào sẽ ném LazyInitializationException.
-                      Muốn xem các tour trong đơn thì bấm vào mã đơn.
-                    -->
+
                     <tr th:each="b : ${bookingsPage.content}">
                         <td>
                             <a class="fw-semibold text-decoration-none"
@@ -52,8 +47,7 @@
                         <td class="text-end fw-semibold text-danger"
                             th:text="|${#numbers.formatInteger(b.totalAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
                         <td>
-                            <!-- Màu nhãn lấy từ chính enum BookingStatus, nhờ vậy thêm
-                                 trạng thái mới không phải sửa khuôn mẫu. -->
+
                             <span class="badge"
                                   th:classappend="'bg-' + ${b.status.badgeClass}"
                                   th:text="#{${b.status.messageKey}}">Trạng thái</span>

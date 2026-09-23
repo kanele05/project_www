@@ -1,11 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Quản lý liên hệ (UC022).
 
-  ContactMessageRepository.find{All,ByStatus}...OrderByCreatedAtDesc đều nạp
-  sẵn tour và handledBy bằng @EntityGraph, nên hai quan hệ đó an toàn ở đây dù
-  open-in-view đang tắt (gotcha #43).
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/fragments/admin-layout :: head(#{admin.contact.title})}"></head>
 <body>
@@ -24,7 +18,6 @@
 
             <div th:replace="~{fragments/components :: alerts}"></div>
 
-            <!-- Bộ lọc trạng thái - mặc định "Mới". -->
             <ul class="nav nav-pills mb-3">
                 <li class="nav-item">
                     <a class="nav-link" th:classappend="${status == 'NEW'} ? 'active'"
@@ -106,7 +99,7 @@
                                 </button>
                             </td>
                         </tr>
-                        <!-- Hàng gấp mở: đổi trạng thái + ghi chú trả lời, cùng lúc. -->
+
                         <tr class="collapse" th:id="'handle-' + ${c.id}">
                             <td colspan="6" class="bg-light-subtle">
                                 <form class="row g-2 align-items-end py-2" method="post"

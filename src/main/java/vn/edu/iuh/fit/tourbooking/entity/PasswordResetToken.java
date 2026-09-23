@@ -19,17 +19,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * Vé một lần dùng để đặt lại mật khẩu.
- *
- * <p>Ba quy tắc an toàn nằm trong bảng này chứ không nằm trong ràng buộc CSDL
- * (đề bài cấm CHECK / Trigger), tầng service kiểm tra khi khách bấm vào liên kết:
- * vé phải <b>chưa dùng</b>, <b>chưa hết hạn</b>, và mỗi lần yêu cầu mới sẽ vô hiệu
- * hoá các vé cũ của cùng tài khoản.</p>
- *
- * <p>Cột {@code token} lưu chuỗi ngẫu nhiên dài, không lưu email trong liên kết:
- * đoán được token là đổi được mật khẩu, nên nó phải khó đoán và có hạn dùng.</p>
- */
+// Vé một lần dùng để đặt lại mật khẩu: phải chưa dùng và chưa hết hạn mới hợp lệ.
 @Entity
 @Table(
         name = "password_reset_tokens",
@@ -42,7 +32,6 @@ import java.util.Objects;
 @NoArgsConstructor
 public class PasswordResetToken extends Auditable {
 
-    /** Thời hạn mặc định của một vé, tính bằng phút. */
     public static final long VALID_MINUTES = 30;
 
     @Id
@@ -60,7 +49,6 @@ public class PasswordResetToken extends Auditable {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    /** Null nghĩa là vé chưa được dùng. Dùng rồi thì không dùng lại được nữa. */
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
@@ -78,7 +66,6 @@ public class PasswordResetToken extends Auditable {
         return usedAt != null;
     }
 
-    /** Vé chỉ dùng được khi vừa chưa hết hạn vừa chưa bị dùng. */
     public boolean isUsable() {
         return !isUsed() && !isExpired();
     }

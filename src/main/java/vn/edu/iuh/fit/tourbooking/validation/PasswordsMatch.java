@@ -9,17 +9,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Kiểm tra hai ô mật khẩu khớp nhau.
- *
- * <p>Phải đặt ở mức lớp chứ không thể ở mức trường: ràng buộc này so sánh
- * <i>hai</i> trường với nhau, mà một validator ở mức trường chỉ nhìn thấy giá
- * trị của đúng trường nó gắn vào.</p>
- */
 @Documented
 @Constraint(validatedBy = PasswordsMatchValidator.class)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+// Ràng buộc mức lớp: hai trường mật khẩu (mặc định password/confirmPassword) phải khớp nhau.
 public @interface PasswordsMatch {
 
     String message() default "{validation.password.mismatch}";

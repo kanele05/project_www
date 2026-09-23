@@ -29,21 +29,10 @@ import vn.edu.iuh.fit.tourbooking.service.PaymentService;
 import vn.edu.iuh.fit.tourbooking.service.ReviewService;
 import vn.edu.iuh.fit.tourbooking.service.UserService;
 
-/**
- * Khu vực tài khoản của khách hàng: hồ sơ, đổi mật khẩu, lịch sử đặt tour.
- *
- * <p>Cả nhánh {@code /account/**} đã ở mức {@code authenticated()} trong
- * {@code SecurityConfig}, nên trong này chắc chắn luôn có người dùng đăng nhập
- * và {@code principal} không bao giờ null.</p>
- *
- * <p><b>Nguyên tắc xuyên suốt:</b> mọi thao tác đều lấy mã người dùng từ
- * {@code principal.getId()}, tuyệt đối không nhận mã người dùng từ tham số gửi
- * lên. Nhận từ trình duyệt là mở cửa cho việc sửa hồ sơ hay xem đơn của người
- * khác chỉ bằng cách đổi một con số trên thanh địa chỉ.</p>
- */
 @Controller
 @RequestMapping("/account")
 @RequiredArgsConstructor
+// Khu vực tài khoản của khách hàng: hồ sơ, đổi mật khẩu, lịch sử đặt tour, gửi đánh giá, tự huỷ đơn.
 public class AccountController {
 
     private final UserService userService;
@@ -59,44 +48,15 @@ public class AccountController {
         return "redirect:/account/bookings";
     }
 
-    /**
-     * Điền sẵn {@code profileForm} - kể cả {@code id} - <b>trước khi</b> Spring
-     * gắn tham số request vào {@code @PostMapping("/profile")}.
-     *
-     * <p>{@code @Valid} chạy ngay lúc gắn tham số, trước cả khi thân phương thức
-     * {@link #updateProfile} bắt đầu chạy; gọi {@code form.setId(...)} trong thân
-     * phương thức là quá muộn, validator {@code @UniqueEmail(excludeIdField="id")}
-     * đã kết luận xong với {@code id == null} (coi như thêm mới) từ trước đó.
-     * Đưa việc điền {@code id} lên phương thức {@code @ModelAttribute} này thì
-     * {@code id} có mặt <b>lúc</b> validator chạy, đúng như gotcha đã ghi trong
-     * PLAN.md.</p>
-     */
     @ModelAttribute("profileForm")
     public ProfileForm profileForm(@AuthenticationPrincipal CustomUserDetails principal) {
         return userService.toProfileForm(principal.getId());
     }
 
-    /**
-     * Chặn request tự gắn giá trị vào trường {@code id} của {@code profileForm}.
-     *
-     * <p>Không có dòng này thì {@code WebDataBinder} bind {@code id} từ tham số
-     * request <b>trước khi</b> {@code @Valid} chạy, ghi đè lên giá trị vừa được
-     * {@link #profileForm} điền sẵn từ tài khoản đang đăng nhập. Một request tự
-     * chế {@code id=3&email=binh.tran@gmail.com} gửi bằng tài khoản khác (ví dụ
-     * {@code an.nguyen}) khiến {@code @UniqueEmail(excludeIdField="id")} loại trừ
-     * nhầm id 3 (đúng người đang sở hữu email đó) khỏi phép kiểm trùng - validator
-     * báo "còn dùng được", request đi tiếp tới {@link #updateProfile}, nơi
-     * {@code form.setId(principal.getId())} sửa lại id đúng nhưng đã quá muộn:
-     * ghi email trùng xuống CSDL đụng ràng buộc UNIQUE, ra thẳng trang 500.
-     * {@code setDisallowedFields} chặn ngay từ bước bind, nên {@code id} luôn giữ
-     * đúng giá trị đã điền sẵn suốt vòng đời request.</p>
-     */
     @InitBinder("profileForm")
     public void initProfileFormBinder(WebDataBinder binder) {
         binder.setDisallowedFields("id");
     }
-
-    // ===================== Hồ sơ =====================
 
     @GetMapping("/profile")
     public String profilePage(Model model) {
@@ -108,9 +68,7 @@ public class AccountController {
                                 BindingResult binding,
                                 @AuthenticationPrincipal CustomUserDetails principal,
                                 RedirectAttributes ra) {
-        // Ghi đè mã số bằng mã của tài khoản đang đăng nhập. Trường id trong biểu
-        // mẫu chỉ phục vụ ràng buộc @UniqueEmail(excludeIdField), không phải để
-        // người dùng chỉ định mình muốn sửa hồ sơ của ai.
+
         form.setId(principal.getId());
 
         if (binding.hasErrors()) {
@@ -123,14 +81,11 @@ public class AccountController {
             return "redirect:/account/profile";
 
         } catch (BusinessRuleException e) {
-            // Chốt chặn thứ hai của tính duy nhất email (xem UserService.updateProfile):
-            // gắn lỗi vào đúng ô email thay vì để lọt xuống một trang 500.
+
             binding.rejectValue("email", "error", resolve(e));
             return "account/profile";
         }
     }
-
-    // ===================== Đổi mật khẩu =====================
 
     @GetMapping("/password")
     public String passwordPage(Model model) {
@@ -154,14 +109,11 @@ public class AccountController {
             return "redirect:/account/password";
 
         } catch (BusinessRuleException e) {
-            // Sai mật khẩu hiện tại: gắn lỗi vào đúng ô đó thay vì hiện một dải
-            // thông báo đỏ ở đầu trang.
+
             binding.rejectValue("currentPassword", "error", resolve(e));
             return "account/password";
         }
     }
-
-    // ===================== Đơn đặt tour =====================
 
     @GetMapping("/bookings")
     public String bookings(@AuthenticationPrincipal CustomUserDetails principal,
@@ -172,37 +124,24 @@ public class AccountController {
         return "account/bookings";
     }
 
-    /**
-     * Chi tiết một đơn.
-     *
-     * <p>Địa chỉ dùng <b>mã đơn</b> chứ không dùng khoá chính tuần tự, và
-     * {@code getOwnedByCode} còn kiểm tra chủ sở hữu: khách hàng khác mở đúng mã
-     * đơn này sẽ nhận <b>403</b>.</p>
-     */
     @GetMapping("/bookings/{code}")
     public String bookingDetail(@PathVariable String code,
                                 @AuthenticationPrincipal CustomUserDetails principal,
                                 Model model) {
         var booking = bookingService.getOwnedByCode(code, principal.getId(), principal.isAdmin());
         model.addAttribute("booking", booking);
-        // Danh sách hành khách của cả đơn (có thể gồm nhiều dòng nếu đặt nhiều tour).
+
         model.addAttribute("passengers", bookingPassengerRepository.findByBookingId(booking.getId()));
-        // Bổ sung A/B: dòng thời gian đổi trạng thái và các lần thanh toán.
+
         model.addAttribute("statusHistory", bookingStatusHistoryRepository.findByBookingCode(code));
         model.addAttribute("payments", paymentService.findByBookingId(booking.getId()));
-        // UC023 (mục 12.3): chỉ cần tính khi đơn còn huỷ được (PENDING/CONFIRMED) -
-        // đơn đã ở trạng thái cuối thì trang không hiện hộp huỷ nào cả.
+
         if (booking.isCancellable()) {
             model.addAttribute("selfCancelPolicy", bookingService.evaluateSelfCancel(booking));
         }
         return "account/booking-detail";
     }
 
-    /**
-     * UC023 - khách tự huỷ đơn của chính mình. Mọi điều kiện (chủ sở hữu, trạng
-     * thái, số ngày còn lại) được {@code BookingService.cancelBySelf} kiểm LẠI từ
-     * đầu, không tin bất cứ điều gì trang GET đã hiện trước đó.
-     */
     @PostMapping("/bookings/{code}/cancel")
     public String selfCancel(@PathVariable String code,
                              @AuthenticationPrincipal CustomUserDetails principal,
@@ -216,15 +155,6 @@ public class AccountController {
         return "redirect:/account/bookings/" + code;
     }
 
-    // ===================== Đánh giá tour (UC018) =====================
-
-    /**
-     * Gửi đánh giá cho một tour. Đặt ở {@code /account/**} (đã ở mức
-     * {@code authenticated()} trong {@code SecurityConfig}) chứ không đặt dưới
-     * {@code /tours/**}: nhánh đó đang {@code permitAll()} không phân biệt
-     * phương thức, đặt ở đây là cách rẻ nhất để bắt buộc đăng nhập mà không phải
-     * sửa cấu hình bảo mật.
-     */
     @PostMapping("/reviews")
     public String submitReview(@Valid @ModelAttribute("reviewForm") ReviewForm form,
                                BindingResult binding,
@@ -242,8 +172,6 @@ public class AccountController {
         }
         return "redirect:/tours/" + form.getTourId();
     }
-
-    // ---------------------------------------------------------------------
 
     private String resolve(BusinessRuleException e) {
         return messageSource.getMessage(e.getMessageKey(), e.getArgs(),

@@ -21,12 +21,6 @@
 
             <div th:replace="~{fragments/components :: alerts}"></div>
 
-            <!--
-              enctype="multipart/form-data" là BẮT BUỘC khi biểu mẫu có ô chọn file.
-              Thiếu thuộc tính này, trình duyệt chỉ gửi lên TÊN file dưới dạng chuỗi,
-              còn nội dung file thì không - và lỗi hiện ra rất khó hiểu vì
-              MultipartFile luôn rỗng mà không báo gì.
-            -->
             <form th:action="@{/admin/tours/save}" th:object="${tourForm}" method="post"
                   enctype="multipart/form-data">
 
@@ -35,7 +29,6 @@
                 <div class="row g-4">
                     <div class="col-lg-8">
 
-                        <!-- ============ Thông tin cơ bản ============ -->
                         <div class="card mb-4">
                             <div class="card-body">
                                 <h2 class="h6 mb-3" th:text="#{admin.tour.section.basic}">Thông tin cơ bản</h2>
@@ -116,7 +109,6 @@
                             </div>
                         </div>
 
-                        <!-- ============ Nội dung ============ -->
                         <div class="card">
                             <div class="card-body">
                                 <h2 class="h6 mb-3" th:text="#{admin.tour.section.content}">Nội dung</h2>
@@ -146,7 +138,6 @@
                         </div>
                     </div>
 
-                    <!-- ============ Cột phải: ảnh và trạng thái ============ -->
                     <div class="col-lg-4">
 
                         <div class="card mb-4">
@@ -205,13 +196,6 @@
                 </div>
             </form>
 
-            <!--
-              Xoá từng ảnh trong thư viện.
-
-              Phải đặt NGOÀI biểu mẫu chính vì HTML không cho lồng <form> trong
-              <form>; trình duyệt sẽ lặng lẽ bỏ thẻ bên trong và nút xoá thành ra
-              gửi luôn biểu mẫu lưu tour.
-            -->
             <div class="card mt-4" th:if="${tour != null and not #lists.isEmpty(tour.images)}">
                 <div class="card-body">
                     <h2 class="h6 mb-3" th:text="#{admin.tour.gallery}">Thư viện ảnh</h2>

@@ -11,10 +11,8 @@ import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Truy vấn danh mục tour.
- */
 @Repository
+// Truy vấn danh mục tour.
 public interface TourCategoryRepository extends JpaRepository<TourCategory, Long> {
 
     Optional<TourCategory> findBySlug(String slug);
@@ -27,7 +25,6 @@ public interface TourCategoryRepository extends JpaRepository<TourCategory, Long
 
     boolean existsBySlugAndIdNot(String slug, Long id);
 
-    /** Danh mục hiện trên thanh điều hướng của trang công khai. */
     List<TourCategory> findByActiveTrueOrderByNameAsc();
 
     @Query("""

@@ -13,9 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Truy vấn đợt khởi hành.
- */
+// Truy vấn đợt khởi hành, kể cả tìm đợt gần nhất còn đủ chỗ cho ô chọn ngày AJAX và giỏ hàng.
 @Repository
 public interface TourDepartureRepository extends JpaRepository<TourDeparture, Long> {
 
@@ -25,17 +23,7 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
 
     boolean existsByTourIdAndDepartureDateAndIdNot(Long tourId, LocalDate departureDate, Long id);
 
-    /**
-     * Các đợt khách còn đặt được, dùng cho ô chọn ngày ở trang chi tiết và cho
-     * web service {@code /api/tours/{id}/departures}.
-     *
-     * <p>{@code minDepartureDate} đã gồm sẵn hạn chót (mục 12.5): bên gọi truyền
-     * {@code LocalDate.now().plusDays(cutoffDays)}, không phải {@code today} suông -
-     * xem {@code TourService.findBookableDepartures}. Điều kiện
-     * {@code d.departureDate >= :minDepartureDate} khớp đúng ngữ nghĩa với
-     * {@code TourDeparture.isBookable(cutoffDays)} để hai nơi không hiểu khác
-     * nhau về "còn đặt được".</p>
-     */
+    // Các đợt còn đặt được: tour và đợt đều đang bán, chưa quá hạn chót, còn ít nhất 1 chỗ.
     @Query("""
             SELECT d FROM TourDeparture d
             WHERE d.tour.id = :tourId
@@ -48,37 +36,16 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
     List<TourDeparture> findBookable(@Param("tourId") Long tourId,
                                      @Param("minDepartureDate") LocalDate minDepartureDate);
 
-    /**
-     * Đợt gần nhất còn <b>đủ</b> chỗ cho {@code minSeats} khách. Nút "Đặt tour" ở
-     * trang danh sách không cho chọn ngày, nên giỏ hàng tự chọn giúp khách đợt sớm
-     * nhất; ở trang chi tiết khách vẫn đổi được sang đợt khác.
-     *
-     * <p><b>Lọc theo {@code minSeats} chứ không chỉ lấy đợt gần nhất rồi để
-     * {@code CartService} tự báo lỗi.</b> Trước bản vá này, khách xin 10 chỗ mà
-     * đợt gần nhất chỉ còn 3 sẽ nhận lỗi "không đủ chỗ" dù đợt kế tiếp còn thừa
-     * chỗ - đúng ra phải tự động bỏ qua đợt không đủ và chọn đợt gần nhất mà thực
-     * sự đặt được.</p>
-     *
-     * @param cutoffDays mục 12.5 - {@code app.booking.cutoff-days}
-     */
+    // Đợt gần nhất còn ĐỦ chỗ cho minSeats khách (không chỉ còn chỗ, phải đủ) - dùng khi thêm giỏ theo tour.
     default Optional<TourDeparture> findNextBookable(Long tourId, int minSeats, int cutoffDays) {
         return findBookable(tourId, LocalDate.now().plusDays(cutoffDays)).stream()
                 .filter(d -> d.hasEnoughSeats(minSeats))
                 .findFirst();
     }
 
-    /**
-     * Nạp kèm tour và danh mục để dùng trong giỏ hàng / thanh toán, nơi cần tên
-     * tour và ảnh mà {@code open-in-view} đang tắt.
-     */
     @EntityGraph(attributePaths = {"tour", "tour.category"})
     Optional<TourDeparture> findWithTourById(Long id);
 
-    /**
-     * Khoá bi quan khi đặt tour: hai khách cùng lấy chỗ cuối cùng thì giao dịch
-     * thứ hai phải chờ, đọc lại {@code availableSeats} đã cập nhật rồi mới quyết
-     * định - đây là chốt chặn cuối cùng bổ sung cho {@code @Version}.
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM TourDeparture d WHERE d.id = :id")
     Optional<TourDeparture> findByIdForUpdate(@Param("id") Long id);

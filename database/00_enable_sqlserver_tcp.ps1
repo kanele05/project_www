@@ -1,15 +1,6 @@
-# =============================================================================
-#  Bật TCP/IP cho SQL Server (bắt buộc để JDBC driver kết nối được)
-#  Chạy bằng PowerShell với quyền Administrator.
-#
-#  Lý do: Microsoft JDBC driver CHỈ giao tiếp qua TCP, không hỗ trợ
-#  Shared Memory / Named Pipes. Mặc định SQL Server Developer Edition
-#  cài xong thì TCP/IP đang ở trạng thái Disabled.
-# =============================================================================
-
+# Bật giao thức TCP/IP cho SQL Server để JDBC driver kết nối được (chạy PowerShell với quyền Administrator).
 $ErrorActionPreference = 'Stop'
 
-# Instance mặc định của SQL Server 2025 -> khoá registry là MSSQL17.MSSQLSERVER
 $tcp = 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL17.MSSQLSERVER\MSSQLServer\SuperSocketNetLib\Tcp'
 
 if (-not (Test-Path $tcp)) {
@@ -26,7 +17,6 @@ Write-Host "2. Ghim cong tinh 1433 cho IPAll ..." -ForegroundColor Cyan
 Set-ItemProperty -Path "$tcp\IPAll" -Name 'TcpPort'         -Value '1433' -Type String
 Set-ItemProperty -Path "$tcp\IPAll" -Name 'TcpDynamicPorts' -Value ''     -Type String
 
-# Bật luôn từng địa chỉ IP con (IP1..IP10) cho chắc
 Get-ChildItem -Path $tcp | Where-Object { $_.PSChildName -match '^IP\d+$' } | ForEach-Object {
     Set-ItemProperty -Path $_.PSPath -Name 'Enabled' -Value 1 -Type DWord -ErrorAction SilentlyContinue
 }

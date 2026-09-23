@@ -16,7 +16,6 @@
     <form th:action="@{/checkout}" th:object="${checkoutForm}" method="post">
         <div class="row g-4">
 
-            <!-- ===================== Thông tin liên hệ ===================== -->
             <div class="col-lg-7">
                 <div class="panel">
                     <div class="panel__pad">
@@ -83,14 +82,11 @@
                 </div>
             </div>
 
-            <!-- ===================== Tóm tắt đơn hàng ===================== -->
             <div class="col-lg-5">
                 <div class="panel">
                     <div class="panel__pad">
                         <h2 class="h6 mb-3" th:text="#{checkout.summary}">Đơn hàng của bạn</h2>
 
-                        <!-- Dữ liệu lấy từ giỏ hàng trong session. Giá hiển thị ở đây chỉ
-                             để xem; lúc ghi đơn, BookingService đọc lại giá từ CSDL. -->
                         <div class="d-flex justify-content-between small border-bottom py-2"
                              th:each="item : ${cart.items}">
                             <div class="pe-2">
@@ -112,9 +108,6 @@
                             </div>
                         </div>
 
-                        <!--/* Ô nhập mã giảm giá. Nút "Áp dụng" chỉ để XEM TRƯỚC bằng
-                               AJAX; số tiền thật do BookingService tính lại lúc ghi
-                               đơn, nên tắt JavaScript vẫn đặt tour có mã bình thường. */-->
                         <div class="mt-3 pt-3 border-top" data-coupon-box>
                             <label class="form-label small fw-semibold" for="couponCode"
                                    th:text="#{checkout.coupon.label}">Mã giảm giá</label>
@@ -155,11 +148,6 @@
             </div>
         </div>
 
-        <!-- ===================== Mục 12.7: danh sách hành khách ===================== -->
-        <!--/* N người lớn + M trẻ em của mỗi dòng giỏ hàng ⇒ đúng N+M ô hành khách,
-               dựng sẵn ở CheckoutController.buildPassengerGroups. Loại hành khách
-               KHÔNG có ô để chọn - vị trí trong adults/children đã quyết định loại,
-               tầng service kiểm lại nghiêm ngặt (không tin dữ liệu gửi lên). */-->
         <div class="row g-4 mt-0">
             <div class="col-12">
                 <div class="panel">
@@ -167,8 +155,6 @@
                         <h2 class="h6 mb-1" th:text="#{checkout.passengers.title}">Danh sách hành khách</h2>
                         <p class="small text-muted" th:text="#{checkout.passengers.hint}">Ghi chú</p>
 
-                        <!-- Lỗi cấu trúc (số ô hành khách lệch giỏ hàng) gắn ở lỗi TOÀN CỤC
-                             của BindingResult, không gắn vào một ô cụ thể nào. -->
                         <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
                             <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi</div>
                         </div>
@@ -183,7 +169,6 @@
                             </h3>
                             <input type="hidden" th:field="*{passengerGroups[__${itemStat.index}__].departureId}">
 
-                            <!-- ---- Người lớn ---- -->
                             <div class="border rounded p-3 mb-3"
                                  th:each="p, pStat : *{passengerGroups[__${itemStat.index}__].adults}">
                                 <p class="small fw-semibold text-uppercase text-muted mb-2"
@@ -229,10 +214,7 @@
                                     </div>
                                     <div class="col-12">
                                         <div class="form-check form-check-inline mt-1">
-                                            <!--/* Bọc ô checkbox NGAY TRONG label thay vì nối bằng
-                                                   for/id: id do th:field sinh ra phụ thuộc chỉ số
-                                                   danh sách, khớp id/for thủ công giữa hai vòng lặp
-                                                   lồng nhau dễ sai mà không báo lỗi gì cả. */-->
+
                                             <label class="form-check-label small">
                                                 <input class="form-check-input" type="checkbox"
                                                        th:field="*{passengerGroups[__${itemStat.index}__].adults[__${pStat.index}__].singleRoom}">
@@ -249,7 +231,6 @@
                                 </div>
                             </div>
 
-                            <!-- ---- Trẻ em ---- -->
                             <div class="border rounded p-3 mb-3"
                                  th:each="p, pStat : *{passengerGroups[__${itemStat.index}__].children}">
                                 <p class="small fw-semibold text-uppercase text-muted mb-2"

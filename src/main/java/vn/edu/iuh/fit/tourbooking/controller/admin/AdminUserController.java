@@ -21,17 +21,10 @@ import vn.edu.iuh.fit.tourbooking.service.BookingService;
 import vn.edu.iuh.fit.tourbooking.service.UserService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Quản lý tài khoản người dùng.
- *
- * <p>Biểu mẫu bind vào {@code AdminUserForm} - lớp này <b>không hề có trường
- * chứa chuỗi băm mật khẩu</b>, nên không có đường nào để mật khẩu lọt ra mã
- * nguồn trang. Xem mã nguồn trang danh sách hay trang sửa đều không tìm thấy
- * chuỗi {@code $2a$} nào.</p>
- */
 @Controller
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
+// Khu quản trị: thêm/sửa/xoá/khoá tài khoản người dùng.
 public class AdminUserController {
 
     private final UserService userService;
@@ -51,13 +44,6 @@ public class AdminUserController {
         return "admin/user/list";
     }
 
-    /**
-     * Trang chi tiết CHỈ XEM (mục 12.8 - đề bài đòi "xem chi tiết từng tài
-     * khoản người dùng, không xem được password"). {@code AdminUserForm} không
-     * hề mang chuỗi băm mật khẩu (xem Javadoc lớp), nhưng để chắc chắn hơn nữa,
-     * trang này đọc thẳng từ {@code User} và HTML sinh ra <b>không có ô nhập
-     * nào</b> - không có nơi nào để lỡ tay in mật khẩu ra.
-     */
     @GetMapping("/{id}/view")
     public String view(@PathVariable Long id,
                        @RequestParam(defaultValue = "0") int page,
@@ -96,9 +82,7 @@ public class AdminUserController {
             return "redirect:/admin/users";
 
         } catch (BusinessRuleException e) {
-            // Lỗi mật khẩu gắn vào đúng ô đó; lỗi "tự hạ quyền / khoá chính mình"
-            // hay "hạ quyền admin cuối cùng" gắn vào ô vai trò, vì đó là trường
-            // người dùng cần sửa lại để đi tiếp.
+
             String field = e.getMessageKey().startsWith("error.user.passwordRequired")
                     ? "newPassword" : "role";
             binding.rejectValue(field, "error", messages.of(e));
@@ -107,10 +91,6 @@ public class AdminUserController {
         }
     }
 
-    /**
-     * Xoá tài khoản - bị chặn trong ba trường hợp: tự xoá chính mình, xoá quản
-     * trị viên cuối cùng, hoặc tài khoản đã từng đặt tour.
-     */
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id,
                          @AuthenticationPrincipal CustomUserDetails principal,

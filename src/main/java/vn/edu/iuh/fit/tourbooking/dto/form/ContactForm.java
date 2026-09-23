@@ -5,18 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * Biểu mẫu gửi liên hệ công khai (UC021).
- *
- * <p>Không đòi đăng nhập - {@code AC01 Khách vãng lai} cũng gửi được, nên không
- * có trường {@code userId} nào ở đây. {@code tourId} tuỳ chọn: có giá trị khi
- * biểu mẫu được mở từ nút "Liên hệ về tour này" ở trang chi tiết tour, để trống
- * khi khách vào thẳng {@code /contact} hỏi chung.</p>
- */
 @Data
+// Biểu mẫu liên hệ công khai.
 public class ContactForm {
 
-    /** Tour khách đang hỏi, nếu có - điền sẵn qua tham số {@code ?tourId=}. */
     private Long tourId;
 
     @NotBlank(message = "{validation.contact.fullName.required}")

@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ============================================================================
-   Đề tài : Website giới thiệu tour du lịch và đăng ký tour trực tuyến
-   Môn    : Lập trình WWW (Java) - Khoa CNTT, ĐH Công nghiệp TP.HCM
 
-   Vì sao Spring Boot 3.5.x mà không phải 4.x?
-     - 4.x là major release có nhiều breaking change (đổi tên starter, tách
-       module, đổi API Spring Security 7). Toàn bộ tài liệu/slide của môn học
-       đều dựa trên Spring Boot 3.x.
-     - Lưu ý: Spring Initializr hiện chỉ còn sinh được 4.x, nên file pom này
-       được viết tay để quay về 3.5.16 (vẫn tải bình thường từ Maven Central).
-
-   Vì sao target Java 21 mà máy cài JDK 23?
-     - 21 là bản LTS. Biên dịch bằng Corretto 23 với -release 21 thì file JAR
-       chạy được trên mọi JDK 21+, kể cả máy của giảng viên khi chấm bài.
-  ============================================================================
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -38,7 +22,7 @@
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- Webjars: quản lý CSS/JS bằng Maven thay vì copy-paste file vào static/ -->
+
         <webjars-bootstrap.version>5.3.3</webjars-bootstrap.version>
         <webjars-jquery.version>3.7.1</webjars-jquery.version>
         <webjars-bootstrap-icons.version>1.11.3</webjars-bootstrap-icons.version>
@@ -47,7 +31,6 @@
 
     <dependencies>
 
-        <!-- ============ Web + tầng giao diện ============ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -56,13 +39,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-        <!-- Cho phép dùng sec:authorize / sec:authentication trong template -->
+
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
-        <!-- ============ Tầng dữ liệu (CLO4) ============ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -73,28 +55,21 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- ============ Bảo mật (CLO5/CLO6 - giai đoạn 3) ============ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- ============ Kiểm tra dữ liệu ở tầng Model ============ -->
-        <!-- Đề bài cấm dùng CHECK constraint/Function/Stored Procedure trong
-             DBMS, nên mọi ràng buộc dữ liệu nằm ở Bean Validation + service.  -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- ============ Gửi email ============ -->
-        <!-- Dev: ConsoleEmailService in ra log. Đổi app.mail.mode=smtp để gửi thật. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
-        <!-- ============ Tài nguyên front-end ============ -->
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>bootstrap</artifactId>
@@ -110,14 +85,13 @@
             <artifactId>bootstrap-icons</artifactId>
             <version>${webjars-bootstrap-icons.version}</version>
         </dependency>
-        <!-- Cho phép viết /webjars/bootstrap/css/bootstrap.min.css (bỏ số version) -->
+
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>webjars-locator-lite</artifactId>
             <version>${webjars-locator.version}</version>
         </dependency>
 
-        <!-- ============ Tiện ích lúc phát triển ============ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -129,19 +103,13 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Quy ước dùng Lombok - xem README:
-             Entity  : CHỈ @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-                       (CẤM @Data/@ToString/@EqualsAndHashCode -> StackOverflowError
-                        ở quan hệ 2 chiều Booking <-> BookingDetail)
-             DTO     : @Data, @Builder thoải mái
-             Service : @RequiredArgsConstructor, @Slf4j                            -->
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- ============ Kiểm thử ============ -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

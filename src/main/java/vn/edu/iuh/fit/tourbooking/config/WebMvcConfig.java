@@ -9,16 +9,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Cấu hình Spring MVC.
- *
- * <p>Việc duy nhất cần làm ở đây là công bố thư mục ảnh đã tải lên ra ngoài web.
- * Ảnh được lưu ở một thư mục nằm <b>ngoài</b> classpath (xem {@code AppProperties}),
- * nên Spring không tự phục vụ như các file trong {@code static/}.</p>
- */
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
+// Đăng ký thư mục upload ngoài classpath thành đường dẫn tĩnh /uploads/** (dùng URI có "/" cuối, an toàn trên Windows).
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final AppProperties appProperties;
@@ -27,10 +21,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadDir = Paths.get(appProperties.upload().dir()).toAbsolutePath().normalize();
 
-        // Dùng toUri().toString() chứ KHÔNG ghép chuỗi "file:" + đường dẫn.
-        // Trên Windows đường dẫn có dấu gạch chéo ngược (C:\Users\...) và Spring sẽ
-        // âm thầm không tìm ra file - ảnh mất mà không có lấy một dòng lỗi.
-        // Kết quả của toUri() luôn kết thúc bằng dấu / nên các đường dẫn con nối đúng.
         String location = uploadDir.toUri().toString();
 
         registry.addResourceHandler(appProperties.upload().urlPrefix() + "/**")

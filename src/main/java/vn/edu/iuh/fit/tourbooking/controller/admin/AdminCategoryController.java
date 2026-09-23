@@ -18,12 +18,10 @@ import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.service.CategoryService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Quản lý danh mục tour. Cùng khuôn mẫu với {@link AdminTourController}.
- */
 @Controller
 @RequestMapping("/admin/categories")
 @RequiredArgsConstructor
+// Khu quản trị: thêm/sửa/xoá/bật-tắt danh mục tour.
 public class AdminCategoryController {
 
     private final CategoryService categoryService;
@@ -42,9 +40,6 @@ public class AdminCategoryController {
         return "admin/category/list";
     }
 
-    /**
-     * Trang chi tiết CHỈ XEM (mục 12.8): danh mục kèm danh sách tour thuộc nó.
-     */
     @GetMapping("/{id}/view")
     public String view(@PathVariable Long id, Model model) {
         model.addAttribute("detail", categoryService.adminDetail(id));
@@ -81,9 +76,6 @@ public class AdminCategoryController {
         }
     }
 
-    /**
-     * Xoá danh mục - bị chặn nếu còn tour thuộc danh mục đó.
-     */
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         try {

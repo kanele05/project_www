@@ -18,14 +18,7 @@ import lombok.Setter;
 
 import java.util.Objects;
 
-/**
- * Một ảnh trong bộ sưu tập ảnh của tour.
- *
- * <p>{@code imagePath} lưu đường dẫn <b>tương đối</b> so với thư mục upload
- * (ví dụ {@code tours/9f3c....jpg}), không lưu đường dẫn tuyệt đối kiểu
- * {@code C:\...}: chỉ cần đổi máy hoặc đổi ổ đĩa là toàn bộ ảnh chết link.
- * URL công khai được ghép ở tầng view bằng {@code app.upload.url-prefix}.</p>
- */
+// Một ảnh trong bộ sưu tập ảnh của tour, đường dẫn tương đối so với thư mục upload.
 @Entity
 @Table(
         name = "tour_images",
@@ -52,7 +45,6 @@ public class TourImage {
     @Column(name = "caption", length = 255)
     private String caption;
 
-    /** Thứ tự hiển thị trong thư viện ảnh; số nhỏ đứng trước. */
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
 
@@ -62,10 +54,6 @@ public class TourImage {
         this.sortOrder = sortOrder;
     }
 
-    /**
-     * Ảnh không có khoá nghiệp vụ nào ngoài đường dẫn file, vốn đã là duy nhất
-     * (đặt tên bằng UUID lúc lưu), nên so sánh theo {@code imagePath}.
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

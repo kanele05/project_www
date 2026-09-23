@@ -7,12 +7,7 @@ import org.springframework.beans.BeanWrapperImpl;
 
 import java.util.Objects;
 
-/**
- * Phần thực thi của {@link PasswordsMatch}.
- *
- * <p>Viết theo kiểu tổng quát (nhận tên trường qua tham số) để dùng lại được cho
- * cả biểu mẫu đăng ký lẫn biểu mẫu đổi mật khẩu.</p>
- */
+// Kiểm hai trường mật khẩu bằng reflection (BeanWrapper), gắn lỗi vào đúng trường xác nhận.
 public class PasswordsMatchValidator implements ConstraintValidator<PasswordsMatch, Object> {
 
     private String passwordField;
@@ -36,7 +31,6 @@ public class PasswordsMatchValidator implements ConstraintValidator<PasswordsMat
             return true;
         }
 
-        // Báo lỗi ở ô nhập lại mật khẩu - đó mới là ô người dùng cần sửa.
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(message)
                 .addPropertyNode(confirmField)

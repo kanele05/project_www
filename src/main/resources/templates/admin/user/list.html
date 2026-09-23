@@ -1,19 +1,5 @@
 <!DOCTYPE html>
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<!--/*
-  Danh sách tài khoản.
-
-  Bảng này chỉ đọc các trường vô hại của entity User. Không có chỗ nào in ra
-  user.password, và biểu mẫu sửa thì bind vào AdminUserForm - lớp đó không hề có
-  trường mật khẩu. Xem mã nguồn trang trong trình duyệt sẽ không tìm thấy chuỗi
-  băm nào.
-
-  Ghi chú dùng cú pháp <!--​/* ... */--​> của Thymeleaf, tức là "chú thích mức bộ
-  phân tích": nó bị gỡ bỏ khi render nên KHÔNG đi ra trình duyệt. Cần như vậy vì
-  chú thích HTML thường vẫn nằm nguyên trong mã nguồn trang - và một ghi chú nhắc
-  tới tiền tố của chuỗi băm BCrypt sẽ làm phép kiểm tra "tìm chuỗi băm trong mã
-  nguồn trang" báo nhầm là có.
-*/-->
 
 <head th:replace="~{admin/fragments/admin-layout :: head(#{admin.user.title})}"></head>
 <body>
@@ -89,8 +75,7 @@
                                       th:text="${u.enabled} ? #{admin.status.enabled} : #{admin.status.disabled}">Trạng thái</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <!-- Mục 12.8: trang chi tiết CHỈ XEM (lịch sử đơn), tách khỏi
-                                     biểu mẫu sửa - và KHÔNG hề chạm tới cột password. -->
+
                                 <a class="btn btn-sm btn-outline-secondary"
                                    th:href="@{/admin/users/{id}/view(id=${u.id})}"
                                    th:title="#{admin.action.view}">

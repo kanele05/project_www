@@ -11,16 +11,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Đổi giỏ hàng trong session sang DTO cho AJAX.
- *
- * <p>Phép chuyển đổi này hoàn toàn không chạm tới CSDL: {@code CartItem} đã chép
- * sẵn tên tour, giá và ảnh vào lúc thêm vào giỏ. Đúng tinh thần "giỏ hàng nằm
- * trong Session" của đề bài - mở lại trang giỏ hàng không sinh thêm câu truy vấn
- * nào.</p>
- */
 @Component
 @RequiredArgsConstructor
+// Chuyển Cart/CartItem (session) sang DTO hiển thị, ghép URL ảnh và định dạng ngày.
 public class CartMapper {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");

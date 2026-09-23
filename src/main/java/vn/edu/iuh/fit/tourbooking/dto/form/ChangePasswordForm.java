@@ -5,14 +5,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import vn.edu.iuh.fit.tourbooking.validation.PasswordsMatch;
 
-/**
- * Biểu mẫu đổi mật khẩu.
- *
- * <p>Bắt nhập lại mật khẩu hiện tại: nếu ai đó ngồi vào máy đang mở sẵn phiên
- * đăng nhập, họ vẫn không chiếm được tài khoản.</p>
- */
 @Data
 @PasswordsMatch(passwordField = "newPassword", confirmField = "confirmPassword")
+// Biểu mẫu đổi mật khẩu ở trang tài khoản cá nhân.
 public class ChangePasswordForm {
 
     @NotBlank(message = "{validation.currentPassword.required}")

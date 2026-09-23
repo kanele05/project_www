@@ -4,14 +4,7 @@ import java.text.Normalizer;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/**
- * Chuyển tiêu đề tiếng Việt thành chuỗi thân thiện với URL.
- *
- * <p>{@code "Đà Nẵng - Hội An 4N3Đ"} &rarr; {@code "da-nang-hoi-an-4n3d"}.</p>
- *
- * <p>Cùng thuật toán bỏ dấu này còn được dùng cho tìm kiếm không dấu, nên tách
- * riêng {@link #removeDiacritics(String)} để nơi khác gọi lại được.</p>
- */
+// Bỏ dấu tiếng Việt và dựng slug URL duy nhất từ một chuỗi bất kỳ.
 public final class SlugUtil {
 
     private static final Pattern NON_ALNUM = Pattern.compile("[^a-z0-9]+");
@@ -20,13 +13,7 @@ public final class SlugUtil {
     private SlugUtil() {
     }
 
-    /**
-     * Bỏ dấu tiếng Việt.
-     *
-     * <p>Riêng chữ {@code đ/Đ} phải thay tay: {@code Normalizer} chỉ tách được
-     * dấu phụ khỏi nguyên âm, còn {@code đ} là một ký tự Latin độc lập chứ không
-     * phải {@code d} cộng dấu, nên tách kiểu gì cũng không ra {@code d}.</p>
-     */
+    // Bỏ dấu tiếng Việt (xử lý riêng đ/Đ vì Normalizer không tách được) để phục vụ tìm kiếm không dấu.
     public static String removeDiacritics(String input) {
         if (input == null) {
             return null;
@@ -36,10 +23,6 @@ public final class SlugUtil {
         return normalized.replaceAll("\\p{M}+", "");
     }
 
-    /**
-     * Sinh slug: bỏ dấu, hạ chữ thường, thay mọi ký tự không phải chữ/số bằng
-     * dấu gạch ngang rồi cắt gạch thừa ở hai đầu.
-     */
     public static String toSlug(String input) {
         if (input == null || input.isBlank()) {
             return "";
@@ -49,13 +32,7 @@ public final class SlugUtil {
         return EDGE_DASH.matcher(dashed).replaceAll("");
     }
 
-    /**
-     * Slug đảm bảo không trùng: nếu {@code exists} báo đã có thì nối thêm
-     * {@code -2}, {@code -3}... cho tới khi tìm được chuỗi còn trống.
-     *
-     * @param input  tiêu đề gốc
-     * @param exists hàm kiểm tra slug đã tồn tại trong CSDL hay chưa
-     */
+    // Sinh slug và thêm hậu tố -2, -3... tới khi chưa tồn tại.
     public static String toUniqueSlug(String input, java.util.function.Predicate<String> exists) {
         String base = toSlug(input);
         String candidate = base;

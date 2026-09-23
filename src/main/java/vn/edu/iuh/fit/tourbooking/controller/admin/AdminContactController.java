@@ -16,37 +16,21 @@ import vn.edu.iuh.fit.tourbooking.service.UserService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-/**
- * Quản lý liên hệ (UC022).
- *
- * <p>Cùng khuôn "gấp mở tại dòng" với {@code AdminReviewController}: xem chi
- * tiết và trả lời nằm ngay trong bảng, không cần trang riêng.</p>
- */
 @Controller
 @RequestMapping("/admin/contacts")
 @RequiredArgsConstructor
+// Khu quản trị: xử lý liên hệ gửi từ biểu mẫu công khai (UC022).
 public class AdminContactController {
 
     private final ContactService contactService;
     private final UserService userService;
     private final MessageHelper messages;
 
-    /**
-     * Mặc định mở ở "Mới" (UC022) - đây là hàng đợi việc phải làm.
-     *
-     * <p>{@code status="ALL"} nghĩa là không lọc; tách khỏi {@link ContactStatus}
-     * vì enum đó không có giá trị "tất cả" và không nên thêm một giá trị giả chỉ
-     * để phục vụ bộ lọc giao diện.</p>
-     */
     @GetMapping
     public String list(@RequestParam(defaultValue = "NEW") String status,
                        @RequestParam(defaultValue = "0") int page,
                        Model model) {
-        // ContactStatus.valueOf(status) ném IllegalArgumentException với một giá
-        // trị lạ (?status=xyz), mà GlobalExceptionHandler chỉ bắt
-        // BusinessRuleException - trước bản vá này địa chỉ này ra thẳng trang 500.
-        // Giá trị lạ thì coi như "ALL" (không lọc), cùng khuôn "vào sai thì về
-        // trạng thái mặc định an toàn" như những bộ lọc khác của khu quản trị.
+
         ContactStatus filter = resolveFilter(status);
         String normalizedStatus = filter == null ? "ALL" : filter.name();
         model.addAttribute("contactsPage", contactService.adminList(filter, page));

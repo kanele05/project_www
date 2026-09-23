@@ -11,27 +11,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/** Truy vấn vé đặt lại mật khẩu. */
 @Repository
+// Truy vấn vé đặt lại mật khẩu.
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
 
     Optional<PasswordResetToken> findByToken(String token);
 
-    /** Các vé còn hiệu lực của một tài khoản - dùng để vô hiệu hoá khi cấp vé mới. */
     List<PasswordResetToken> findByUserIdAndUsedAtIsNull(Long userId);
 
     long countByUserId(Long userId);
 
-    /** Dọn vé quá hạn. Gọi từ service có {@code @Transactional}. */
     @Modifying
     @Query("DELETE FROM PasswordResetToken t WHERE t.expiresAt < :time")
     int deleteExpired(@Param("time") LocalDateTime time);
 
-    /**
-     * Xoá hết vé của một tài khoản sắp bị xoá. Vé đặt lại mật khẩu không có giá
-     * trị lưu trữ, nên đây là dữ liệu duy nhất được xoá theo người dùng thay vì
-     * chặn việc xoá.
-     */
     @Modifying
     @Query("DELETE FROM PasswordResetToken t WHERE t.user.id = :userId")
     int deleteByUserId(@Param("userId") Long userId);

@@ -7,19 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import vn.edu.iuh.fit.tourbooking.service.StatisticsService;
 
-/**
- * Bảng điều khiển của khu vực quản trị.
- *
- * <p>Cả nhánh {@code /admin/**} đã được {@code SecurityConfig} đặt ở mức
- * {@code hasRole('ADMIN')}, nên không lớp nào trong gói này phải tự kiểm tra
- * quyền nữa - kiểm tra một chỗ vẫn hơn rải rác mỗi nơi một ít rồi quên.</p>
- */
 @Controller
 @RequestMapping("/admin")
 @RequiredArgsConstructor
+// Trang chủ khu quản trị: số liệu tổng quan, đơn gần đây, tour bán chạy.
 public class AdminDashboardController {
 
-    /** Số tour hiển thị trong bảng xếp hạng bán chạy. */
     private static final int TOP_TOUR_LIMIT = 5;
 
     private final StatisticsService statisticsService;

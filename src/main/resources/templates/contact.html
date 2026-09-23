@@ -1,13 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   LIÊN HỆ (UC021) - AC01 Khách vãng lai, không cần đăng nhập.
 
-   tourId tuỳ chọn: có giá trị khi mở từ nút "Liên hệ về tour này" ở trang chi
-   tiết tour (xem tour/detail.html), lúc đó prefillTour khác null và trang hiện
-   thêm một dòng "Đang hỏi về tour này".
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(#{contact.title})}"></head>
 <body class="d-flex flex-column min-vh-100">
@@ -42,8 +34,6 @@
 
                     <div th:replace="~{fragments/components :: alerts}"></div>
 
-                    <!--/* Đang hỏi về một tour cụ thể - chỉ hiện khi mở từ nút
-                           "Liên hệ về tour này". */-->
                     <div class="alert alert-light border d-flex align-items-center gap-2 mb-4"
                          th:if="${prefillTour != null}">
                         <i class="bi bi-info-circle text-jade"></i>

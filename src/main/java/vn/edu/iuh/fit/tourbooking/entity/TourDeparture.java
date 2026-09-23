@@ -22,15 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Một đợt khởi hành cụ thể của tour: đi ngày nào, giá bao nhiêu, còn mấy chỗ.
- *
- * <p>Đây là thứ khách hàng thực sự đặt. Việc tách khỏi {@link Tour} khiến ba
- * yêu cầu khó của đề bài trở nên có thật: chuỗi ràng buộc xoá ba tầng
- * (danh mục &rarr; tour &rarr; đợt khởi hành &rarr; chi tiết đơn), web service
- * {@code /api/tours/{id}/departures} phục vụ ô chọn ngày bằng AJAX, và nghiệp vụ
- * đặt tour có kiểm tra - trừ chỗ thật sự thay vì chỉ một câu INSERT.</p>
- */
+// Một đợt khởi hành cụ thể: ngày đi, giá, số chỗ còn lại - thứ khách hàng thực sự đặt.
 @Entity
 @Table(
         name = "tour_departures",
@@ -63,7 +55,6 @@ public class TourDeparture extends Auditable {
     @Column(name = "total_seats", nullable = false)
     private Integer totalSeats;
 
-    /** Số chỗ còn trống; giảm khi đặt thành công, tăng lại khi huỷ đơn. */
     @Column(name = "available_seats", nullable = false)
     private Integer availableSeats;
 
@@ -76,11 +67,6 @@ public class TourDeparture extends Auditable {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    /**
-     * Khoá lạc quan chống bán quá chỗ: hai khách bấm đặt cùng lúc thì giao dịch
-     * thứ hai sẽ nhận {@code OptimisticLockException} thay vì cùng ghi đè
-     * {@code availableSeats} lên một giá trị sai.
-     */
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -96,27 +82,11 @@ public class TourDeparture extends Auditable {
         this.priceChild = priceChild;
     }
 
-    // ---------------------------------------------------------------------
-    // Nghiệp vụ về chỗ ngồi
-    // ---------------------------------------------------------------------
-
     public boolean hasEnoughSeats(int seats) {
         return availableSeats != null && availableSeats >= seats;
     }
 
-    /**
-     * Còn nhận khách: đang mở bán, còn chỗ, và ngày khởi hành cách hôm nay ít
-     * nhất {@code cutoffDays} ngày (mục 12.5 - hạn chót đặt tour,
-     * {@code app.booking.cutoff-days}).
-     *
-     * <p><b>Nhận tham số thay vì đọc một hằng số viết cứng</b>: con số này phải
-     * đổi được từ {@code application.yml} mà không cần sửa lại lớp entity. Mọi
-     * nơi quyết định "đợt này còn đặt được không" - trang chi tiết, thêm giỏ,
-     * thanh toán, web service {@code /api/tours/{id}/departures} - đều phải gọi
-     * đúng phương thức này với cùng một giá trị {@code cutoffDays} lấy từ
-     * {@code AppProperties.Booking.cutoffDays()}, để không có hai nơi hiểu khác
-     * nhau về "còn đặt được".</p>
-     */
+    // Còn đặt được không: đang bán, chưa quá hạn chót (cutoffDays), và còn chỗ.
     public boolean isBookable(int cutoffDays) {
         return active
                 && departureDate != null
@@ -125,11 +95,7 @@ public class TourDeparture extends Auditable {
                 && availableSeats > 0;
     }
 
-    /**
-     * Giữ chỗ khi đặt tour. Chỉ được gọi bên trong giao dịch của
-     * {@code BookingService}; việc báo lỗi thân thiện cho người dùng do tầng
-     * service đảm nhiệm, ở đây chỉ chặn để dữ liệu không bao giờ âm.
-     */
+    // Giữ chỗ khi đặt tour: trừ số chỗ còn trống, ném lỗi nếu không đủ.
     public void holdSeats(int seats) {
         if (!hasEnoughSeats(seats)) {
             throw new IllegalStateException(
@@ -139,7 +105,7 @@ public class TourDeparture extends Auditable {
         availableSeats -= seats;
     }
 
-    /** Trả chỗ lại khi huỷ đơn hoặc khi giảm số khách. */
+    // Trả lại chỗ khi huỷ đơn, không vượt quá tổng số chỗ.
     public void releaseSeats(int seats) {
         availableSeats = Math.min(totalSeats, availableSeats + seats);
     }
@@ -148,10 +114,6 @@ public class TourDeparture extends Auditable {
         return totalSeats - availableSeats;
     }
 
-    /**
-     * Khoá nghiệp vụ là cặp (tour, ngày khởi hành) - đúng bằng ràng buộc duy nhất
-     * đã khai báo ở {@code @Table}.
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

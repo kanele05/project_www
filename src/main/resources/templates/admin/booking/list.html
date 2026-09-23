@@ -54,9 +54,6 @@
                                 th:text="#{admin.empty}">Chưa có dữ liệu.</td>
                         </tr>
 
-                        <!-- Danh sách này KHÔNG duyệt booking.details: quan hệ đó là LAZY và
-                             open-in-view đang tắt. Muốn xem các tour trong đơn thì mở trang
-                             chi tiết, nơi dữ liệu được nạp bằng join fetch. -->
                         <tr th:each="b : ${bookingsPage.content}">
                             <td>
                                 <a class="fw-semibold text-decoration-none"

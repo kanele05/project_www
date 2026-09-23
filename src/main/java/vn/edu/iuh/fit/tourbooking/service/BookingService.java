@@ -42,18 +42,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Nghiệp vụ đặt tour.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Nghiệp vụ trung tâm của đơn hàng: đặt tour, máy trạng thái, tự huỷ/huỷ bởi khách, hoàn tiền, sửa số khách.
 public class BookingService {
 
-    /** Số đơn hiển thị trên một trang ở mục "Đơn của tôi". */
     public static final int PAGE_SIZE = 10;
 
-    /** Bảng danh sách đơn ở khu vực quản trị. */
     public static final int ADMIN_PAGE_SIZE = 15;
 
     private final BookingRepository bookingRepository;
@@ -68,26 +64,9 @@ public class BookingService {
     private final MessageHelper messages;
     private final EntityManager entityManager;
 
-    /** Độ dài tối đa hợp lý cho một họ tên hành khách - khớp {@code booking_passengers.full_name NVARCHAR(100)}. */
     private static final int MAX_PASSENGER_NAME_LENGTH = 100;
 
-    /**
-     * Khoá đơn theo mã tra cứu <b>TRƯỚC</b> khi đổi trạng thái/số khách (mục
-     * "NGHIÊM TRỌNG - 1", đã tái hiện bằng thao tác thật hai kịch bản: mất khoản
-     * đã thu khi khách tự huỷ trùng lúc admin đánh dấu đã thu tiền, và lách máy
-     * trạng thái khi admin xác nhận trùng lúc khách tự huỷ). Đây là dòng ĐẦU TIÊN
-     * của {@link #updateStatus}, {@link #cancelBySelf}, {@link #expirePendingBooking}
-     * và {@link #updateDetailQuantity} - bên thua phải đợi bên thắng commit xong
-     * rồi mới đọc lại đúng trạng thái mới nhất và bị chặn bằng
-     * {@link BusinessRuleException} (thông qua các phép kiểm trạng thái đã có sẵn
-     * ngay sau lời gọi này), không ghi đè lên nhau nữa.
-     *
-     * <p>Gotcha #60: chỉ khoá ở tầng CSDL thôi CHƯA ĐỦ -
-     * {@code entityManager.refresh(...)} bắt buộc ngay sau khi giữ được khoá, để
-     * không đọc nhầm bản entity cũ đã nằm sẵn trong cache cấp một của cùng giao
-     * dịch (giống hệt cách {@code PromotionService.recordUsage} đã làm với
-     * {@code Promotion}).</p>
-     */
+    // Khoá bi quan một đơn theo mã rồi refresh - bắt buộc để không đọc nhầm state cũ trong session (gotcha #60).
     private Booking lockBookingByCode(String code) {
         Booking locked = bookingRepository.findByCodeForUpdate(code)
                 .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
@@ -95,7 +74,7 @@ public class BookingService {
         return locked;
     }
 
-    /** Cùng {@link #lockBookingByCode} nhưng theo khoá chính, trả {@code null} nếu không còn tồn tại. */
+    // Khoá bi quan một đơn theo id rồi refresh; trả về null nếu không còn tồn tại.
     private Booking lockBookingById(Long id) {
         Booking locked = bookingRepository.findByIdForUpdate(id).orElse(null);
         if (locked == null) {
@@ -105,25 +84,7 @@ public class BookingService {
         return locked;
     }
 
-    /**
-     * Chốt đơn đặt tour: <b>toàn bộ nằm trong một giao dịch duy nhất</b>.
-     *
-     * <p>Hoặc là mọi thứ cùng thành công - đơn được ghi, số chỗ bị trừ - hoặc là
-     * không có gì xảy ra cả. Nếu tách thành nhiều giao dịch, chỉ cần bước trừ chỗ
-     * hỏng là hệ thống có một đơn hàng "ma" không giữ chỗ nào.</p>
-     *
-     * <p><b>Giá được đọc lại từ CSDL</b> qua {@code new BookingDetail(departure, ...)}
-     * chứ không lấy giá đang nằm trong giỏ hàng ở session. Giỏ hàng nằm phía người
-     * dùng nên về nguyên tắc là không đáng tin; hơn nữa quản trị viên có thể vừa
-     * chỉnh giá trong lúc khách còn để tour trong giỏ.</p>
-     *
-     * <p>Giỏ hàng <b>không</b> bị xoá ở đây mà do controller xoá sau khi phương
-     * thức này trả về thành công. Xoá ngay tại đây thì lỡ giao dịch không commit
-     * được (ví dụ hai khách tranh nhau chỗ cuối), khách vừa mất giỏ hàng vừa
-     * không có đơn nào.</p>
-     *
-     * @return đơn hàng vừa tạo, đã có mã tra cứu
-     */
+    // Đặt tour từ giỏ hàng: khoá và trừ chỗ từng đợt, ghi hành khách, áp mã giảm giá, sinh khoản thu PENDING và dòng lịch sử đầu tiên, phát sự kiện gửi thư.
     @Transactional
     public Booking placeOrder(Long userId, CheckoutForm form, Cart cart) {
         if (cart == null || cart.isEmpty()) {
@@ -139,8 +100,6 @@ public class BookingService {
         booking.setBookingDate(LocalDateTime.now());
         booking.setStatus(BookingStatus.PENDING);
 
-        // Chép thông tin liên hệ vào đơn. Từ giờ đơn này không còn phụ thuộc vào
-        // bảng users nữa: khách có đổi số điện thoại thì đơn cũ vẫn giữ số cũ.
         booking.setCustomerName(form.getCustomerName().trim());
         booking.setCustomerEmail(form.getCustomerEmail().trim());
         booking.setCustomerPhone(form.getCustomerPhone().trim());
@@ -149,20 +108,11 @@ public class BookingService {
         booking.setNote(form.getNote());
 
         for (CartItem item : cart.getItems()) {
-            // Khoá bi quan: hai khách cùng giành chỗ cuối cùng thì người thứ hai
-            // phải chờ, đọc lại số chỗ đã cập nhật rồi mới quyết định. Không có
-            // khoá này thì cả hai cùng đọc "còn 1 chỗ" và cùng đặt thành công.
+
             TourDeparture departure = departureRepository.findByIdForUpdate(item.getDepartureId())
                     .orElseThrow(() -> new BusinessRuleException(
                             "error.checkout.departureGone", item.getTourName()));
 
-            // isBookable(cutoffDays) chỉ xét chính đợt khởi hành (mục 12.5: hạn
-            // chót đặt tour); tour "Ngừng bán" vẫn có đợt active còn chỗ nên phải
-            // kiểm riêng tour.isActive() ở đây. departure được nạp bằng
-            // findByIdForUpdate (không JOIN FETCH tour), nhưng đang ở trong giao
-            // dịch @Transactional của phương thức này nên chạm vào quan hệ LAZY
-            // departure.getTour() vẫn an toàn (khác hẳn open-in-view=false ở tầng
-            // template).
             if (!departure.isBookable(appProperties.booking().cutoffDays()) || !departure.getTour().isActive()) {
                 throw new BusinessRuleException("error.checkout.notBookable", item.getTourName());
             }
@@ -176,20 +126,11 @@ public class BookingService {
             departure.holdSeats(seats);
             BookingDetail detail = new BookingDetail(departure, item.getNumAdults(), item.getNumChildren());
 
-            // Mục 12.7: gắn danh sách hành khách của đúng dòng giỏ hàng này. Đây
-            // là lần kiểm THỨ HAI (lần đầu ở CheckoutController.validatePassengerStructure)
-            // - không tin cấu trúc form đã qua được tầng controller, vì giữa lúc
-            // khách gửi biểu mẫu và lúc giao dịch này chạy, giỏ hàng có thể đã đổi
-            // (ví dụ mở hai tab). Sai gì cũng huỷ toàn bộ giao dịch, không ghi dở dang.
             attachPassengers(detail, findGroup(form, item.getDepartureId()), item);
 
             booking.addDetail(detail);
         }
 
-        // Mã giảm giá: kiểm LẠI ở đây chứ không tin kết quả của nút "Áp dụng" bên
-        // trang thanh toán. Giữa lúc khách bấm xem trước và lúc bấm đặt, mã có thể
-        // đã hết lượt - và biểu mẫu hoàn toàn có thể được gửi thẳng không qua nút đó.
-        // Số tiền giảm luôn tính lại từ CSDL, biểu mẫu chỉ mang mỗi cái mã.
         PromotionService.CouponCheck coupon = null;
         if (form.getCouponCode() != null && !form.getCouponCode().isBlank()) {
             coupon = promotionService.check(form.getCouponCode(), userId, booking.getSubtotalAmount());
@@ -201,23 +142,15 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
 
         if (coupon != null) {
-            // Nằm trong cùng giao dịch: đơn hỏng thì lượt dùng mã cũng biến mất.
+
             promotionService.recordUsage(coupon.promotion(), user, saved, coupon.discount());
         }
 
-        // Bổ sung A: dòng đầu tiên của nhật ký trạng thái - fromStatus = null vì
-        // đơn vừa được tạo, chưa có trạng thái cũ nào. changedBy là chính khách
-        // hàng, không phải hệ thống: đặt tour là một thao tác có người đứng sau.
         bookingStatusHistoryRepository.save(
                 new BookingStatusHistory(saved, null, BookingStatus.PENDING, user, null));
 
-        // Bổ sung B: sinh sẵn một khoản phải thu PENDING - cùng giao dịch với
-        // đơn, đơn hỏng thì khoản thu ma cũng biến mất theo.
         paymentService.createPendingForBooking(saved);
 
-        // Chỉ phát tín hiệu ở đây; thư được gửi SAU KHI giao dịch commit
-        // (xem BookingEmailListener). Gửi ngay tại đây thì lỡ giao dịch bị huỷ,
-        // khách đã cầm trong tay thư xác nhận một đơn hàng không tồn tại.
         eventPublisher.publishEvent(new BookingPlacedEvent(saved.getCode()));
 
         log.info("Đã tạo đơn {} cho {} - {} dòng, tổng {} đ",
@@ -225,7 +158,7 @@ public class BookingService {
         return saved;
     }
 
-    /** Tìm đúng nhóm hành khách của một dòng giỏ hàng theo {@code departureId}. */
+    // Tìm nhóm hành khách đã nhập trên form ứng với một đợt khởi hành trong giỏ.
     private PassengerGroupForm findGroup(CheckoutForm form, Long departureId) {
         if (form.getPassengerGroups() == null) {
             return null;
@@ -236,17 +169,7 @@ public class BookingService {
                 .orElse(null);
     }
 
-    /**
-     * Gắn danh sách hành khách vào một dòng chi tiết vừa tạo (mục 12.7).
-     *
-     * <p><b>Không tin dữ liệu gửi lên</b>: số hành khách theo từng loại phải
-     * khớp CHÍNH XÁC {@code numAdults}/{@code numChildren} của dòng - lệch một
-     * người cũng bị chặn (kể cả khi tầng controller đã kiểm - phòng khi giỏ hàng
-     * đổi giữa hai lần kiểm, hoặc yêu cầu được gửi thẳng không qua controller
-     * này, ví dụ trong kiểm thử). Mỗi tên đều được kiểm lại {@code NotBlank} và
-     * ngày sinh không ở tương lai - <b>không tin @Valid ở tầng trước đã chặn
-     * hết</b>.</p>
-     */
+    // Gắn danh sách hành khách vào dòng chi tiết; số lượng nhập phải khớp đúng số người lớn/trẻ em đã đặt.
     private void attachPassengers(BookingDetail detail, PassengerGroupForm group, CartItem item) {
         List<PassengerForm> adults = group == null || group.getAdults() == null
                 ? List.of() : group.getAdults();
@@ -265,6 +188,7 @@ public class BookingService {
         }
     }
 
+    // Dựng một BookingPassenger từ dữ liệu form, kiểm họ tên bắt buộc và ngày sinh không ở tương lai.
     private BookingPassenger toPassenger(BookingDetail detail, PassengerForm form, PassengerType type) {
         if (form.getFullName() == null || form.getFullName().isBlank()) {
             throw new BusinessRuleException("error.checkout.passengerNameRequired");
@@ -287,24 +211,14 @@ public class BookingService {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
 
-    /** Lịch sử đặt tour của một khách hàng, mới nhất lên đầu. */
     @Transactional(readOnly = true)
     public Page<Booking> findByUser(Long userId, int page) {
         return bookingRepository.findByUserIdOrderByBookingDateDesc(
                 userId, PageRequest.of(Math.max(page, 0), PAGE_SIZE));
     }
 
-    /**
-     * Nạp một đơn theo mã tra cứu, <b>kèm kiểm tra quyền sở hữu</b>.
-     *
-     * <p>Địa chỉ dùng mã đơn thay cho khoá chính tuần tự đã khiến việc đoán mò
-     * khó hơn nhiều, nhưng khó đoán không phải là bảo mật. Phép so sánh chủ sở
-     * hữu bên dưới mới là thứ thực sự chặn được người khác xem đơn của mình.</p>
-     *
-     * @param requesterId  tài khoản đang đăng nhập
-     * @param requesterIsAdmin quản trị viên được xem mọi đơn
-     */
     @Transactional(readOnly = true)
+    // Lấy đơn theo mã kèm kiểm quyền sở hữu: không phải admin và không phải chủ đơn thì bị chặn.
     public Booking getOwnedByCode(String code, Long requesterId, boolean requesterIsAdmin) {
         Booking booking = bookingRepository.findDetailByCode(code)
                 .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
@@ -317,47 +231,24 @@ public class BookingService {
         return booking;
     }
 
-    /** Nạp đơn kèm chi tiết để dựng nội dung thư - dùng sau khi giao dịch đã commit. */
     @Transactional(readOnly = true)
     public Booking getDetailByCode(String code) {
         return bookingRepository.findDetailByCode(code)
                 .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
     }
 
-    // =====================================================================
-    //  Phần dành cho khu vực quản trị
-    // =====================================================================
-
     @Transactional(readOnly = true)
     public Page<Booking> adminSearch(String keyword, BookingStatus status, int page) {
         return bookingRepository.adminSearch(keyword, status,
-                // Mặc định sắp xếp đơn mới nhất lên đầu - người trực đơn quan tâm
-                // đơn vừa vào, không phải đơn từ năm ngoái.
+
                 PageRequest.of(Math.max(page, 0), ADMIN_PAGE_SIZE,
                         Sort.by(Sort.Direction.DESC, "bookingDate")));
     }
 
-    /**
-     * Đổi trạng thái đơn ở màn quản trị (mục 12.1: PENDING&rarr;CONFIRMED/CANCELLED,
-     * CONFIRMED&rarr;COMPLETED/CANCELLED; COMPLETED và CANCELLED là trạng thái
-     * <b>cuối</b>, không có nhánh "khôi phục đơn đã huỷ" nữa).
-     *
-     * <p>Đây là phần dễ sai nhất của màn quản trị đơn hàng: huỷ đơn mà quên trả
-     * chỗ thì những chỗ đó "bốc hơi" - không ai đặt được nhưng cũng không ai đi.
-     * Sang {@code COMPLETED} chỉ được chấp nhận khi ngày khởi hành đã tới (hoặc
-     * qua) <b>và</b> đơn đã có khoản ĐÃ THANH TOÁN - xem {@link #isCompletable}.</p>
-     *
-     * <p>Bổ sung A: mỗi lần đổi đều ghi thêm một dòng {@code booking_status_history}
-     * - đây là chỗ duy nhất trong ứng dụng cập nhật trạng thái đơn <i>sau khi đặt</i>
-     * mà không phải là khách tự huỷ ({@link #cancelBySelf}) hay hệ thống tự huỷ
-     * quá hạn ({@link #expirePendingBooking}).</p>
-     *
-     * @param changedByUserId quản trị viên đang thao tác
-     * @param reason          ghi chú của quản trị viên, tuỳ chọn
-     */
+    // Đổi trạng thái đơn theo máy trạng thái; CANCELLED thì trả chỗ + huỷ khoản thu + hoàn 100%, COMPLETED phải qua điều kiện riêng. Luôn ghi một dòng lịch sử.
     @Transactional
     public Booking updateStatus(String code, BookingStatus newStatus, Long changedByUserId, String reason) {
-        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+
         Booking booking = lockBookingByCode(code);
 
         BookingStatus oldStatus = booking.getStatus();
@@ -373,20 +264,16 @@ public class BookingService {
             requireCompletable(booking);
         }
         if (newStatus == BookingStatus.CANCELLED) {
-            // Huỷ đơn: trả chỗ về cho các đợt khởi hành, trả lượt dùng mã (nếu có).
+
             releaseHold(booking);
-            // Bổ sung B: đóng luôn khoản thu PENDING - không thì nút "Đã thu tiền"
-            // của một đơn đã huỷ vẫn bấm được (xem PaymentService.cancelPendingForBooking).
+
             paymentService.cancelPendingForBooking(booking);
-            // Mục 12.2: quản trị viên huỷ luôn hoàn 100% khoản đã thu (lỗi phía
-            // công ty) - không đổi schema, chỉ THÊM một dòng REFUNDED mới.
+
             paymentService.refundIfPaid(booking, 100, messages.get("payment.note.refund.adminCancel"));
         }
 
         booking.setStatus(newStatus);
 
-        // getReferenceById thay vì findById: chỉ cần một proxy đủ để gắn khoá
-        // ngoại, không cần nạp cả bản ghi User cho một cột chỉ dùng để tham chiếu.
         User changedBy = changedByUserId == null ? null : userRepository.getReferenceById(changedByUserId);
         bookingStatusHistoryRepository.save(
                 new BookingStatusHistory(booking, oldStatus, newStatus, changedBy,
@@ -396,14 +283,8 @@ public class BookingService {
         return booking;
     }
 
-    /**
-     * Các trạng thái đích hợp lệ cho đơn đang xem - dùng để dựng ô chọn trạng
-     * thái ở màn quản trị (mục 12.1: "Giao diện admin chỉ liệt kê các trạng thái
-     * đích hợp lệ"). Loại {@code COMPLETED} khỏi danh sách nếu đơn chưa đủ điều
-     * kiện ({@link #isCompletable}) - không có lý do gì cho quản trị viên chọn
-     * một lựa chọn chắc chắn sẽ bị từ chối.
-     */
     @Transactional(readOnly = true)
+    // Danh sách trạng thái hợp lệ có thể chuyển tới từ trạng thái hiện tại, để vẽ nút trên giao diện.
     public List<BookingStatus> validNextStatuses(Booking booking) {
         List<BookingStatus> result = new ArrayList<>();
         for (BookingStatus target : BookingStatus.values()) {
@@ -418,11 +299,12 @@ public class BookingService {
         return result;
     }
 
-    /** Điều kiện phụ của mục 12.1 để một đơn được sang HOÀN TẤT. */
+    // Đủ điều kiện chuyển sang COMPLETED không: đã tới ngày khởi hành và đã có khoản PAID.
     private boolean isCompletable(Booking booking) {
         return !departureNotYetReached(booking) && paymentService.hasPaidPayment(booking.getId());
     }
 
+    // Như isCompletable nhưng ném lỗi kèm lý do cụ thể nếu chưa đủ điều kiện.
     private void requireCompletable(Booking booking) {
         if (departureNotYetReached(booking)) {
             throw new BusinessRuleException("error.booking.complete.notYetDeparted");
@@ -432,43 +314,24 @@ public class BookingService {
         }
     }
 
-    /** true nếu còn ít nhất một dòng của đơn có ngày khởi hành sau hôm nay. */
     private boolean departureNotYetReached(Booking booking) {
         return booking.getDetails().stream()
                 .map(d -> d.getDeparture().getDepartureDate())
                 .anyMatch(date -> date.isAfter(LocalDate.now()));
     }
 
-    /** Trả chỗ cho các đợt khởi hành và trả lượt dùng mã giảm giá (nếu có) khi huỷ đơn. */
+    // Trả lại chỗ đã giữ ở mọi đợt khởi hành của đơn và trả lượt dùng mã giảm giá (nếu có).
     private void releaseHold(Booking booking) {
         booking.getDetails().forEach(d -> d.getDeparture().releaseSeats(d.getTotalGuests()));
         promotionService.releaseUsage(booking);
     }
 
-    // =====================================================================
-    //  UC023 - Khách tự huỷ đơn (mục 12.3)
-    // =====================================================================
-
-    /**
-     * Kết quả tính chính sách tự huỷ cho một đơn, dùng cả để hiển thị hộp xác
-     * nhận ("số tiền sẽ được hoàn") lẫn để {@link #cancelBySelf} kiểm lại trước
-     * khi thực sự huỷ - không tin con số đã hiện trên trang GET trước đó.
-     *
-     * @param timingOk         còn đủ ngày để tự huỷ theo {@code app.booking.self-cancel-min-days}
-     * @param refundPercent    tỉ lệ hoàn nếu huỷ ngay bây giờ (100 hoặc {@code partial-refund-percent})
-     * @param refundAmount     số tiền sẽ hoàn nếu huỷ ngay bây giờ (0 nếu {@code !timingOk})
-     * @param daysUntilDeparture số ngày còn lại tới đợt khởi hành GẦN NHẤT trong đơn
-     */
     public record SelfCancelPolicy(boolean timingOk, int refundPercent,
                                    BigDecimal refundAmount, long daysUntilDeparture) {
     }
 
-    /**
-     * Tính chính sách tự huỷ theo mục 12.3 dựa trên đợt khởi hành <b>gần nhất</b>
-     * trong đơn (an toàn nhất khi đơn gộp nhiều tour: chưa chắc huỷ được nếu bất
-     * kỳ tour nào trong đơn đã cận ngày).
-     */
     @Transactional(readOnly = true)
+    // Tính chính sách tự huỷ theo số ngày còn lại tới ngày khởi hành sớm nhất: có kịp huỷ không, hoàn bao nhiêu %.
     public SelfCancelPolicy evaluateSelfCancel(Booking booking) {
         AppProperties.Booking cfg = appProperties.booking();
 
@@ -490,23 +353,10 @@ public class BookingService {
         return new SelfCancelPolicy(timingOk, refundPercent, refundAmount, daysUntil);
     }
 
-    /**
-     * Khách tự huỷ đơn của chính mình (UC023).
-     *
-     * <p>Mọi điều kiện được kiểm LẠI ở đây, không tin trang GET đã hiện gì trước
-     * đó - cùng nguyên tắc với {@code PromotionService.check} rồi {@code recordUsage}:
-     * giữa lúc khách mở trang và lúc bấm huỷ, tình huống có thể đã đổi.</p>
-     *
-     * @throws AccessDeniedException nếu không phải đơn của chính khách
-     * @throws BusinessRuleException nếu đơn không còn huỷ được (đã ở trạng thái
-     *                                cuối) hoặc đã quá cận ngày khởi hành
-     */
+    // Khách tự huỷ đơn của chính mình: kiểm quyền sở hữu, kiểm còn huỷ được và còn kịp thời hạn, trả chỗ và hoàn tiền theo chính sách.
     @Transactional
     public Booking cancelBySelf(String code, Long userId) {
-        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode. Đây
-        // chính là vế "khách tự huỷ" của kịch bản A/B đã tái hiện bằng thao tác
-        // thật: nếu thua cuộc đua với admin (updateStatus/markPaid), isCancellable()
-        // bên dưới sẽ đọc đúng trạng thái mới nhất và chặn lại bằng BusinessRuleException.
+
         Booking booking = lockBookingByCode(code);
 
         if (!booking.getUser().getId().equals(userId)) {
@@ -538,23 +388,10 @@ public class BookingService {
         return booking;
     }
 
-    // =====================================================================
-    //  Mục 12.4 - hệ thống tự huỷ đơn CHỜ chưa thanh toán quá hạn
-    // =====================================================================
-
-    /**
-     * Huỷ MỘT đơn CHỜ XÁC NHẬN đã quá hạn thanh toán - gọi từ
-     * {@code BookingExpiryScheduler}, <b>mỗi đơn một giao dịch riêng</b> (yêu cầu
-     * của mục 12.4) để một đơn lỗi không kéo cả mẻ đang xử lý.
-     *
-     * <p>Nạp lại và kiểm tra trạng thái NGAY TẠI ĐÂY (không tin danh sách id đã
-     * truy vấn trước đó ở tầng lập lịch): giữa lúc liệt kê và lúc xử lý, đơn có
-     * thể đã được quản trị viên xác nhận hoặc khách đã thanh toán - bỏ qua chứ
-     * không huỷ nhầm.</p>
-     */
+    // Tự huỷ một đơn PENDING quá hạn thanh toán (gọi từ BookingExpiryScheduler); bỏ qua nếu đã có khoản PAID.
     @Transactional
     public void expirePendingBooking(Long bookingId) {
-        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+
         Booking booking = lockBookingById(bookingId);
         if (booking == null || booking.getStatus() != BookingStatus.PENDING) {
             return;
@@ -568,8 +405,7 @@ public class BookingService {
         paymentService.cancelPendingForBooking(booking);
 
         booking.setStatus(BookingStatus.CANCELLED);
-        // changedBy = null: hệ thống tự đổi, không có quản trị viên nào đứng sau
-        // (mục 12.4).
+
         bookingStatusHistoryRepository.save(new BookingStatusHistory(booking, oldStatus,
                 BookingStatus.CANCELLED, null, "Quá hạn thanh toán"));
 
@@ -577,69 +413,30 @@ public class BookingService {
                 booking.getCode(), appProperties.booking().pendingExpiryHours());
     }
 
-    /**
-     * Kết quả một lần gọi {@link #updateDetailQuantity}: hoặc áp dụng luôn, hoặc
-     * còn thiếu tên cho một số hành khách <b>mới</b> - khi đó phương thức
-     * <b>chưa đổi gì cả</b> (kể cả số chỗ), gọi lại đúng nó kèm đủ tên
-     * ({@code newAdultNames}/{@code newChildNames}) là xong (mục 12.7).
-     */
     public record PassengerNameGap(int adultsNeeded, int childrenNeeded, List<String> droppedNames) {
         public boolean isEmpty() {
             return adultsNeeded <= 0 && childrenNeeded <= 0;
         }
     }
 
-    /**
-     * Sửa số khách của một dòng trong đơn - giao diện tối thiểu cho quản trị
-     * viên giữ đúng bất biến "số hành khách theo loại luôn khớp
-     * {@code numAdults}/{@code numChildren}" (mục 12.7), kể cả khi đề bài bắt
-     * buộc chức năng sửa số lượng này phải còn dùng được:
-     *
-     * <ul>
-     *   <li><b>Tăng</b> số khách một loại &rArr; phải có đủ {@code newAdultNames}/
-     *       {@code newChildNames} cho đúng số người MỚI; thiếu tên thì
-     *       {@link PassengerNameGap#isEmpty()} trả {@code false} và <b>không có
-     *       gì được ghi</b> - controller hiện lại đúng bấy nhiêu ô nhập tên.</li>
-     *   <li><b>Giảm</b> số khách một loại &rArr; tự động bỏ bớt hành khách có id
-     *       LỚN NHẤT của đúng loại đó (người được thêm gần đây nhất) - đơn giản
-     *       hơn hẳn so với để quản trị viên tự chọn từng người mà vẫn đúng.</li>
-     * </ul>
-     *
-     * <p>Số lượng hành khách HIỆN CÓ được đếm trực tiếp trong CSDL (không dựa
-     * vào {@code detail.numAdults} cũ) nên phương thức này còn <b>tự chữa</b>
-     * được cả những dòng đã lệch bất biến từ trước (ví dụ đặt qua bản chưa có
-     * màn nhập hành khách): gọi lại với đúng số khách hiện tại sẽ được yêu cầu
-     * bổ sung đủ tên còn thiếu.</p>
-     *
-     * <p>Số chỗ được điều chỉnh theo <b>mức chênh lệch</b>, và tổng tiền của dòng
-     * lẫn của cả đơn đều được tính lại - ba con số đó phải luôn khớp nhau, nếu
-     * không thì báo cáo doanh thu và số chỗ còn trống đều sai.</p>
-     */
+    // Admin sửa số khách của một dòng: chặn nếu đơn ở trạng thái cuối hoặc đã có khoản PAID; điều chỉnh chỗ, tiền, giảm giá và đồng bộ danh sách hành khách theo tên mới nếu tăng số khách.
     @Transactional
     public PassengerNameGap updateDetailQuantity(String code, Long detailId, int adults, int children,
                                                   List<String> newAdultNames, List<String> newChildNames) {
-        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+
         Booking booking = lockBookingByCode(code);
 
         if (booking.getStatus().isFinal()) {
             throw new BusinessRuleException("error.booking.finalStatus");
         }
-        // Đơn đã có khoản thu PAID: chặn sửa số khách thay vì âm thầm đổi tổng
-        // tiền của một đơn đã thu tiền thật. Luồng hoàn tiền/thu thêm đúng nghĩa
-        // (hoàn một phần, thu bù chênh lệch...) là quyết định nghiệp vụ đang chờ
-        // quyết định của người phụ trách - tạm thời cách an toàn nhất là chặn hẳn
-        // và gợi ý liên hệ bộ phận kế toán để xử lý thủ công.
+
         if (paymentService.hasPaidPayment(booking.getId())) {
             throw new BusinessRuleException("error.booking.detailQuantity.hasPaidPayment");
         }
         if (adults < 1) {
             throw new BusinessRuleException("error.cart.needAdult");
         }
-        // Gửi thẳng numChildren âm (bỏ qua ràng buộc min="0" của HTML) từng khiến
-        // delta ra âm, releaseSeats() trả lại chỗ CHƯA TỪNG giữ (bán quá chỗ) và
-        // recalculateSubtotal() ra tiền âm. Trần tổng khách dùng lại đúng hằng số
-        // của giỏ hàng (CartService.MAX_GUESTS_PER_ITEM) - không có lý do gì hai
-        // nơi có hai trần khác nhau.
+
         if (children < 0) {
             throw new BusinessRuleException("error.cart.invalidChildren");
         }
@@ -662,8 +459,6 @@ public class BookingService {
         List<String> cleanAdultNames = cleanNames(newAdultNames);
         List<String> cleanChildNames = cleanNames(newChildNames);
 
-        // Tăng mà chưa đủ tên: KHÔNG áp dụng gì cả (kể cả số chỗ/thành tiền) -
-        // trả phần còn thiếu để controller hiện lại đúng bấy nhiêu ô nhập tên.
         if ((adultGap > 0 && cleanAdultNames.size() < adultGap)
                 || (childGap > 0 && cleanChildNames.size() < childGap)) {
             return new PassengerNameGap(Math.max(adultGap, 0), Math.max(childGap, 0), List.of());
@@ -685,21 +480,12 @@ public class BookingService {
         detail.setNumAdults(adults);
         detail.setNumChildren(children);
         detail.recalculateSubtotal();
-        // Tiền hàng đổi thì số tiền giảm của mã (nếu có) cũng phải tính lại theo
-        // đúng luật của Promotion - xem Javadoc PromotionService.recalculateDiscount.
-        // Phải chạy TRƯỚC recalculateTotal() để tổng đơn dùng đúng số giảm mới.
+
         promotionService.recalculateDiscount(booking);
         booking.recalculateTotal();
-        // Bổ sung B: khoản thu PENDING phải đi theo tổng đơn mới, không thì màn
-        // chi tiết hiện hai con số vênh nhau (xem PaymentService.syncPendingAmount).
+
         paymentService.syncPendingAmount(booking);
 
-        // Giữ bất biến (mục 12.7): đồng bộ danh sách hành khách theo đúng
-        // chênh lệch vừa tính - PHẢI chạy sau khi đã chắc chắn đủ chỗ/đủ tên,
-        // không thì một lần gọi lỗi giữa chừng có thể để lại hành khách "mồ côi".
-        // Nhẹ - 7: gom lại tên những người bị bỏ (nếu giảm số khách) để controller
-        // nêu đích danh trong thông báo thành công, không để quản trị viên tự hỏi
-        // "vừa xoá mất ai".
         List<String> dropped = new ArrayList<>();
         dropped.addAll(syncPassengers(detail, PassengerType.ADULT, adultGap, cleanAdultNames));
         dropped.addAll(syncPassengers(detail, PassengerType.CHILD, childGap, cleanChildNames));
@@ -709,14 +495,7 @@ public class BookingService {
         return new PassengerNameGap(0, 0, dropped);
     }
 
-    /**
-     * Lọc bỏ tên rỗng và kiểm lại độ dài (Nhẹ - 4, đã tái hiện): gửi thẳng một
-     * tên dài quá cột {@code booking_passengers.full_name NVARCHAR(100)} trước
-     * đây rơi thẳng xuống Hibernate/JDBC, SQL Server trả lỗi cắt chuỗi và lộ
-     * nguyên văn tên bảng/cột trong trang 500 - chặn sớm bằng
-     * {@link BusinessRuleException} có message key để người dùng thấy một câu
-     * tiếng Việt tử tế thay vì chi tiết CSDL.
-     */
+    // Lọc bỏ tên rỗng, cắt khoảng trắng thừa, kiểm độ dài tối đa.
     private List<String> cleanNames(List<String> raw) {
         if (raw == null) {
             return List.of();
@@ -733,11 +512,7 @@ public class BookingService {
         return cleaned;
     }
 
-    /**
-     * Đồng bộ hành khách một loại trong dòng chi tiết theo mức chênh lệch
-     * {@code gap} (dương = cần thêm bấy nhiêu người tên trong {@code namesForAdd},
-     * âm = cần bớt bấy nhiêu người - luôn chọn id LỚN NHẤT trước).
-     */
+    // Đồng bộ danh sách hành khách theo loại khi số khách đổi: gap dương thì thêm khách mới theo tên nhập, gap âm thì bớt khách cuối danh sách.
     private List<String> syncPassengers(BookingDetail detail, PassengerType type, int gap, List<String> namesForAdd) {
         List<String> removedNames = new ArrayList<>();
         if (gap > 0) {
@@ -762,12 +537,6 @@ public class BookingService {
         return removedNames;
     }
 
-    /**
-     * Tín hiệu "vừa đặt tour xong". Chỉ mang mã đơn chứ không mang cả đối tượng
-     * {@code Booking}: bên nhận chạy sau khi giao dịch đã đóng, entity lúc đó đã
-     * tách khỏi ngữ cảnh lưu trữ nên đọc các quan hệ LAZY sẽ hỏng. Cầm mã đơn rồi
-     * nạp lại trong một giao dịch mới là cách chắc chắn nhất.
-     */
     public record BookingPlacedEvent(String bookingCode) {
     }
 }

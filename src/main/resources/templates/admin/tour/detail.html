@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Trang chi tiết CHỈ XEM của một tour (mục 12.8 - đề bài đòi "xem chi tiết từng
-  tour/loại"). Tách khỏi admin/tour/form.html: không có ô nhập nào ở đây, chỉ
-  đọc dữ liệu - biểu mẫu sửa vẫn nằm nguyên ở địa chỉ cũ, có nút "Sửa" trỏ sang.
--->
+
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/fragments/admin-layout :: head(${detail.tour.name})}"></head>
 <body>
@@ -45,7 +41,6 @@
 
             <div class="row g-4">
 
-                <!-- ===================== Thông tin + ảnh + lịch trình ===================== -->
                 <div class="col-lg-8">
                     <div class="card mb-4">
                         <div class="card-body">
@@ -107,7 +102,6 @@
                         </div>
                     </div>
 
-                    <!-- ===================== Ảnh ===================== -->
                     <div class="card mb-4">
                         <div class="card-body">
                             <h2 class="h6 mb-3" th:text="#{admin.tour.gallery}">Thư viện ảnh</h2>
@@ -122,7 +116,6 @@
                         </div>
                     </div>
 
-                    <!-- ===================== Các đợt khởi hành ===================== -->
                     <div class="card">
                         <div class="card-body">
                             <h2 class="h6 mb-3" th:text="#{admin.action.departures}">Đợt khởi hành</h2>
@@ -165,7 +158,6 @@
                     </div>
                 </div>
 
-                <!-- ===================== Số liệu ===================== -->
                 <div class="col-lg-4">
                     <div class="card mb-4">
                         <div class="card-body">

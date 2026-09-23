@@ -25,18 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Đơn đặt tour - gốc của cụm dữ liệu {@code Booking + BookingDetail}.
- *
- * <p><b>Vì sao chép lại thông tin liên hệ của khách vào đơn</b> thay vì luôn đọc
- * từ {@link User}: đơn hàng là chứng từ, phải phản ánh đúng thông tin tại thời
- * điểm đặt. Khách đổi số điện thoại sáu tháng sau thì đơn cũ vẫn phải giữ số cũ.
- * Cùng lý do đó, {@link BookingDetail} chép lại tên tour và đơn giá.</p>
- *
- * <p>URL tra cứu đơn dùng {@code code} chứ không dùng {@code id} tuần tự, kèm
- * kiểm tra quyền sở hữu ở controller - sửa số trên thanh địa chỉ không xem được
- * đơn của người khác.</p>
- */
+// Đơn đặt tour - chép lại thông tin liên hệ và giá tại thời điểm đặt, tra cứu bằng "code" chứ không dùng id.
 @Entity
 @Table(
         name = "bookings",
@@ -57,7 +46,6 @@ public class Booking extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Mã đơn hiển thị cho khách, dạng {@code TB20260807A1B2C3}. */
     @Column(name = "code", nullable = false, length = 20)
     private String code;
 
@@ -68,8 +56,6 @@ public class Booking extends Auditable {
 
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
-
-    // --- Thông tin liên hệ tại thời điểm đặt (bản sao, không đọc từ User) ---
 
     @Column(name = "customer_name", nullable = false, length = 100)
     private String customerName;
@@ -83,40 +69,17 @@ public class Booking extends Auditable {
     @Column(name = "customer_address", length = 255)
     private String customerAddress;
 
-    /**
-     * Số tiền khách phải trả, <b>đã trừ</b> {@link #discountAmount}.
-     * Luôn được tính lại bằng {@link #recalculateTotal()}, không gán tay.
-     */
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    /**
-     * Mã giảm giá đã áp cho đơn, null nếu khách không dùng mã.
-     *
-     * <p>Bảng {@code coupon_usages} có ràng buộc duy nhất trên {@code booking_id}
-     * nên quan hệ này luôn là một - một về phía đơn: mỗi đơn tối đa một mã.</p>
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id",
             foreignKey = @ForeignKey(name = "fk_bookings_promotion"))
     private Promotion promotion;
 
-    /**
-     * Số tiền được giảm, <b>chép lại</b> tại thời điểm đặt.
-     *
-     * <p>Không tính lại từ {@link Promotion} mỗi lần đọc: quản trị viên sửa giá trị
-     * mã về sau thì hoá đơn cũ vẫn phải giữ nguyên số đã giảm - cùng nguyên tắc với
-     * các cột bản sao ở {@link BookingDetail}.</p>
-     */
     @Column(name = "discount_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
-    /**
-     * Không dùng {@code @Enumerated}; việc quy đổi do {@code BookingStatusConverter}
-     * đảm nhiệm để Hibernate không sinh ràng buộc CHECK cho cột enum
-     * (xem chú thích ở {@code RoleConverter} và ở {@code User.role} về lý do
-     * không ép kiểu cột thành VARCHAR).
-     */
     @Column(name = "status", nullable = false, length = 20)
     private BookingStatus status = BookingStatus.PENDING;
 
@@ -126,38 +89,29 @@ public class Booking extends Auditable {
     @Column(name = "payment_method", length = 30)
     private String paymentMethod;
 
-    /**
-     * Chi tiết đơn không tồn tại độc lập, nên {@code cascade = ALL} +
-     * {@code orphanRemoval}: xoá dòng khỏi danh sách là xoá luôn bản ghi.
-     */
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BookingDetail> details = new ArrayList<>();
 
-    // ---------------------------------------------------------------------
-
+    // Thêm dòng chi tiết và gắn ngược lại tham chiếu booking (giữ hai chiều nhất quán).
     public void addDetail(BookingDetail detail) {
         details.add(detail);
         detail.setBooking(this);
     }
 
+    // Gỡ một dòng chi tiết khỏi đơn.
     public void removeDetail(BookingDetail detail) {
         details.remove(detail);
         detail.setBooking(null);
     }
 
-    /** Tiền hàng trước khi trừ giảm giá. */
+    // Cộng dồn thành tiền của tất cả các dòng chi tiết.
     public BigDecimal getSubtotalAmount() {
         return details.stream()
                 .map(BookingDetail::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /**
-     * Tính lại tổng tiền - gọi sau mọi thay đổi số lượng khách hoặc mã giảm giá.
-     *
-     * <p>Có kẹp sàn ở 0: giảm giá không bao giờ được lớn hơn tiền hàng, kể cả khi
-     * quản trị viên lỡ tay nhập một mã giảm 50 triệu.</p>
-     */
+    // Tính lại tổng tiền = tổng các dòng trừ giảm giá, chặn giảm giá vượt quá tổng.
     public void recalculateTotal() {
         BigDecimal subtotal = getSubtotalAmount();
         BigDecimal discount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
@@ -168,7 +122,6 @@ public class Booking extends Auditable {
         this.totalAmount = subtotal.subtract(discount);
     }
 
-    /** Tổng số khách của cả đơn, dùng để hiển thị và để kiểm tra chỗ. */
     public int getTotalGuests() {
         return details.stream().mapToInt(BookingDetail::getTotalGuests).sum();
     }

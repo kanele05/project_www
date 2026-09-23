@@ -100,9 +100,7 @@
                                         <i class="bi" th:classappend="${p.active} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                     </button>
                                 </form>
-                                <!--/* Bấm xoá một mã đã có lượt dùng sẽ bị tầng service chặn lại
-                                       kèm thông báo tiếng Việt và gợi ý "Vô hiệu hoá mã", chứ
-                                       không phải lỗi khoá ngoại. */-->
+
                                 <form class="d-inline" method="post"
                                       th:action="@{/admin/promotions/{id}/delete(id=${p.id})}"
                                       th:data-ajax-delete="@{/api/admin/promotions/{id}(id=${p.id})}"

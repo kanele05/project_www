@@ -18,23 +18,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Đánh giá của khách về một tour đã đi.
- *
- * <p>Hai quy tắc làm nên giá trị của bảng này, cả hai đều kiểm bằng Java ở tầng
- * service:</p>
- * <ol>
- *   <li><b>Chỉ khách đã thực sự đi</b> mới được đánh giá - phải có một đơn ở trạng
- *       thái {@code COMPLETED} chứa tour này. Cột {@code booking_id} giữ lại đơn đã
- *       dùng làm bằng chứng, nhờ đó hiện được nhãn "Đã xác thực".</li>
- *   <li><b>Mỗi tài khoản đánh giá một tour một lần</b> - ràng buộc duy nhất
- *       {@code (user_id, tour_id)}.</li>
- * </ol>
- *
- * <p>{@code approved} mặc định là {@code false}: đánh giá phải qua kiểm duyệt mới
- * hiện ra trang công khai, tránh nội dung rác. Điểm trung bình của tour chỉ tính
- * trên các đánh giá đã duyệt.</p>
- */
+// Đánh giá của khách về một tour, chờ quản trị viên duyệt mới hiện công khai.
 @Entity
 @Table(
         name = "reviews",
@@ -64,13 +48,11 @@ public class Review extends Auditable {
             foreignKey = @ForeignKey(name = "fk_reviews_user"))
     private User user;
 
-    /** Đơn dùng làm bằng chứng đã đi tour; null với dữ liệu nhập tay của quản trị viên. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id",
             foreignKey = @ForeignKey(name = "fk_reviews_booking"))
     private Booking booking;
 
-    /** Số sao từ 1 đến 5. Khoảng giá trị kiểm ở DTO và service, không đặt CHECK. */
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
@@ -80,11 +62,9 @@ public class Review extends Auditable {
     @Column(name = "content", nullable = false, length = 1000)
     private String content;
 
-    /** Chỉ đánh giá đã duyệt mới hiện ra trang công khai và mới được tính điểm. */
     @Column(name = "approved", nullable = false)
     private boolean approved = false;
 
-    /** Trả lời của quản trị viên, hiện ngay dưới đánh giá. */
     @Column(name = "admin_reply", length = 1000)
     private String adminReply;
 
@@ -98,11 +78,11 @@ public class Review extends Auditable {
         this.content = content;
     }
 
-    /** Đánh giá gắn với một đơn đã hoàn thành thì được gắn nhãn "Đã xác thực". */
     public boolean isVerified() {
         return booking != null;
     }
 
+    // Quản trị viên trả lời đánh giá, ghi lại thời điểm trả lời.
     public void reply(String text) {
         this.adminReply = text;
         this.repliedAt = LocalDateTime.now();

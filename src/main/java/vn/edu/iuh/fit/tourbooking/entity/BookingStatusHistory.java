@@ -17,18 +17,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Nhật ký đổi trạng thái đơn: đơn nào, từ trạng thái nào sang trạng thái nào,
- * ai đổi, lúc mấy giờ, vì lý do gì.
- *
- * <p>Cột {@code bookings.status} chỉ giữ trạng thái <b>hiện tại</b>; bảng này giữ
- * cả quá trình. Khi khách gọi hỏi "sao đơn tôi bị huỷ", đây là chỗ trả lời được.
- * Bản ghi chỉ thêm chứ không sửa - ứng dụng không có chỗ nào cập nhật lại dòng
- * lịch sử.</p>
- *
- * <p>{@code changedBy} để null được: hệ thống tự đổi trạng thái (ví dụ tour đã
- * kết thúc thì chuyển sang COMPLETED) thì không có người nào đứng sau.</p>
- */
+// Nhật ký đổi trạng thái đơn: từ trạng thái nào sang trạng thái nào, ai đổi, lúc nào, vì sao.
 @Entity
 @Table(
         name = "booking_status_history",
@@ -51,7 +40,6 @@ public class BookingStatusHistory {
             foreignKey = @ForeignKey(name = "fk_booking_status_history_booking"))
     private Booking booking;
 
-    /** Null ở dòng đầu tiên - lúc đơn vừa được tạo thì chưa có trạng thái cũ. */
     @Column(name = "from_status", length = 20)
     private BookingStatus fromStatus;
 

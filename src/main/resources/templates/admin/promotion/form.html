@@ -71,9 +71,7 @@
                                                th:field="*{discountValue}" th:errorclass="is-invalid">
                                         <div class="invalid-feedback" th:errors="*{discountValue}">Lỗi</div>
                                         <div class="form-text" th:text="#{admin.promotion.discountValue.hint}">Gợi ý</div>
-                                        <!--/* @AssertTrue isPercentValueValid gắn lỗi vào "percentValueValid" -
-                                             cùng khuôn với periodValid bên dưới: lỗi ở mức biểu mẫu (không gắn
-                                             riêng vào một trường input nào) nên #fields.hasErrors thay vì th:field. */-->
+
                                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('percentValueValid')}"
                                              th:errors="*{percentValueValid}">Lỗi giá trị phần trăm</div>
                                     </div>
@@ -85,8 +83,7 @@
                                                th:field="*{maxDiscount}" th:errorclass="is-invalid">
                                         <div class="invalid-feedback" th:errors="*{maxDiscount}">Lỗi</div>
                                         <div class="form-text" th:text="#{admin.promotion.maxDiscount.hint}">Gợi ý</div>
-                                        <!--/* @AssertTrue isMaxDiscountValid gắn lỗi vào "maxDiscountValid" -
-                                             cùng khuôn với percentValueValid/periodValid ở trên. */-->
+
                                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('maxDiscountValid')}"
                                              th:errors="*{maxDiscountValid}">Lỗi trần giảm giá</div>
                                     </div>
@@ -129,8 +126,7 @@
                                         <input class="form-control" type="datetime-local" id="endAt"
                                                th:field="*{endAt}" th:errorclass="is-invalid">
                                         <div class="invalid-feedback" th:errors="*{endAt}">Lỗi</div>
-                                        <!--/* @AssertTrue isPeriodValid gắn lỗi vào "periodValid" - Thymeleaf tự map
-                                               tên thuộc tính suy ra từ tên phương thức is*(). */-->
+
                                         <div class="text-danger small mt-1" th:if="${#fields.hasErrors('periodValid')}"
                                              th:errors="*{periodValid}">Lỗi khoảng thời gian</div>
                                     </div>

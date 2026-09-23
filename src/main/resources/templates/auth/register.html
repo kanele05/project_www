@@ -16,12 +16,6 @@
                         <span th:text="#{auth.register.title}">Tạo tài khoản</span>
                     </h1>
 
-                    <!--
-                      th:object gắn biểu mẫu với đối tượng RegisterForm, nhờ vậy
-                      th:field="*{...}" tự lo cả ba việc: đặt id, đặt name và điền
-                      lại giá trị người dùng vừa nhập khi biểu mẫu bị trả về vì lỗi.
-                      th:errorclass thêm lớp is-invalid của Bootstrap khi ô đó sai.
-                    -->
                     <form th:action="@{/register}" th:object="${registerForm}" method="post">
 
                         <div class="mb-3">
@@ -35,11 +29,7 @@
                         <div class="mb-3">
                             <label class="form-label" for="email"
                                    th:text="#{auth.register.email}">Email</label>
-                            <!--/*
-                              data-check-email bật phần hỏi máy chủ ngay khi rời ô
-                              (app.js gọi /api/users/email-available). Chỉ là tiện ích:
-                              việc chặn thật vẫn do @UniqueEmail lo lúc gửi biểu mẫu.
-                            */-->
+
                             <input class="form-control" type="email" id="email"
                                    th:field="*{email}" th:errorclass="is-invalid"
                                    autocomplete="username" data-check-email required>

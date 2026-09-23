@@ -12,23 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * Xử lý "đã đăng nhập nhưng không đủ quyền".
- *
- * <p>Một bộ xử lý chung cho cả hai khu vực, rẽ nhánh theo đường dẫn:</p>
- * <ul>
- *   <li>{@code /api/**} &rarr; <b>403 kèm JSON</b> để AJAX đọc được;</li>
- *   <li>còn lại &rarr; giao cho bộ xử lý mặc định của Spring Security, nó chuyển
- *       tiếp sang trang lỗi và Spring Boot dựng {@code templates/error/403.html}.</li>
- * </ul>
- *
- * <p>Cũng chính là nơi trả lời khi <b>thiếu token CSRF</b>: với người đã đăng
- * nhập, thiếu token là 403. (Với khách chưa đăng nhập thì lại là 302 về trang
- * đăng nhập, vì Spring Security coi mọi từ chối của tài khoản ẩn danh là "cần
- * đăng nhập trước đã" - đừng vì thấy 302 mà tưởng CSRF chưa bật.)</p>
- */
 @Component
 @RequiredArgsConstructor
+// Từ chối quyền cho /api/** trả JSON, các đường khác vẫn dùng cách xử lý mặc định của Spring Security.
 public class ApiAccessDeniedHandler implements AccessDeniedHandler {
 
     private final ApiErrorWriter errorWriter;

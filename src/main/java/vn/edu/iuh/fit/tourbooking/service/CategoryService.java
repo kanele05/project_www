@@ -21,42 +21,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Nghiệp vụ về danh mục tour: phần đọc cho trang công khai và phần thêm/sửa/xoá
- * cho khu vực quản trị.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Nghiệp vụ danh mục tour: phần đọc cho trang công khai, phần thêm/sửa/xoá cho khu quản trị.
 public class CategoryService {
 
     public static final int ADMIN_PAGE_SIZE = 15;
 
-    /** Thư mục con trong thư mục upload dành cho ảnh danh mục. */
     private static final String CATEGORY_IMAGE_DIR = "categories";
 
     private final TourCategoryRepository categoryRepository;
     private final TourRepository tourRepository;
     private final FileStorageService fileStorageService;
 
-    /** Một ô danh mục ở trang chủ: danh mục kèm số tour đang bán của nó. */
     public record CategoryCard(TourCategory category, long tourCount) {
     }
 
-    /** Danh mục hiện trên thanh điều hướng - chỉ lấy danh mục đang bật. */
     @Transactional(readOnly = true)
     public List<TourCategory> findActiveCategories() {
         return categoryRepository.findByActiveTrueOrderByNameAsc();
     }
 
-    /**
-     * Danh mục kèm số tour, xếp danh mục nhiều tour nhất lên đầu.
-     *
-     * <p>Xếp theo số tour là có chủ đích: ô đầu tiên trên lưới trang chủ chiếm
-     * gấp bốn diện tích các ô còn lại, nên nó phải là danh mục có nhiều thứ để
-     * xem nhất chứ không phải danh mục tình cờ đứng đầu bảng chữ cái.</p>
-     */
     @Transactional(readOnly = true)
+    // Danh mục đang bật kèm số tour mỗi danh mục, sắp theo số tour giảm dần.
     public List<CategoryCard> findActiveWithTourCount() {
         Map<Long, Long> counts = new HashMap<>();
         for (Object[] row : tourRepository.countActiveGroupedByCategory()) {
@@ -69,23 +57,12 @@ public class CategoryService {
                 .toList();
     }
 
-    /**
-     * Tra danh mục theo slug cho địa chỉ {@code /categories/{slug}}.
-     *
-     * <p>Dùng slug thay vì mã số để địa chỉ vừa dễ đọc vừa có ích cho tìm kiếm,
-     * ví dụ {@code /categories/du-lich-bien-dao}.</p>
-     */
     @Transactional(readOnly = true)
     public TourCategory getBySlug(String slug) {
         return categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> ResourceNotFoundException.of("danh mục", slug));
     }
 
-    // =====================================================================
-    //  Phần dành cho khu vực quản trị
-    // =====================================================================
-
-    /** Toàn bộ danh mục, kể cả danh mục đang ẩn. */
     @Transactional(readOnly = true)
     public List<TourCategory> findAll() {
         return categoryRepository.findAll(Sort.by("name"));
@@ -103,11 +80,6 @@ public class CategoryService {
                 .orElseThrow(() -> ResourceNotFoundException.of("danh mục", id));
     }
 
-    /**
-     * Trang chi tiết CHỈ XEM của quản trị viên (mục 12.8 - đề bài đòi "xem chi
-     * tiết từng danh mục"): danh mục kèm toàn bộ tour thuộc nó, kể cả tour đã
-     * ngừng bán (khác trang công khai {@code /categories/{slug}}).
-     */
     public record CategoryAdminDetail(TourCategory category, List<vn.edu.iuh.fit.tourbooking.entity.Tour> tours) {
     }
 
@@ -117,6 +89,7 @@ public class CategoryService {
         return new CategoryAdminDetail(category, tourRepository.findByCategoryIdOrderByNameAsc(id));
     }
 
+    // Tạo mới hoặc cập nhật danh mục: chặn trùng tên, tự sinh slug, thay ảnh (xoá ảnh cũ nếu là ảnh tải lên).
     @Transactional
     public TourCategory save(CategoryForm form) {
         boolean creating = form.getId() == null;
@@ -141,8 +114,7 @@ public class CategoryService {
         if (image != null && !image.isEmpty()) {
             String oldPath = category.getImageUrl();
             category.setImageUrl(fileStorageService.store(image, CATEGORY_IMAGE_DIR));
-            // Ảnh danh mục của dữ liệu mẫu là đường dẫn tĩnh trong static/, không
-            // phải file upload - đừng đụng tới chúng.
+
             if (oldPath != null && !oldPath.startsWith("/")) {
                 fileStorageService.deleteAfterCommit(oldPath);
             }
@@ -153,13 +125,7 @@ public class CategoryService {
         return saved;
     }
 
-    /**
-     * Xoá một danh mục.
-     *
-     * <p>Quy tắc chặn xoá thứ nhất của đề bài: danh mục còn tour thì không xoá
-     * được. Kiểm tra bằng {@code countByCategoryId} trong Java, và thông báo kèm
-     * luôn số tour đang vướng để người dùng biết phải làm gì tiếp.</p>
-     */
+    // Xoá danh mục; chặn nếu còn tour, xoá luôn ảnh nếu là ảnh tải lên.
     @Transactional
     public void delete(Long id) {
         long tourCount = tourRepository.countByCategoryId(id);
@@ -177,7 +143,6 @@ public class CategoryService {
         log.info("Đã xoá danh mục {}", category.getName());
     }
 
-    /** Ẩn / hiện danh mục - phương án thay thế khi không xoá được. */
     @Transactional
     public boolean toggleActive(Long id) {
         TourCategory category = getById(id);

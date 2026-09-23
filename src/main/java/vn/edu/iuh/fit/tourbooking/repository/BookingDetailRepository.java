@@ -11,38 +11,19 @@ import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Truy vấn chi tiết đơn.
- *
- * <p>Repository này tồn tại chủ yếu vì hai truy vấn đếm bên dưới: chúng là chỗ
- * hiện thực yêu cầu "không cho xoá dữ liệu đang được tham chiếu" của đề bài,
- * kiểm tra bằng Java ở tầng service chứ không nhờ CSDL.</p>
- */
+// Truy vấn dòng chi tiết đơn: đếm phục vụ quy tắc chặn xoá, top tour bán chạy, điều kiện đánh giá.
 @Repository
 public interface BookingDetailRepository extends JpaRepository<BookingDetail, Long> {
 
-    /** <b>Chặn xoá đợt khởi hành</b> đã có khách đặt. */
     long countByDepartureId(Long departureId);
 
-    /** <b>Chặn xoá tour</b> khi bất kỳ đợt khởi hành nào của nó đã có khách đặt. */
     long countByDeparture_Tour_Id(Long tourId);
 
-    /**
-     * Số ĐƠN (không phải số dòng chi tiết) từng đặt một tour - dùng cho trang
-     * chi tiết riêng của quản trị viên (mục 12.8). {@code DISTINCT d.booking.id}
-     * vì một đơn có thể có hai dòng cùng trỏ một tour (hai đợt khác nhau) - đếm
-     * thẳng {@code COUNT(d)} sẽ ra số lớn hơn số đơn thực tế.
-     */
     @Query("SELECT COUNT(DISTINCT d.booking.id) FROM BookingDetail d WHERE d.departure.tour.id = :tourId")
     long countDistinctBookingsByTourId(@Param("tourId") Long tourId);
 
     List<BookingDetail> findByBookingId(Long bookingId);
 
-    /**
-     * Xếp hạng tour bán chạy cho bảng điều khiển: {@code [tên tour, số khách]}.
-     * Mục 12.9: chỉ tính đơn ĐÃ XÁC NHẬN + HOÀN TẤT - một đơn còn CHỜ hoặc đã HUỶ
-     * không phải là "đã bán" theo đúng nghĩa.
-     */
     @Query("""
             SELECT d.tourNameSnapshot, SUM(d.numAdults + d.numChildren)
             FROM BookingDetail d
@@ -53,10 +34,6 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
     List<Object[]> findTopSellingTours(@Param("statuses") Collection<BookingStatus> statuses,
                                        org.springframework.data.domain.Pageable pageable);
 
-    /**
-     * <b>Điều kiện được phép đánh giá (UC018):</b> tài khoản phải có ít nhất một
-     * đơn ở trạng thái {@code COMPLETED} chứa tour này.
-     */
     @Query("""
             SELECT COUNT(d) > 0 FROM BookingDetail d
             WHERE d.departure.tour.id = :tourId
@@ -65,10 +42,6 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
             """)
     boolean existsCompletedBookingForTour(@Param("tourId") Long tourId, @Param("userId") Long userId);
 
-    /**
-     * Đơn đã hoàn tất dùng làm "bằng chứng đã đi" khi ghi nhận đánh giá - xem
-     * {@code Review.booking}. Mới nhất trước, phòng khi khách đi tour này nhiều lần.
-     */
     @Query("""
             SELECT DISTINCT d.booking FROM BookingDetail d
             WHERE d.departure.tour.id = :tourId

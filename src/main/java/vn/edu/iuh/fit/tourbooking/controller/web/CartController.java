@@ -13,36 +13,21 @@ import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.service.CartService;
 import vn.edu.iuh.fit.tourbooking.session.CartItem;
 
-/**
- * Giỏ hàng.
- *
- * <p>Mọi phương thức POST đều kết thúc bằng {@code redirect:} kèm flash attribute
- * (mẫu POST - Redirect - GET). Nếu trả thẳng tên khuôn mẫu, người dùng bấm F5 sau
- * khi thêm vào giỏ sẽ thêm lần nữa mà không hề hay biết.</p>
- */
 @Controller
 @RequiredArgsConstructor
+// Trang giỏ hàng: hiện giỏ, thêm/sửa/xoá dòng qua form thường (PRG).
 public class CartController {
 
     private final CartService cartService;
 
-    /** Dùng để đổi mã thông điệp trong {@link BusinessRuleException} ra câu chữ. */
     private final MessageSource messageSource;
 
     @GetMapping("/cart")
     public String view() {
-        // Giỏ hàng đã được GlobalModelAdvice đẩy sẵn vào model.
+
         return "cart/cart";
     }
 
-    /**
-     * Thêm vào giỏ. Hỗ trợ cả hai lối vào của đề bài:
-     * <ul>
-     *   <li>từ <b>trang chi tiết</b> - biểu mẫu gửi kèm {@code departureId} khách đã chọn;</li>
-     *   <li>từ <b>trang danh sách</b> - chỉ có {@code tourId}, hệ thống tự chọn
-     *       đợt khởi hành gần nhất còn chỗ.</li>
-     * </ul>
-     */
     @PostMapping("/cart/add")
     public String add(@RequestParam(required = false) Long departureId,
                       @RequestParam(required = false) Long tourId,
@@ -62,12 +47,6 @@ public class CartController {
         return "redirect:/cart";
     }
 
-    /**
-     * Sửa số lượng khách của một dòng.
-     *
-     * <p>Tổng số khách bằng 0 thì {@code CartService} xoá hẳn dòng khỏi giỏ - đúng
-     * yêu cầu "số lượng bằng 0 thì xoá" của đề bài.</p>
-     */
     @PostMapping("/cart/update")
     public String update(@RequestParam Long departureId,
                          @RequestParam int numAdults,
@@ -100,9 +79,6 @@ public class CartController {
         return "redirect:/cart";
     }
 
-    // ---------------------------------------------------------------------
-
-    /** Đổi mã thông điệp của lỗi nghiệp vụ thành câu chữ theo ngôn ngữ hiện tại. */
     private String resolve(BusinessRuleException e) {
         return messageSource.getMessage(e.getMessageKey(), e.getArgs(),
                 LocaleContextHolder.getLocale());

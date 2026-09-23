@@ -22,7 +22,6 @@
 
             <div th:replace="~{fragments/components :: alerts}"></div>
 
-            <!-- ===================== Tìm kiếm ===================== -->
             <form class="row g-2 mb-3" method="get" th:action="@{/admin/tours}">
                 <div class="col-md-5">
                     <input class="form-control form-control-sm" type="search" name="keyword"
@@ -42,7 +41,6 @@
                 </div>
             </form>
 
-            <!-- ===================== Bảng dữ liệu ===================== -->
             <div class="card">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -66,10 +64,7 @@
                             <td class="small fw-semibold" th:text="${t.code}">MÃ</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <!--/* Ảnh seed đi kèm mã nguồn là đường dẫn TĨNH bắt đầu bằng "/"
-                                           (vd. /images/tours/...), khác ảnh do quản trị viên tải lên
-                                           (đường dẫn tương đối, nằm trong uploads/tours/ ở runtime) -
-                                           cùng quy ước với TourCategory.imageUrl. */-->
+
                                     <img class="rounded cart-thumb"
                                          th:src="${t.thumbnail == null}
                                                  ? @{/images/no-image.svg}
@@ -84,8 +79,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <!-- t.category đã được nạp sẵn bằng @EntityGraph ở truy vấn
-                                 adminSearch, nên truy cập ở đây an toàn dù open-in-view tắt. -->
+
                             <td class="small" th:text="${t.category.name}">Danh mục</td>
                             <td class="text-end small"
                                 th:text="|${#numbers.formatInteger(t.basePrice, 1, 'POINT')} ${#messages.msg('common.currency')}|">0 ₫</td>
@@ -97,7 +91,7 @@
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <!-- Mục 12.8: trang chi tiết CHỈ XEM, tách khỏi biểu mẫu sửa. -->
+
                                 <a class="btn btn-sm btn-outline-secondary"
                                    th:href="@{/admin/tours/{id}/view(id=${t.id})}"
                                    th:title="#{admin.action.view}">
@@ -114,9 +108,6 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
 
-                                <!-- Mọi thao tác làm thay đổi dữ liệu đều là POST kèm token
-                                     CSRF (Thymeleaf tự chèn nhờ th:action). Dùng đường dẫn
-                                     GET cho các thao tác này sẽ mở đường cho tấn công CSRF. -->
                                 <form class="d-inline" method="post"
                                       th:action="@{/admin/tours/{id}/toggle-active(id=${t.id})}">
                                     <button class="btn btn-sm btn-outline-warning" type="submit"
@@ -125,13 +116,6 @@
                                     </button>
                                 </form>
 
-                                <!--/*
-                                  data-ajax-delete chuyển nút này sang gọi
-                                  DELETE /api/admin/tours/{id}. Tour đã có lượt đặt sẽ
-                                  nhận 409 và admin.js hiện thông báo ngay tại chỗ.
-                                  Thuộc tính action vẫn giữ nguyên nên tắt JavaScript
-                                  thì biểu mẫu gửi theo cách thường như trước.
-                                */-->
                                 <form class="d-inline" method="post"
                                       th:action="@{/admin/tours/{id}/delete(id=${t.id})}"
                                       th:data-ajax-delete="@{/api/admin/tours/{id}(id=${t.id})}"

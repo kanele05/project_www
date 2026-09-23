@@ -24,17 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Một dòng trong đơn đặt tour: khách đặt đợt khởi hành nào, mấy người lớn,
- * mấy trẻ em, thành tiền bao nhiêu.
- *
- * <p>Tên tour và đơn giá được <b>chép lại</b> tại thời điểm đặt. Nếu chỉ trỏ sang
- * {@link TourDeparture} thì khi quản trị viên chỉnh giá cho đợt sau, hoá đơn cũ
- * sẽ đổi số theo - sai về mặt kế toán và không giải thích được với khách.</p>
- *
- * <p>Đây cũng là bảng chặn xoá: còn dòng nào trỏ tới một đợt khởi hành thì không
- * được xoá đợt đó, và theo đó cũng không xoá được tour hay danh mục ở trên.</p>
- */
+// Một dòng trong đơn: đợt khởi hành nào, mấy khách, tên tour và đơn giá được chép lại tại thời điểm đặt.
 @Entity
 @Table(
         name = "booking_details",
@@ -63,7 +53,6 @@ public class BookingDetail {
             foreignKey = @ForeignKey(name = "fk_booking_details_departure"))
     private TourDeparture departure;
 
-    /** Bản sao tên tour lúc đặt, để hoá đơn cũ không đổi khi tour bị đổi tên. */
     @Column(name = "tour_name_snapshot", nullable = false, length = 200)
     private String tourNameSnapshot;
 
@@ -79,19 +68,9 @@ public class BookingDetail {
     @Column(name = "unit_price_child", nullable = false, precision = 15, scale = 2)
     private BigDecimal unitPriceChild;
 
-    /**
-     * Thành tiền của dòng. Lưu sẵn thay vì tính lại mỗi lần đọc để báo cáo doanh
-     * thu chỉ cần {@code SUM(subtotal)}; giá trị luôn được làm mới bằng
-     * {@link #recalculateSubtotal()} sau khi đổi số lượng khách.
-     */
     @Column(name = "subtotal", nullable = false, precision = 15, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
-    /**
-     * Danh sách hành khách của dòng này. Thuộc sở hữu của dòng chi tiết nên
-     * {@code cascade = ALL} + {@code orphanRemoval}: sửa lại số khách rồi bỏ bớt
-     * người khỏi danh sách là xoá luôn bản ghi.
-     */
     @OneToMany(mappedBy = "detail", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("passengerType ASC, id ASC")
     private List<BookingPassenger> passengers = new ArrayList<>();
@@ -110,7 +89,7 @@ public class BookingDetail {
         return numAdults + numChildren;
     }
 
-    /** {@code subtotal = numAdults * giá người lớn + numChildren * giá trẻ em}. */
+    // Tính lại thành tiền của dòng này theo đơn giá và số khách hiện có.
     public void recalculateSubtotal() {
         BigDecimal adults = unitPriceAdult.multiply(BigDecimal.valueOf(numAdults));
         BigDecimal children = unitPriceChild.multiply(BigDecimal.valueOf(numChildren));
@@ -124,10 +103,6 @@ public class BookingDetail {
         return id != null && id.equals(other.id);
     }
 
-    /**
-     * Hằng số thay vì {@code Objects.hash(id)}: bản ghi mới chưa có id, nếu
-     * hashCode đổi sau khi lưu thì đối tượng sẽ "biến mất" khỏi HashSet.
-     */
     @Override
     public int hashCode() {
         return getClass().hashCode();

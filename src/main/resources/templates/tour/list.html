@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Trang danh sách tour. Dùng chung cho hai địa chỉ:
-    /tours                     - danh sách đầy đủ
-    /categories/{slug}         - lọc sẵn theo một danh mục (biến "category" khác null)
--->
+
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${category != null} ? ${category.name} : #{tour.list.title})}"></head>
 <body class="d-flex flex-column min-vh-100">
@@ -12,7 +8,6 @@
 
 <main class="flex-grow-1">
 
-    <!-- ===================== Dải tiêu đề ===================== -->
     <section class="page-head bg-jade">
         <div class="container">
             <nav aria-label="breadcrumb">
@@ -44,19 +39,12 @@
 
         <div class="row g-4">
 
-            <!-- ===================== Cột bộ lọc ===================== -->
             <aside class="col-lg-3">
                 <div class="panel panel__pad filter-panel">
                     <h2 class="h6 mb-3">
                         <i class="bi bi-sliders me-1"></i> <span th:text="#{common.filter}">Lọc</span>
                     </h2>
 
-                    <!--
-                      Biểu mẫu gửi bằng GET để mọi bộ lọc nằm trên thanh địa chỉ:
-                      người dùng lưu hoặc gửi đường dẫn cho nhau vẫn giữ nguyên kết quả.
-                      Khi đang ở trang danh mục thì gửi lại chính địa chỉ đó để không
-                      rơi ra khỏi danh mục.
-                    -->
                     <form method="get"
                           th:action="${category != null}
                                      ? @{/categories/{slug}(slug=${category.slug})}
@@ -69,7 +57,6 @@
                                    th:placeholder="#{tour.search.placeholder}">
                         </div>
 
-                        <!-- Ở trang danh mục thì ô chọn danh mục là thừa, đã cố định rồi -->
                         <div class="mb-3" th:if="${category == null}">
                             <label class="form-label" for="categoryId"
                                    th:text="#{tour.filter.category}">Danh mục</label>
@@ -136,7 +123,6 @@
                 </div>
             </aside>
 
-            <!-- ===================== Kết quả ===================== -->
             <div class="col-lg-9">
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -151,12 +137,7 @@
                 </div>
 
                 <div class="row g-4">
-                    <!--
-                      th:each phải nằm ở thẻ NGOÀI, không được đặt chung một thẻ với
-                      th:replace: Thymeleaf xử lý th:replace trước th:each, nên viết
-                      chung thì mảnh giao diện được chèn khi biến lặp còn chưa tồn tại
-                      và hỏng ngay với lỗi "Property or field 'id' cannot be found on null".
-                    -->
+
                     <th:block th:each="t : ${toursPage.content}">
                         <div th:replace="~{fragments/components :: tourCard(${t})}"></div>
                     </th:block>

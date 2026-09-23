@@ -1,17 +1,5 @@
 <!DOCTYPE html>
-<!--
-  ============================================================================
-   Khung giao diện của khu vực quản trị: thẻ head, thanh trên, menu bên trái.
 
-   Cố tình tách hẳn khỏi fragments/layout.html của trang bán hàng. Hai khu vực
-   này phục vụ hai loại người dùng khác nhau và có bố cục khác hẳn nhau (một bên
-   là trang giới thiệu, một bên là bảng làm việc có menu dọc); nhồi cả hai vào
-   một khung sẽ đầy th:if và rất khó đọc.
-
-   Lưu ý: GlobalModelAdvice chỉ áp dụng cho gói controller.web, nên trong khu vực
-   này KHÔNG có biến "cart" và "navCategories" - đừng tham chiếu tới chúng.
-  ============================================================================
--->
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
@@ -20,12 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="|${pageTitle} - #{admin.title}|">Quản trị</title>
 
-    <!--/* Token CSRF cho AJAX - xem chú thích ở fragments/layout.html. Khu quản trị
-           cần nó cho nút xoá bằng AJAX (DELETE /api/admin/...). */-->
     <meta name="_csrf" th:content="${_csrf?.token}">
     <meta name="_csrf_header" th:content="${_csrf?.headerName}">
 
-    <!--/* Câu chữ cho JavaScript - xem chú thích ở fragments/layout.html. */-->
     <meta name="msg.currency" th:content="#{common.currency}">
     <meta name="msg.error.generic" th:content="#{error.js.generic}">
     <meta name="msg.deleted" th:content="#{admin.ajax.deleted}">
@@ -43,7 +28,6 @@
 
 <body>
 
-<!-- ======================= THANH TRÊN ======================= -->
 <nav th:fragment="topbar" class="navbar navbar-dark admin-topbar sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" th:href="@{/admin}">
@@ -92,7 +76,6 @@
     </div>
 </nav>
 
-<!-- ======================= MENU BÊN TRÁI ======================= -->
 <div th:fragment="sidebar(active)" class="list-group list-group-flush admin-sidebar">
     <a class="list-group-item list-group-item-action"
        th:classappend="${active == 'dashboard'} ? 'active'" th:href="@{/admin}">
@@ -132,7 +115,6 @@
     </a>
 </div>
 
-<!-- ======================= SCRIPT ======================= -->
 <th:block th:fragment="scripts">
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>

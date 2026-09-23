@@ -17,18 +17,10 @@ import vn.edu.iuh.fit.tourbooking.repository.TourRepository;
 
 import java.time.LocalDateTime;
 
-/**
- * Nghiệp vụ hộp thư liên hệ (UC021 gửi công khai, UC022 quản trị viên xử lý).
- *
- * <p>Bảng {@code contact_messages} tồn tại từ Phase 7 nhưng chưa từng được ghi
- * vào - đây là chỗ vá lại, đúng thiết kế chốt ở
- * {@code docs/report/SPEC_CHUNG.md} mục 9. Không có quy tắc nào cần kiểm ở tầng
- * Java khi <b>gửi</b> (ai cũng gửi được, kể cả spam - lọc bằng {@code SPAM} ở
- * khâu quản trị chứ không chặn lúc gửi).</p>
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Nghiệp vụ hộp thư liên hệ: gửi công khai (UC021) và quản trị viên xử lý (UC022). Gửi thì không chặn ai.
 public class ContactService {
 
     public static final int ADMIN_PAGE_SIZE = 15;
@@ -36,7 +28,6 @@ public class ContactService {
     private final ContactMessageRepository contactMessageRepository;
     private final TourRepository tourRepository;
 
-    /** Tour đang hỏi (nếu có) để điền sẵn phần "Đang hỏi về tour này" trên biểu mẫu. */
     @Transactional(readOnly = true)
     public Tour findTourForPrefill(Long tourId) {
         if (tourId == null) {
@@ -45,6 +36,7 @@ public class ContactService {
         return tourRepository.findById(tourId).orElse(null);
     }
 
+    // Ghi một liên hệ mới, gắn tour nếu có chọn.
     @Transactional
     public ContactMessage submit(ContactForm form) {
         ContactMessage message = new ContactMessage(
@@ -63,10 +55,6 @@ public class ContactService {
         return saved;
     }
 
-    // =====================================================================
-    //  Phần dành cho khu vực quản trị (UC022)
-    // =====================================================================
-
     @Transactional(readOnly = true)
     public Page<ContactMessage> adminList(ContactStatus status, int page) {
         PageRequest pageable = PageRequest.of(Math.max(page, 0), ADMIN_PAGE_SIZE);
@@ -75,7 +63,6 @@ public class ContactService {
                 : contactMessageRepository.findByStatusOrderByCreatedAtDesc(status, pageable);
     }
 
-    /** Huy hiệu đếm số liên hệ mới trên menu quản trị. */
     @Transactional(readOnly = true)
     public long countNew() {
         return contactMessageRepository.countByStatus(ContactStatus.NEW);
@@ -87,13 +74,7 @@ public class ContactService {
                 .orElseThrow(() -> ResourceNotFoundException.of("liên hệ", id));
     }
 
-    /**
-     * Đổi trạng thái một liên hệ, kèm ghi chú trả lời.
-     *
-     * <p>{@code handledBy}/{@code handledAt} chỉ đặt khi chuyển sang
-     * {@code RESOLVED} hoặc {@code SPAM} - đúng yêu cầu UC022: đó là hai trạng
-     * thái coi như "đã xong việc", còn {@code IN_PROGRESS} chỉ là đang xử lý dở.</p>
-     */
+    // Đổi trạng thái một liên hệ; chuyển sang RESOLVED/SPAM thì ghi người xử lý và thời điểm.
     @Transactional
     public void updateStatus(Long id, ContactStatus newStatus, User staff, String replyNote) {
         ContactMessage message = getById(id);

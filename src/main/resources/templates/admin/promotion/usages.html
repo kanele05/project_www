@@ -1,10 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Lịch sử dùng một mã khuyến mãi (UC019): ai đã dùng, đơn nào, giảm bao nhiêu.
-  CouponUsageRepository.findByPromotionIdOrderByUsedAtDesc nạp sẵn user và
-  booking bằng @EntityGraph, nên truy cập usage.user / usage.booking ở đây an
-  toàn dù open-in-view đang tắt.
--->
+
 <html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/fragments/admin-layout :: head(#{admin.promotion.usagesTitle(${promotion.code})})}"></head>
 <body>

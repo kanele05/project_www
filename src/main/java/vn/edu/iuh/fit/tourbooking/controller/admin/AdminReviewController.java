@@ -13,23 +13,15 @@ import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.service.ReviewService;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
-/**
- * Kiểm duyệt đánh giá tour (UC020).
- *
- * <p>Không dùng cột/enum mới: {@code Review.approved} đã được thiết kế sẵn cho
- * đúng việc này từ Phase 1 (xem Javadoc của trường đó), chỉ là trước UC020 chưa
- * có màn nào lật cờ này lên. Cùng khuôn PRG với các controller quản trị khác:
- * mọi POST kết thúc bằng {@code redirect:} + flash attribute.</p>
- */
 @Controller
 @RequestMapping("/admin/reviews")
 @RequiredArgsConstructor
+// Khu quản trị: kiểm duyệt đánh giá tour (duyệt/bỏ duyệt/trả lời/xoá) - UC020.
 public class AdminReviewController {
 
     private final ReviewService reviewService;
     private final MessageHelper messages;
 
-    /** Mặc định mở ở "Chờ duyệt" - đúng yêu cầu UC020, đây là hàng đợi việc phải làm. */
     @GetMapping
     public String list(@RequestParam(defaultValue = "PENDING") ReviewService.StatusFilter status,
                        @RequestParam(defaultValue = "0") int page,
@@ -41,7 +33,6 @@ public class AdminReviewController {
         return "admin/review/list";
     }
 
-    /** Duyệt: đánh giá bắt đầu hiện ra trang công khai và tính vào điểm trung bình. */
     @PostMapping("/{id}/approve")
     public String approve(@PathVariable Long id, RedirectAttributes ra) {
         reviewService.approve(id);
@@ -49,7 +40,6 @@ public class AdminReviewController {
         return "redirect:/admin/reviews";
     }
 
-    /** Bỏ duyệt: gỡ khỏi trang công khai mà không xoá, duyệt lại được bất cứ lúc nào. */
     @PostMapping("/{id}/unapprove")
     public String unapprove(@PathVariable Long id, RedirectAttributes ra) {
         reviewService.unapprove(id);
