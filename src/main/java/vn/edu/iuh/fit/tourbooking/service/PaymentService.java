@@ -13,6 +13,9 @@ import vn.edu.iuh.fit.tourbooking.exception.ResourceNotFoundException;
 import vn.edu.iuh.fit.tourbooking.repository.PaymentRepository;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -119,31 +122,59 @@ public class PaymentService {
                 });
     }
 
-    /**
-     * Sinh lại một khoản thu {@code PENDING} khi một đơn đã huỷ được khôi phục.
-     *
-     * <p>Trước bản vá này, {@code BookingService.updateStatus} chỉ giữ lại chỗ
-     * lúc khôi phục mà không đụng gì tới {@link Payment}: khoản {@code PENDING}
-     * gốc đã bị {@link #cancelPendingForBooking} chuyển sang {@code FAILED} lúc
-     * huỷ, nên đơn khôi phục xong <b>có hiệu lực nhưng không còn khoản phải thu
-     * nào</b> - quản trị viên không có nút "Đã thu tiền" nào để bấm nữa, khoản
-     * tiền cứ thế biến mất khỏi mọi báo cáo. Sinh một dòng {@code PENDING} mới
-     * theo đúng tổng tiền <b>hiện tại</b> của đơn (không phải tổng lúc đặt lần
-     * đầu - đơn có thể đã bị sửa số khách trước khi huỷ).</p>
-     */
-    @Transactional
-    public Payment restorePendingForBooking(Booking booking) {
-        Payment payment = createPendingForBooking(booking);
-        log.info("Đơn {}: khôi phục lại khoản thu PENDING {} đ do đơn được mở lại",
-                booking.getCode(), payment.getAmount());
-        return payment;
-    }
-
     /** Đơn đã có ít nhất một khoản thu PAID - dùng để chặn sửa số khách (1.6). */
     @Transactional(readOnly = true)
     public boolean hasPaidPayment(Long bookingId) {
         return paymentRepository.findByBookingIdOrderByIdAsc(bookingId).stream()
                 .anyMatch(p -> p.getStatus() == PaymentStatus.PAID);
+    }
+
+    /** Tổng các khoản ĐÃ THANH TOÁN của một đơn - dùng để tính số tiền hoàn (mục 12.2/12.3). */
+    @Transactional(readOnly = true)
+    public BigDecimal paidTotal(Long bookingId) {
+        return paymentRepository.findByBookingIdOrderByIdAsc(bookingId).stream()
+                .filter(p -> p.getStatus() == PaymentStatus.PAID)
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Hoàn tiền khi huỷ đơn đã có khoản ĐÃ THANH TOÁN (mục 12.2) - <b>không đổi
+     * schema</b>: dòng PAID gốc được giữ nguyên làm lịch sử tiền vào, phương thức
+     * này chỉ THÊM một dòng {@code REFUNDED} mới với số tiền hoàn (luôn dương).
+     *
+     * <p>Không làm gì nếu đơn chưa từng có khoản PAID nào, hoặc {@code refundPercent}
+     * bằng 0 (ví dụ khách tự huỷ nhưng chưa hề thanh toán đồng nào thì không có gì
+     * để hoàn) - tránh sinh ra một dòng {@code REFUNDED} với số tiền 0 vô nghĩa.</p>
+     *
+     * @param refundPercent tỉ lệ hoàn, 0-100. Quản trị viên huỷ luôn truyền 100
+     *                       (mục 12.2); khách tự huỷ truyền theo chính sách 12.3.
+     * @param note           lý do + tỉ lệ, đã dịch sẵn theo ngôn ngữ hiện tại
+     */
+    @Transactional
+    public void refundIfPaid(Booking booking, int refundPercent, String note) {
+        if (refundPercent <= 0) {
+            return;
+        }
+        BigDecimal paidTotal = paidTotal(booking.getId());
+        if (paidTotal.signum() <= 0) {
+            return;
+        }
+        BigDecimal refundAmount = paidTotal
+                .multiply(BigDecimal.valueOf(refundPercent))
+                .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
+        if (refundAmount.signum() <= 0) {
+            return;
+        }
+
+        Payment refund = new Payment(booking, refundAmount, resolveMethod(booking.getPaymentMethod()));
+        refund.setStatus(PaymentStatus.REFUNDED);
+        refund.setPaidAt(LocalDateTime.now());
+        refund.setNote(note);
+        paymentRepository.save(refund);
+
+        log.info("Đơn {}: hoàn {} đ ({}% của {} đ đã thu) - {}",
+                booking.getCode(), refundAmount, refundPercent, paidTotal, note);
     }
 
     @Transactional(readOnly = true)

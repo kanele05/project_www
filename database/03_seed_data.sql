@@ -355,6 +355,14 @@ GO
    Mã đơn được ghép từ ngày đặt để trông giống mã do ứng dụng sinh ra
    (CodeGenerator.bookingCode(): TB + yyyyMMdd + 6 ký tự ngẫu nhiên).
    Bốn cột customer_* chép từ bảng users - đúng như ứng dụng làm lúc thanh toán.
+
+   ⚠️ BẪY DỮ LIỆU MẪU (SPEC_CHUNG.md mục 12.4): cột thứ ba của bảng VALUES bên
+   dưới là số GIỜ trước hiện tại (không phải số ngày như các bước khác trong file
+   này) - BookingExpiryScheduler tự huỷ đơn PENDING chưa thanh toán quá
+   app.booking.pending-expiry-hours (mặc định 24 giờ) ngay từ lần khởi động đầu
+   tiên. Hai đơn PENDING mẫu (id 2 và 4) phải đặt trong vòng vài giờ gần đây,
+   KHÔNG được để vài ngày trước như trước đây (5 và 2 ngày) - nếu không đúng bộ
+   hẹn giờ sẽ huỷ sạch chúng trước khi ai kịp xem qua dữ liệu mẫu.
    =========================================================================== */
 SET IDENTITY_INSERT bookings ON;
 
@@ -363,9 +371,9 @@ INSERT INTO bookings (id, code, user_id, booking_date, customer_name, customer_e
                       discount_amount, status, note,
                       payment_method, created_at, updated_at)
 SELECT b.id,
-       N'TB' + CONVERT(NVARCHAR(8), DATEADD(DAY, -b.cach_ngay, SYSDATETIME()), 112) + b.hau_to,
+       N'TB' + CONVERT(NVARCHAR(8), DATEADD(HOUR, -b.cach_gio, SYSDATETIME()), 112) + b.hau_to,
        u.id,
-       DATEADD(DAY, -b.cach_ngay, SYSDATETIME()),
+       DATEADD(HOUR, -b.cach_gio, SYSDATETIME()),
        u.full_name, u.email, u.phone, u.address,
        0,                                          -- tổng tiền tính lại ở bước 8
        NULL, 0,                                    -- mã giảm giá gán ở bước 15
@@ -374,12 +382,12 @@ SELECT b.id,
        N'Chuyển khoản ngân hàng',
        SYSDATETIME(), SYSDATETIME()
 FROM (VALUES
-        (1, 2, 12, 'CONFIRMED', N'HK4M2P', CAST(NULL AS NVARCHAR(500))),
-        (2, 3,  5, 'PENDING',   N'QT7B9X', NULL),
-        (3, 4, 40, 'COMPLETED', N'LM3D8R', NULL),
-        (4, 2,  2, 'PENDING',   N'VP6K2N', NULL),
-        (5, 3, 20, 'CANCELLED', N'ZC5H7J', N'Khách báo bận, xin huỷ đơn.')
-     ) AS b(id, user_id, cach_ngay, trang_thai, hau_to, ghi_chu)
+        (1, 2, 12 * 24, 'CONFIRMED', N'HK4M2P', CAST(NULL AS NVARCHAR(500))),
+        (2, 3,  5,       'PENDING',   N'QT7B9X', NULL),  -- 5 giờ trước: còn nguyên trong hạn 24 giờ
+        (3, 4, 40 * 24, 'COMPLETED', N'LM3D8R', NULL),
+        (4, 2,  3,       'PENDING',   N'VP6K2N', NULL),  -- 3 giờ trước: còn nguyên trong hạn 24 giờ
+        (5, 3, 20 * 24, 'CANCELLED', N'ZC5H7J', N'Khách báo bận, xin huỷ đơn.')
+     ) AS b(id, user_id, cach_gio, trang_thai, hau_to, ghi_chu)
 JOIN users u ON u.id = b.user_id;
 
 SET IDENTITY_INSERT bookings OFF;

@@ -138,6 +138,14 @@ public class Promotion extends Auditable {
         this.usedCount = (usedCount == null ? 0 : usedCount) + 1;
     }
 
+    /**
+     * Trả lại một lượt dùng khi đơn dùng mã này bị huỷ (mục 12.3/12.4) - kẹp sàn
+     * ở 0 để không bao giờ âm, phòng khi dữ liệu đã lệch từ trước.
+     */
+    public void decreaseUsedCount() {
+        this.usedCount = Math.max(0, (usedCount == null ? 0 : usedCount) - 1);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

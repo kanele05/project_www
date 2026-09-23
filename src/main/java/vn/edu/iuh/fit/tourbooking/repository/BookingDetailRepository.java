@@ -6,7 +6,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.entity.BookingDetail;
+import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -27,14 +29,20 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
 
     List<BookingDetail> findByBookingId(Long bookingId);
 
-    /** Xếp hạng tour bán chạy cho bảng điều khiển: {@code [tên tour, số khách]}. */
+    /**
+     * Xếp hạng tour bán chạy cho bảng điều khiển: {@code [tên tour, số khách]}.
+     * Mục 12.9: chỉ tính đơn ĐÃ XÁC NHẬN + HOÀN TẤT - một đơn còn CHỜ hoặc đã HUỶ
+     * không phải là "đã bán" theo đúng nghĩa.
+     */
     @Query("""
             SELECT d.tourNameSnapshot, SUM(d.numAdults + d.numChildren)
             FROM BookingDetail d
+            WHERE d.booking.status IN :statuses
             GROUP BY d.tourNameSnapshot
             ORDER BY SUM(d.numAdults + d.numChildren) DESC
             """)
-    List<Object[]> findTopSellingTours(org.springframework.data.domain.Pageable pageable);
+    List<Object[]> findTopSellingTours(@Param("statuses") Collection<BookingStatus> statuses,
+                                       org.springframework.data.domain.Pageable pageable);
 
     /**
      * <b>Điều kiện được phép đánh giá (UC018):</b> tài khoản phải có ít nhất một

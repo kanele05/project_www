@@ -13,6 +13,7 @@ import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,25 +62,62 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
             """)
     Optional<Booking> findDetailByCode(@Param("code") String code);
 
+    /**
+     * Cùng {@link #findDetailByCode} nhưng tra theo khoá chính - dùng ở
+     * {@code BookingService.expirePendingBooking} (mục 12.4): bộ hẹn giờ chỉ có
+     * sẵn {@code id} từ {@link #findExpiredPendingIds}, không có mã đơn.
+     */
+    @Query("""
+            SELECT DISTINCT b FROM Booking b
+            JOIN FETCH b.user
+            LEFT JOIN FETCH b.promotion
+            LEFT JOIN FETCH b.details det
+            LEFT JOIN FETCH det.departure dep
+            LEFT JOIN FETCH dep.tour
+            WHERE b.id = :id
+            """)
+    Optional<Booking> findDetailById(@Param("id") Long id);
+
     long countByStatus(BookingStatus status);
 
-    /** Tổng doanh thu, chỉ tính các đơn chưa bị huỷ. */
-    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b WHERE b.status <> :excluded")
-    BigDecimal sumTotalAmountExcludingStatus(@Param("excluded") BookingStatus excluded);
+    /**
+     * Mục 12.4: các đơn CHỜ XÁC NHẬN, đặt trước {@code before} và <b>chưa từng</b>
+     * có khoản ĐÃ THANH TOÁN - ứng viên để {@code BookingExpiryScheduler} tự huỷ.
+     * Chỉ trả về id: mỗi đơn được nạp lại đầy đủ và xử lý trong giao dịch riêng
+     * của chính nó ở {@code BookingService.expirePendingBooking}.
+     */
+    @Query("""
+            SELECT b.id FROM Booking b
+            WHERE b.status = vn.edu.iuh.fit.tourbooking.entity.BookingStatus.PENDING
+              AND b.bookingDate < :before
+              AND NOT EXISTS (
+                  SELECT 1 FROM Payment p
+                  WHERE p.booking = b AND p.status = vn.edu.iuh.fit.tourbooking.entity.PaymentStatus.PAID
+              )
+            """)
+    List<Long> findExpiredPendingIds(@Param("before") LocalDateTime before);
 
     /**
-     * Doanh thu theo tháng cho biểu đồ ở bảng điều khiển quản trị.
+     * Tổng doanh thu - chỉ tính đơn ĐÃ XÁC NHẬN + HOÀN TẤT (mục 12.9: loại CHỜ
+     * và ĐÃ HUỶ, vì tiền đó chưa chắc chắn thu được).
+     */
+    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b WHERE b.status IN :statuses")
+    BigDecimal sumTotalAmountForStatuses(@Param("statuses") Collection<BookingStatus> statuses);
+
+    /**
+     * Doanh thu theo tháng cho biểu đồ ở bảng điều khiển quản trị (mục 12.9: cùng
+     * quy tắc đơn tính vào doanh thu như trên).
      * Trả về mảng {@code [năm, tháng, tổng tiền]}.
      */
     @Query("""
             SELECT YEAR(b.bookingDate), MONTH(b.bookingDate), SUM(b.totalAmount)
             FROM Booking b
-            WHERE b.status <> :excluded AND b.bookingDate >= :from
+            WHERE b.status IN :statuses AND b.bookingDate >= :from
             GROUP BY YEAR(b.bookingDate), MONTH(b.bookingDate)
             ORDER BY YEAR(b.bookingDate), MONTH(b.bookingDate)
             """)
     List<Object[]> revenueByMonth(@Param("from") LocalDateTime from,
-                                  @Param("excluded") BookingStatus excluded);
+                                  @Param("statuses") Collection<BookingStatus> statuses);
 
     @EntityGraph(attributePaths = "user")
     List<Booking> findTop5ByOrderByBookingDateDesc();

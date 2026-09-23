@@ -6,8 +6,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.dto.form.CheckoutForm;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.entity.BookingDetail;
@@ -24,8 +26,15 @@ import vn.edu.iuh.fit.tourbooking.repository.UserRepository;
 import vn.edu.iuh.fit.tourbooking.session.Cart;
 import vn.edu.iuh.fit.tourbooking.session.CartItem;
 import vn.edu.iuh.fit.tourbooking.util.CodeGenerator;
+import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Nghiệp vụ đặt tour.
@@ -48,6 +57,8 @@ public class BookingService {
     private final PaymentService paymentService;
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final AppProperties appProperties;
+    private final MessageHelper messages;
 
     /**
      * Chốt đơn đặt tour: <b>toàn bộ nằm trong một giao dịch duy nhất</b>.
@@ -100,13 +111,14 @@ public class BookingService {
                     .orElseThrow(() -> new BusinessRuleException(
                             "error.checkout.departureGone", item.getTourName()));
 
-            // isBookable() chỉ xét chính đợt khởi hành; tour "Ngừng bán" vẫn có
-            // đợt active còn chỗ nên phải kiểm riêng tour.isActive() ở đây. departure
-            // được nạp bằng findByIdForUpdate (không JOIN FETCH tour), nhưng đang ở
-            // trong giao dịch @Transactional của phương thức này nên chạm vào quan hệ
-            // LAZY departure.getTour() vẫn an toàn (khác hẳn open-in-view=false ở
-            // tầng template).
-            if (!departure.isBookable() || !departure.getTour().isActive()) {
+            // isBookable(cutoffDays) chỉ xét chính đợt khởi hành (mục 12.5: hạn
+            // chót đặt tour); tour "Ngừng bán" vẫn có đợt active còn chỗ nên phải
+            // kiểm riêng tour.isActive() ở đây. departure được nạp bằng
+            // findByIdForUpdate (không JOIN FETCH tour), nhưng đang ở trong giao
+            // dịch @Transactional của phương thức này nên chạm vào quan hệ LAZY
+            // departure.getTour() vẫn an toàn (khác hẳn open-in-view=false ở tầng
+            // template).
+            if (!departure.isBookable(appProperties.booking().cutoffDays()) || !departure.getTour().isActive()) {
                 throw new BusinessRuleException("error.checkout.notBookable", item.getTourName());
             }
 
@@ -210,18 +222,21 @@ public class BookingService {
     }
 
     /**
-     * Đổi trạng thái đơn, kèm trả lại hoặc giữ lại chỗ cho đúng.
+     * Đổi trạng thái đơn ở màn quản trị (mục 12.1: PENDING&rarr;CONFIRMED/CANCELLED,
+     * CONFIRMED&rarr;COMPLETED/CANCELLED; COMPLETED và CANCELLED là trạng thái
+     * <b>cuối</b>, không có nhánh "khôi phục đơn đã huỷ" nữa).
      *
      * <p>Đây là phần dễ sai nhất của màn quản trị đơn hàng: huỷ đơn mà quên trả
      * chỗ thì những chỗ đó "bốc hơi" - không ai đặt được nhưng cũng không ai đi.
-     * Ngược lại, khôi phục một đơn đã huỷ thì phải giữ chỗ lại, và có thể không
-     * còn chỗ vì người khác đã đặt mất trong lúc đơn bị huỷ.</p>
+     * Sang {@code COMPLETED} chỉ được chấp nhận khi ngày khởi hành đã tới (hoặc
+     * qua) <b>và</b> đơn đã có khoản ĐÃ THANH TOÁN - xem {@link #isCompletable}.</p>
      *
      * <p>Bổ sung A: mỗi lần đổi đều ghi thêm một dòng {@code booking_status_history}
-     * - đây là chỗ duy nhất trong ứng dụng cập nhật trạng thái đơn <i>sau khi đặt</i>,
-     * nên không sót lần nào.</p>
+     * - đây là chỗ duy nhất trong ứng dụng cập nhật trạng thái đơn <i>sau khi đặt</i>
+     * mà không phải là khách tự huỷ ({@link #cancelBySelf}) hay hệ thống tự huỷ
+     * quá hạn ({@link #expirePendingBooking}).</p>
      *
-     * @param changedByUserId quản trị viên đang thao tác; null nếu do hệ thống tự đổi
+     * @param changedByUserId quản trị viên đang thao tác
      * @param reason          ghi chú của quản trị viên, tuỳ chọn
      */
     @Transactional
@@ -233,30 +248,23 @@ public class BookingService {
         if (oldStatus == newStatus) {
             return booking;
         }
+        if (!oldStatus.canTransitionTo(newStatus)) {
+            throw new BusinessRuleException("error.booking.invalidTransition",
+                    messages.get(oldStatus.getMessageKey()), messages.get(newStatus.getMessageKey()));
+        }
 
+        if (newStatus == BookingStatus.COMPLETED) {
+            requireCompletable(booking);
+        }
         if (newStatus == BookingStatus.CANCELLED) {
-            // Huỷ đơn: trả chỗ về cho các đợt khởi hành.
-            booking.getDetails().forEach(d ->
-                    d.getDeparture().releaseSeats(d.getTotalGuests()));
+            // Huỷ đơn: trả chỗ về cho các đợt khởi hành, trả lượt dùng mã (nếu có).
+            releaseHold(booking);
             // Bổ sung B: đóng luôn khoản thu PENDING - không thì nút "Đã thu tiền"
             // của một đơn đã huỷ vẫn bấm được (xem PaymentService.cancelPendingForBooking).
             paymentService.cancelPendingForBooking(booking);
-
-        } else if (oldStatus == BookingStatus.CANCELLED) {
-            // Khôi phục đơn đã huỷ: phải giữ chỗ lại, và phải kiểm tra còn chỗ không.
-            for (BookingDetail d : booking.getDetails()) {
-                TourDeparture departure = d.getDeparture();
-                if (!departure.hasEnoughSeats(d.getTotalGuests())) {
-                    throw new BusinessRuleException("error.booking.restoreNoSeats",
-                            d.getTourNameSnapshot(), departure.getAvailableSeats());
-                }
-                departure.holdSeats(d.getTotalGuests());
-            }
-            // Bổ sung B: khoản thu PENDING gốc đã bị đóng thành FAILED lúc huỷ
-            // (xem PaymentService.cancelPendingForBooking) - đơn khôi phục xong mà
-            // không sinh lại khoản phải thu thì còn hiệu lực nhưng không còn cách
-            // nào ghi nhận tiền (1.4). Sinh lại theo đúng tổng hiện tại của đơn.
-            paymentService.restorePendingForBooking(booking);
+            // Mục 12.2: quản trị viên huỷ luôn hoàn 100% khoản đã thu (lỗi phía
+            // công ty) - không đổi schema, chỉ THÊM một dòng REFUNDED mới.
+            paymentService.refundIfPaid(booking, 100, messages.get("payment.note.refund.adminCancel"));
         }
 
         booking.setStatus(newStatus);
@@ -270,6 +278,183 @@ public class BookingService {
 
         log.info("Đơn {}: {} -> {}", code, oldStatus, newStatus);
         return booking;
+    }
+
+    /**
+     * Các trạng thái đích hợp lệ cho đơn đang xem - dùng để dựng ô chọn trạng
+     * thái ở màn quản trị (mục 12.1: "Giao diện admin chỉ liệt kê các trạng thái
+     * đích hợp lệ"). Loại {@code COMPLETED} khỏi danh sách nếu đơn chưa đủ điều
+     * kiện ({@link #isCompletable}) - không có lý do gì cho quản trị viên chọn
+     * một lựa chọn chắc chắn sẽ bị từ chối.
+     */
+    @Transactional(readOnly = true)
+    public List<BookingStatus> validNextStatuses(Booking booking) {
+        List<BookingStatus> result = new ArrayList<>();
+        for (BookingStatus target : BookingStatus.values()) {
+            if (!booking.getStatus().canTransitionTo(target)) {
+                continue;
+            }
+            if (target == BookingStatus.COMPLETED && !isCompletable(booking)) {
+                continue;
+            }
+            result.add(target);
+        }
+        return result;
+    }
+
+    /** Điều kiện phụ của mục 12.1 để một đơn được sang HOÀN TẤT. */
+    private boolean isCompletable(Booking booking) {
+        return !departureNotYetReached(booking) && paymentService.hasPaidPayment(booking.getId());
+    }
+
+    private void requireCompletable(Booking booking) {
+        if (departureNotYetReached(booking)) {
+            throw new BusinessRuleException("error.booking.complete.notYetDeparted");
+        }
+        if (!paymentService.hasPaidPayment(booking.getId())) {
+            throw new BusinessRuleException("error.booking.complete.notPaid");
+        }
+    }
+
+    /** true nếu còn ít nhất một dòng của đơn có ngày khởi hành sau hôm nay. */
+    private boolean departureNotYetReached(Booking booking) {
+        return booking.getDetails().stream()
+                .map(d -> d.getDeparture().getDepartureDate())
+                .anyMatch(date -> date.isAfter(LocalDate.now()));
+    }
+
+    /** Trả chỗ cho các đợt khởi hành và trả lượt dùng mã giảm giá (nếu có) khi huỷ đơn. */
+    private void releaseHold(Booking booking) {
+        booking.getDetails().forEach(d -> d.getDeparture().releaseSeats(d.getTotalGuests()));
+        promotionService.releaseUsage(booking);
+    }
+
+    // =====================================================================
+    //  UC023 - Khách tự huỷ đơn (mục 12.3)
+    // =====================================================================
+
+    /**
+     * Kết quả tính chính sách tự huỷ cho một đơn, dùng cả để hiển thị hộp xác
+     * nhận ("số tiền sẽ được hoàn") lẫn để {@link #cancelBySelf} kiểm lại trước
+     * khi thực sự huỷ - không tin con số đã hiện trên trang GET trước đó.
+     *
+     * @param timingOk         còn đủ ngày để tự huỷ theo {@code app.booking.self-cancel-min-days}
+     * @param refundPercent    tỉ lệ hoàn nếu huỷ ngay bây giờ (100 hoặc {@code partial-refund-percent})
+     * @param refundAmount     số tiền sẽ hoàn nếu huỷ ngay bây giờ (0 nếu {@code !timingOk})
+     * @param daysUntilDeparture số ngày còn lại tới đợt khởi hành GẦN NHẤT trong đơn
+     */
+    public record SelfCancelPolicy(boolean timingOk, int refundPercent,
+                                   BigDecimal refundAmount, long daysUntilDeparture) {
+    }
+
+    /**
+     * Tính chính sách tự huỷ theo mục 12.3 dựa trên đợt khởi hành <b>gần nhất</b>
+     * trong đơn (an toàn nhất khi đơn gộp nhiều tour: chưa chắc huỷ được nếu bất
+     * kỳ tour nào trong đơn đã cận ngày).
+     */
+    @Transactional(readOnly = true)
+    public SelfCancelPolicy evaluateSelfCancel(Booking booking) {
+        AppProperties.Booking cfg = appProperties.booking();
+
+        long daysUntil = booking.getDetails().stream()
+                .map(d -> d.getDeparture().getDepartureDate())
+                .min(Comparator.naturalOrder())
+                .map(date -> ChronoUnit.DAYS.between(LocalDate.now(), date))
+                .orElse(0L);
+
+        boolean timingOk = daysUntil >= cfg.selfCancelMinDays();
+        int refundPercent = daysUntil >= cfg.fullRefundMinDays() ? 100 : cfg.partialRefundPercent();
+        BigDecimal refundAmount = BigDecimal.ZERO;
+        if (timingOk) {
+            BigDecimal paidTotal = paymentService.paidTotal(booking.getId());
+            refundAmount = paidTotal
+                    .multiply(BigDecimal.valueOf(refundPercent))
+                    .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
+        }
+        return new SelfCancelPolicy(timingOk, refundPercent, refundAmount, daysUntil);
+    }
+
+    /**
+     * Khách tự huỷ đơn của chính mình (UC023).
+     *
+     * <p>Mọi điều kiện được kiểm LẠI ở đây, không tin trang GET đã hiện gì trước
+     * đó - cùng nguyên tắc với {@code PromotionService.check} rồi {@code recordUsage}:
+     * giữa lúc khách mở trang và lúc bấm huỷ, tình huống có thể đã đổi.</p>
+     *
+     * @throws AccessDeniedException nếu không phải đơn của chính khách
+     * @throws BusinessRuleException nếu đơn không còn huỷ được (đã ở trạng thái
+     *                                cuối) hoặc đã quá cận ngày khởi hành
+     */
+    @Transactional
+    public Booking cancelBySelf(String code, Long userId) {
+        Booking booking = bookingRepository.findDetailByCode(code)
+                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
+
+        if (!booking.getUser().getId().equals(userId)) {
+            log.warn("Tài khoản id={} cố tự huỷ đơn {} của người khác", userId, code);
+            throw new AccessDeniedException("Không có quyền huỷ đơn này");
+        }
+        if (!booking.isCancellable()) {
+            throw new BusinessRuleException("error.booking.selfCancel.notCancellable");
+        }
+
+        SelfCancelPolicy policy = evaluateSelfCancel(booking);
+        if (!policy.timingOk()) {
+            throw new BusinessRuleException("error.booking.selfCancel.tooLate",
+                    appProperties.booking().selfCancelMinDays());
+        }
+
+        BookingStatus oldStatus = booking.getStatus();
+        releaseHold(booking);
+        paymentService.cancelPendingForBooking(booking);
+        paymentService.refundIfPaid(booking, policy.refundPercent(),
+                messages.get("payment.note.refund.selfCancel", policy.refundPercent()));
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        bookingStatusHistoryRepository.save(new BookingStatusHistory(booking, oldStatus,
+                BookingStatus.CANCELLED, userRepository.getReferenceById(userId), "Khách tự huỷ"));
+
+        log.info("Đơn {}: khách tự huỷ, hoàn {}% ({} đ)",
+                code, policy.refundPercent(), policy.refundAmount());
+        return booking;
+    }
+
+    // =====================================================================
+    //  Mục 12.4 - hệ thống tự huỷ đơn CHỜ chưa thanh toán quá hạn
+    // =====================================================================
+
+    /**
+     * Huỷ MỘT đơn CHỜ XÁC NHẬN đã quá hạn thanh toán - gọi từ
+     * {@code BookingExpiryScheduler}, <b>mỗi đơn một giao dịch riêng</b> (yêu cầu
+     * của mục 12.4) để một đơn lỗi không kéo cả mẻ đang xử lý.
+     *
+     * <p>Nạp lại và kiểm tra trạng thái NGAY TẠI ĐÂY (không tin danh sách id đã
+     * truy vấn trước đó ở tầng lập lịch): giữa lúc liệt kê và lúc xử lý, đơn có
+     * thể đã được quản trị viên xác nhận hoặc khách đã thanh toán - bỏ qua chứ
+     * không huỷ nhầm.</p>
+     */
+    @Transactional
+    public void expirePendingBooking(Long bookingId) {
+        Booking booking = bookingRepository.findDetailById(bookingId).orElse(null);
+        if (booking == null || booking.getStatus() != BookingStatus.PENDING) {
+            return;
+        }
+        if (paymentService.hasPaidPayment(booking.getId())) {
+            return;
+        }
+
+        BookingStatus oldStatus = booking.getStatus();
+        releaseHold(booking);
+        paymentService.cancelPendingForBooking(booking);
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        // changedBy = null: hệ thống tự đổi, không có quản trị viên nào đứng sau
+        // (mục 12.4).
+        bookingStatusHistoryRepository.save(new BookingStatusHistory(booking, oldStatus,
+                BookingStatus.CANCELLED, null, "Quá hạn thanh toán"));
+
+        log.info("Đơn {} tự huỷ do quá hạn thanh toán (quá {} giờ)",
+                booking.getCode(), appProperties.booking().pendingExpiryHours());
     }
 
     /**

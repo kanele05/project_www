@@ -104,11 +104,23 @@ public class TourDeparture extends Auditable {
         return availableSeats != null && availableSeats >= seats;
     }
 
-    /** Còn nhận khách: đang mở bán, chưa tới ngày đi và vẫn còn chỗ. */
-    public boolean isBookable() {
+    /**
+     * Còn nhận khách: đang mở bán, còn chỗ, và ngày khởi hành cách hôm nay ít
+     * nhất {@code cutoffDays} ngày (mục 12.5 - hạn chót đặt tour,
+     * {@code app.booking.cutoff-days}).
+     *
+     * <p><b>Nhận tham số thay vì đọc một hằng số viết cứng</b>: con số này phải
+     * đổi được từ {@code application.yml} mà không cần sửa lại lớp entity. Mọi
+     * nơi quyết định "đợt này còn đặt được không" - trang chi tiết, thêm giỏ,
+     * thanh toán, web service {@code /api/tours/{id}/departures} - đều phải gọi
+     * đúng phương thức này với cùng một giá trị {@code cutoffDays} lấy từ
+     * {@code AppProperties.Booking.cutoffDays()}, để không có hai nơi hiểu khác
+     * nhau về "còn đặt được".</p>
+     */
+    public boolean isBookable(int cutoffDays) {
         return active
                 && departureDate != null
-                && departureDate.isAfter(LocalDate.now())
+                && !departureDate.isBefore(LocalDate.now().plusDays(cutoffDays))
                 && availableSeats != null
                 && availableSeats > 0;
     }

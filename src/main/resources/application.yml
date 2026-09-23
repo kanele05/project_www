@@ -121,6 +121,25 @@ app:
     from: no-reply@tourbooking.iuh.edu.vn
     from-name: IUH Tour Booking
 
+  # ---------------------------------------------------------------------------
+  # Vòng đời đơn hàng & nghiệp vụ đặt tour (docs/report/SPEC_CHUNG.md mục 12).
+  # Mọi con số ở đây là MẶC ĐỊNH, đổi được không cần biên dịch lại - tuyệt đối
+  # không viết cứng các con số này trong mã Java.
+  # ---------------------------------------------------------------------------
+  booking:
+    # Đợt khởi hành chỉ đặt được khi ngày khởi hành >= hôm nay + cutoff-days.
+    cutoff-days: 2
+    # Đơn CHỜ XÁC NHẬN chưa có khoản ĐÃ THANH TOÁN, đặt quá số giờ này thì bị hệ
+    # thống tự huỷ (xem BookingExpiryScheduler, chạy mỗi 15 phút).
+    pending-expiry-hours: 24
+    # Khách chỉ tự huỷ được khi còn ít nhất ngần này ngày nữa tới lúc khởi hành.
+    self-cancel-min-days: 3
+    # Còn từ ngần này ngày trở lên thì khách tự huỷ được hoàn 100%.
+    full-refund-min-days: 7
+    # Còn từ self-cancel-min-days tới (không tính) full-refund-min-days thì hoàn
+    # theo tỉ lệ này (%).
+    partial-refund-percent: 50
+
 server:
   # Dùng 8081 vì cổng 8080 trên máy này đang bị Apache (XAMPP) chiếm.
   # Có thể ghi đè khi chạy:  --server.port=8080

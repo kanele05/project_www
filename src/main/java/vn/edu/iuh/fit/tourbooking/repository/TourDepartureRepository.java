@@ -28,17 +28,25 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
     /**
      * Các đợt khách còn đặt được, dùng cho ô chọn ngày ở trang chi tiết và cho
      * web service {@code /api/tours/{id}/departures}.
+     *
+     * <p>{@code minDepartureDate} đã gồm sẵn hạn chót (mục 12.5): bên gọi truyền
+     * {@code LocalDate.now().plusDays(cutoffDays)}, không phải {@code today} suông -
+     * xem {@code TourService.findBookableDepartures}. Điều kiện
+     * {@code d.departureDate >= :minDepartureDate} khớp đúng ngữ nghĩa với
+     * {@code TourDeparture.isBookable(cutoffDays)} để hai nơi không hiểu khác
+     * nhau về "còn đặt được".</p>
      */
     @Query("""
             SELECT d FROM TourDeparture d
             WHERE d.tour.id = :tourId
               AND d.active = true
               AND d.tour.active = true
-              AND d.departureDate > :today
+              AND d.departureDate >= :minDepartureDate
               AND d.availableSeats > 0
             ORDER BY d.departureDate ASC
             """)
-    List<TourDeparture> findBookable(@Param("tourId") Long tourId, @Param("today") LocalDate today);
+    List<TourDeparture> findBookable(@Param("tourId") Long tourId,
+                                     @Param("minDepartureDate") LocalDate minDepartureDate);
 
     /**
      * Đợt gần nhất còn <b>đủ</b> chỗ cho {@code minSeats} khách. Nút "Đặt tour" ở
@@ -50,9 +58,11 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
      * đợt gần nhất chỉ còn 3 sẽ nhận lỗi "không đủ chỗ" dù đợt kế tiếp còn thừa
      * chỗ - đúng ra phải tự động bỏ qua đợt không đủ và chọn đợt gần nhất mà thực
      * sự đặt được.</p>
+     *
+     * @param cutoffDays mục 12.5 - {@code app.booking.cutoff-days}
      */
-    default Optional<TourDeparture> findNextBookable(Long tourId, int minSeats) {
-        return findBookable(tourId, LocalDate.now()).stream()
+    default Optional<TourDeparture> findNextBookable(Long tourId, int minSeats, int cutoffDays) {
+        return findBookable(tourId, LocalDate.now().plusDays(cutoffDays)).stream()
                 .filter(d -> d.hasEnoughSeats(minSeats))
                 .findFirst();
     }

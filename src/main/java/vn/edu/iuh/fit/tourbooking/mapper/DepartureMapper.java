@@ -1,6 +1,8 @@
 package vn.edu.iuh.fit.tourbooking.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.dto.view.DepartureDto;
 import vn.edu.iuh.fit.tourbooking.entity.TourDeparture;
 
@@ -19,7 +21,10 @@ import java.time.format.DateTimeFormatter;
  * nên chỉ việc đưa xuống là hết rủi ro.</p>
  */
 @Component
+@RequiredArgsConstructor
 public class DepartureMapper {
+
+    private final AppProperties appProperties;
 
     /**
      * Ngày tháng kiểu Việt Nam.
@@ -44,7 +49,7 @@ public class DepartureMapper {
                 departure.getAvailableSeats(),
                 departure.getPriceAdult(),
                 departure.getPriceChild(),
-                departure.isBookable());
+                departure.isBookable(appProperties.booking().cutoffDays()));
     }
 
     private String format(LocalDate date) {

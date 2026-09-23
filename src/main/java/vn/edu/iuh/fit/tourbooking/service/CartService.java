@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.entity.TourDeparture;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.repository.TourDepartureRepository;
@@ -44,6 +45,7 @@ public class CartService {
 
     private final TourDepartureRepository departureRepository;
     private final TourRepository tourRepository;
+    private final AppProperties appProperties;
 
     /**
      * Lấy giỏ hàng của phiên hiện tại, tạo mới nếu chưa có.
@@ -78,7 +80,8 @@ public class CartService {
         // minSeats = adults + children: đợt gần nhất mà không đủ chỗ cho đúng số
         // khách khách đang xin thì bỏ qua, tìm tiếp đợt kế - xem Javadoc
         // TourDepartureRepository.findNextBookable.
-        TourDeparture departure = departureRepository.findNextBookable(tourId, adults + children)
+        TourDeparture departure = departureRepository.findNextBookable(tourId, adults + children,
+                        appProperties.booking().cutoffDays())
                 .orElseThrow(() -> new BusinessRuleException("error.cart.noDeparture"));
         return addByDeparture(session, departure.getId(), adults, children);
     }
@@ -94,7 +97,7 @@ public class CartService {
         // vẫn có đợt đang active và còn chỗ, nên phải kiểm riêng tour ở đây - đây
         // là đường thêm vào giỏ từ trang chi tiết (findWithTourById đã nạp sẵn
         // tour bằng @EntityGraph nên đọc tour.isActive() an toàn, không đụng LAZY).
-        if (!departure.isBookable() || !departure.getTour().isActive()) {
+        if (!departure.isBookable(appProperties.booking().cutoffDays()) || !departure.getTour().isActive()) {
             throw new BusinessRuleException("error.cart.notBookable");
         }
 

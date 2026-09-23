@@ -18,8 +18,10 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Số liệu tổng hợp cho bảng điều khiển quản trị.
@@ -35,6 +37,13 @@ public class StatisticsService {
 
     /** Số tháng hiển thị trên biểu đồ doanh thu. */
     private static final int REVENUE_MONTHS = 12;
+
+    /**
+     * Mục 12.9: "Doanh thu" và "Tour bán chạy" chỉ tính đơn ĐÃ XÁC NHẬN + HOÀN
+     * TẤT - loại CHỜ (tiền chưa chắc thu được) và ĐÃ HUỶ (tiền không còn thu).
+     */
+    private static final Set<BookingStatus> REVENUE_STATUSES =
+            EnumSet.of(BookingStatus.CONFIRMED, BookingStatus.COMPLETED);
 
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
@@ -83,15 +92,15 @@ public class StatisticsService {
                 // Chỉ đếm khách hàng, không tính tài khoản quản trị vào "số khách".
                 userRepository.countByRoleAndEnabledTrue(Role.CUSTOMER),
                 bookingRepository.count(),
-                // Doanh thu không tính đơn đã huỷ - tiền đó chưa bao giờ thu được.
-                bookingRepository.sumTotalAmountExcludingStatus(BookingStatus.CANCELLED),
+                // Mục 12.9: chỉ tính đơn ĐÃ XÁC NHẬN + HOÀN TẤT vào doanh thu.
+                bookingRepository.sumTotalAmountForStatuses(REVENUE_STATUSES),
                 byStatus);
     }
 
     @Transactional(readOnly = true)
     public List<MonthlyRevenue> revenueByMonth() {
         LocalDateTime from = LocalDateTime.now().minusMonths(REVENUE_MONTHS);
-        List<Object[]> rows = bookingRepository.revenueByMonth(from, BookingStatus.CANCELLED);
+        List<Object[]> rows = bookingRepository.revenueByMonth(from, REVENUE_STATUSES);
         if (rows.isEmpty()) {
             return List.of();
         }
@@ -122,7 +131,8 @@ public class StatisticsService {
 
     @Transactional(readOnly = true)
     public List<TopTour> topSellingTours(int limit) {
-        List<Object[]> rows = bookingDetailRepository.findTopSellingTours(PageRequest.of(0, limit));
+        List<Object[]> rows = bookingDetailRepository.findTopSellingTours(
+                REVENUE_STATUSES, PageRequest.of(0, limit));
 
         List<TopTour> result = new ArrayList<>(rows.size());
         for (Object[] row : rows) {

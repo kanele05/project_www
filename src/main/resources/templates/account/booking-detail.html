@@ -23,6 +23,8 @@
         </ol>
     </nav>
 
+    <div th:replace="~{fragments/components :: alerts}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4 mb-0" th:text="#{account.bookings.detail.title(${booking.code})}">Chi tiết đơn</h1>
         <span class="badge fs-6" th:classappend="'bg-' + ${booking.status.badgeClass}"
@@ -133,6 +135,42 @@
                         <dt class="col-5" th:if="${booking.note}" th:text="#{account.bookings.note}">Ghi chú</dt>
                         <dd class="col-7 mb-0" th:if="${booking.note}" th:text="${booking.note}">Ghi chú</dd>
                     </dl>
+                </div>
+            </div>
+
+            <!-- ===================== UC023: khách tự huỷ đơn (mục 12.3) ===================== -->
+            <!--/* Chỉ hiện khi đơn còn huỷ được (PENDING/CONFIRMED) - selfCancelPolicy chỉ
+                   được AccountController đẩy vào model đúng trong trường hợp đó. */-->
+            <div class="panel mt-4" th:if="${selfCancelPolicy != null}">
+                <div class="panel__pad">
+                    <h2 class="h6 mb-3" th:text="#{account.bookings.selfCancel.title}">Huỷ đơn</h2>
+
+                    <!-- Còn đủ ngày để tự huỷ: hiện rõ số tiền sẽ hoàn TRƯỚC khi khách bấm huỷ. -->
+                    <div th:if="${selfCancelPolicy.timingOk}"
+                         th:with="refundText=|${#numbers.formatInteger(selfCancelPolicy.refundAmount, 1, 'POINT')} ${#messages.msg('common.currency')}|">
+                        <p class="small text-muted"
+                           th:text="#{account.bookings.selfCancel.refundInfo(${selfCancelPolicy.refundPercent})}">
+                            Huỷ ngay bây giờ sẽ được hoàn 100% số tiền đã thanh toán.
+                        </p>
+                        <p class="fw-semibold"
+                           th:text="#{account.bookings.selfCancel.refundAmount(${refundText})}">
+                            Số tiền sẽ hoàn: 0 ₫
+                        </p>
+                        <form method="post" th:action="@{/account/bookings/{code}/cancel(code=${booking.code})}"
+                              th:attr="data-confirm=${#messages.msg('account.bookings.selfCancel.confirm', refundText)}">
+                            <button class="btn btn-outline-danger btn-sm" type="submit"
+                                    th:text="#{account.bookings.selfCancel.button}">Huỷ đơn này</button>
+                        </form>
+                    </div>
+
+                    <!-- Quá cận ngày khởi hành: không cho tự huỷ, chỉ hướng dẫn liên hệ. -->
+                    <div th:unless="${selfCancelPolicy.timingOk}">
+                        <p class="small text-danger mb-0"
+                           th:text="#{account.bookings.selfCancel.tooLate}">
+                            Đơn đã quá cận ngày khởi hành nên không thể tự huỷ trên website.
+                            Vui lòng liên hệ tổng đài để được hỗ trợ.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

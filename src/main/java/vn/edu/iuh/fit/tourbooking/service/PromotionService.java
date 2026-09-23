@@ -206,6 +206,36 @@ public class PromotionService {
                 booking.getCode(), promotion.getCode(), newDiscount);
     }
 
+    /**
+     * Trả lại một lượt dùng mã khi đơn dùng mã đó bị huỷ (mục 12.3 - khách tự
+     * huỷ; mục 12.4 - hệ thống tự huỷ đơn quá hạn thanh toán). Không làm gì nếu
+     * đơn không dùng mã nào.
+     *
+     * <p>Xoá hẳn dòng {@code coupon_usages} (không chỉ đổi cờ): mã giới hạn
+     * "1 lượt/người" mà không trả lại dòng này thì một đơn bị huỷ vẫn tính là đã
+     * dùng, khách mất oan một lượt cho một đơn không còn hiệu lực.</p>
+     *
+     * <p>Cùng khoá bi quan + {@code refresh()} như {@link #recordUsage} - xem
+     * Javadoc ở đó về gotcha lost-update khi entity đã nằm sẵn trong persistence
+     * context từ trước lúc xin khoá.</p>
+     */
+    @Transactional
+    public void releaseUsage(Booking booking) {
+        couponUsageRepository.findByBookingId(booking.getId()).ifPresent(usage -> {
+            Promotion locked = promotionRepository.findByIdForUpdate(usage.getPromotion().getId())
+                    .orElseThrow(() -> new BusinessRuleException(
+                            "error.coupon.notFound", usage.getPromotion().getCode()));
+            entityManager.refresh(locked);
+
+            locked.decreaseUsedCount();
+            promotionRepository.save(locked);
+            couponUsageRepository.delete(usage);
+
+            log.info("Đơn {}: trả lại 1 lượt dùng mã {} (used_count còn {})",
+                    booking.getCode(), locked.getCode(), locked.getUsedCount());
+        });
+    }
+
     // =====================================================================
     //  Phần dành cho khu vực quản trị (UC019)
     // =====================================================================

@@ -62,4 +62,29 @@ public enum BookingStatus {
     public boolean isFinal() {
         return this == COMPLETED || this == CANCELLED;
     }
+
+    /**
+     * Máy trạng thái đơn hàng (SPEC_CHUNG.md mục 12.1):
+     * <pre>
+     * PENDING   -&gt; CONFIRMED | CANCELLED
+     * CONFIRMED -&gt; COMPLETED | CANCELLED
+     * COMPLETED, CANCELLED: trạng thái CUỐI, không chuyển tiếp đi đâu nữa -
+     *   cố ý KHÔNG có nhánh "khôi phục đơn đã huỷ".
+     * </pre>
+     *
+     * <p>Đây chỉ là phép kiểm <b>cấu trúc</b> (đúng hình trên sơ đồ). Điều kiện
+     * phụ để vào {@code COMPLETED} ("ngày khởi hành đã tới" + "đã có khoản
+     * ĐÃ THANH TOÁN") cần dữ liệu ngoài enum này, nên được kiểm riêng ở
+     * {@code BookingService.updateStatus}.</p>
+     */
+    public boolean canTransitionTo(BookingStatus target) {
+        if (target == null || target == this) {
+            return false;
+        }
+        return switch (this) {
+            case PENDING -> target == CONFIRMED || target == CANCELLED;
+            case CONFIRMED -> target == COMPLETED || target == CANCELLED;
+            case COMPLETED, CANCELLED -> false;
+        };
+    }
 }

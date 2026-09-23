@@ -80,18 +80,25 @@ public class DepartureService {
                     form.getTotalSeats(), form.getPriceAdult(), form.getPriceChild());
         } else {
             departure = getOfTour(tourId, form.getId());
+            int soldSeats = departure.getBookedSeats();
 
             if (!form.getDepartureDate().equals(departure.getDepartureDate())) {
-                // Đổi sang một ngày khác thì ngày mới đó vẫn phải ở tương lai. Ngược
-                // lại - giữ nguyên ngày cũ, chỉ sửa giá/số chỗ/trạng thái của một đợt
-                // đã qua ngày (vẫn cần sửa được vì đã có khách đặt) - thì bỏ qua.
+                // Mục 12.6: đợt còn đơn CHƯA HUỶ (soldSeats > 0 - availableSeats
+                // đã cộng lại chỗ của mọi đơn đã huỷ nên đúng bằng "còn đơn chưa
+                // huỷ") thì KHOÁ hẳn việc đổi ngày khởi hành - khách đã đặt theo
+                // đúng ngày cũ, đổi ngày sau lưng là phá vỡ cam kết với họ. Gợi ý
+                // tạo đợt mới thay vì sửa đợt đang bán.
+                if (soldSeats > 0) {
+                    throw new BusinessRuleException("error.departure.dateLockedHasBookings", soldSeats);
+                }
+                // Đổi sang một ngày khác thì ngày mới đó vẫn phải ở tương lai.
                 requireFutureDate(form.getDepartureDate());
             }
 
-            int soldSeats = departure.getBookedSeats();
             if (form.getTotalSeats() < soldSeats) {
-                // Không cho hạ tổng số chỗ xuống dưới số khách đã đặt: làm vậy thì
-                // availableSeats sẽ âm và có khách đã trả tiền nhưng không còn chỗ.
+                // Mục 12.6: không cho hạ tổng số chỗ xuống dưới số khách đã đặt -
+                // làm vậy thì availableSeats sẽ âm và có khách đã trả tiền nhưng
+                // không còn chỗ.
                 throw new BusinessRuleException("error.departure.seatsBelowSold", soldSeats);
             }
 

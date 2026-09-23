@@ -190,7 +190,30 @@ public class AccountController {
         // Bổ sung A/B: dòng thời gian đổi trạng thái và các lần thanh toán.
         model.addAttribute("statusHistory", bookingStatusHistoryRepository.findByBookingCode(code));
         model.addAttribute("payments", paymentService.findByBookingId(booking.getId()));
+        // UC023 (mục 12.3): chỉ cần tính khi đơn còn huỷ được (PENDING/CONFIRMED) -
+        // đơn đã ở trạng thái cuối thì trang không hiện hộp huỷ nào cả.
+        if (booking.isCancellable()) {
+            model.addAttribute("selfCancelPolicy", bookingService.evaluateSelfCancel(booking));
+        }
         return "account/booking-detail";
+    }
+
+    /**
+     * UC023 - khách tự huỷ đơn của chính mình. Mọi điều kiện (chủ sở hữu, trạng
+     * thái, số ngày còn lại) được {@code BookingService.cancelBySelf} kiểm LẠI từ
+     * đầu, không tin bất cứ điều gì trang GET đã hiện trước đó.
+     */
+    @PostMapping("/bookings/{code}/cancel")
+    public String selfCancel(@PathVariable String code,
+                             @AuthenticationPrincipal CustomUserDetails principal,
+                             RedirectAttributes ra) {
+        try {
+            bookingService.cancelBySelf(code, principal.getId());
+            ra.addFlashAttribute("successMessage", getMessage("account.bookings.selfCancel.success"));
+        } catch (BusinessRuleException e) {
+            ra.addFlashAttribute("errorMessage", resolve(e));
+        }
+        return "redirect:/account/bookings/" + code;
     }
 
     // ===================== Đánh giá tour (UC018) =====================

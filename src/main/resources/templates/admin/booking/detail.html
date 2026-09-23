@@ -127,12 +127,15 @@
                         <div class="card-body">
                             <h2 class="h6 mb-3" th:text="#{admin.booking.changeStatus}">Đổi trạng thái</h2>
 
-                            <form method="post"
+                            <!--/* Mục 12.1: COMPLETED và CANCELLED là trạng thái CUỐI - không
+                                   còn nhánh "khôi phục đơn đã huỷ". validNextStatuses chỉ chứa
+                                   các đích hợp lệ của đúng đơn đang xem (rỗng nếu đơn đã ở
+                                   trạng thái cuối). */-->
+                            <form method="post" th:if="${not #lists.isEmpty(validNextStatuses)}"
                                   th:action="@{/admin/bookings/{code}/status(code=${booking.code})}">
                                 <select class="form-select form-select-sm mb-2" name="status">
-                                    <option th:each="s : ${statuses}" th:value="${s}"
-                                            th:text="#{${s.messageKey}}"
-                                            th:selected="${s == booking.status}">Trạng thái</option>
+                                    <option th:each="s : ${validNextStatuses}" th:value="${s}"
+                                            th:text="#{${s.messageKey}}">Trạng thái</option>
                                 </select>
                                 <!--/* Bổ sung A: lý do (tuỳ chọn) được ghi vào đúng dòng
                                        booking_status_history sinh ra từ lần đổi này. */-->
@@ -142,10 +145,15 @@
                                         th:text="#{admin.action.save}">Lưu</button>
                             </form>
 
-                            <p class="small text-muted mt-2 mb-0">
-                                Chuyển sang "Đã huỷ" sẽ trả lại chỗ cho các đợt khởi hành;
-                                khôi phục lại thì hệ thống giữ chỗ lần nữa và sẽ báo lỗi
-                                nếu chỗ đã hết.
+                            <p class="small text-muted mb-0" th:if="${not #lists.isEmpty(validNextStatuses)}">
+                                <span th:text="#{admin.booking.statusHint.cancelRefund}">
+                                    Chuyển sang "Đã huỷ" sẽ trả lại chỗ, trả lượt dùng mã (nếu có),
+                                    và hoàn 100% khoản đã thu (nếu có).
+                                </span>
+                            </p>
+                            <p class="small text-muted mb-0" th:if="${#lists.isEmpty(validNextStatuses)}"
+                               th:text="#{admin.booking.statusHint.finalStatus}">
+                                Đơn đã ở trạng thái cuối, không thể đổi trạng thái nữa.
                             </p>
                         </div>
                     </div>

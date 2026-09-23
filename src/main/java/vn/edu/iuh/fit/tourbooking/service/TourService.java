@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourForm;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourSearchForm;
 import vn.edu.iuh.fit.tourbooking.entity.Tour;
@@ -58,6 +59,7 @@ public class TourService {
     private final ReviewRepository reviewRepository;
     private final ContactMessageRepository contactMessageRepository;
     private final FileStorageService fileStorageService;
+    private final AppProperties appProperties;
 
     /** Số tour tối đa một lần gọi web service được lấy - chặn kiểu xin {@code size=100000}. */
     public static final int MAX_API_PAGE_SIZE = 50;
@@ -161,10 +163,18 @@ public class TourService {
      * <p>Nạp riêng chứ không {@code join fetch} chung với bộ ảnh ở
      * {@code findDetailById}: lấy đồng thời hai collection trong một câu truy vấn
      * sẽ tạo tích Descartes, số dòng trả về bằng tích số ảnh nhân số đợt.</p>
+     *
+     * <p>Đây là <b>một trong bốn chỗ</b> áp hạn chót đặt tour (mục 12.5): trang
+     * chi tiết, web service {@code /api/tours/{id}/departures} và trang danh sách
+     * đều đi qua đúng phương thức này, nên chỉ cần một chỗ để đổi số ngày hạn
+     * chót. Hai chỗ còn lại (thêm giỏ, thanh toán) gọi thẳng
+     * {@code TourDeparture.isBookable(cutoffDays)} vì chúng làm việc với MỘT đợt
+     * khởi hành cụ thể chứ không phải danh sách.</p>
      */
     @Transactional(readOnly = true)
     public List<TourDeparture> findBookableDepartures(Long tourId) {
-        return departureRepository.findBookable(tourId, LocalDate.now());
+        return departureRepository.findBookable(tourId,
+                LocalDate.now().plusDays(appProperties.booking().cutoffDays()));
     }
 
     /** Danh sách điểm đến để đổ vào ô lọc. */

@@ -57,7 +57,10 @@ public class AdminBookingController {
     public String detail(@PathVariable String code, Model model) {
         Booking booking = bookingService.getDetailByCode(code);
         model.addAttribute("booking", booking);
-        model.addAttribute("statuses", BookingStatus.values());
+        // Mục 12.1: màn quản trị chỉ liệt kê các trạng thái ĐÍCH hợp lệ của đơn
+        // đang xem, không phải toàn bộ enum - chọn một lựa chọn ngoài danh sách
+        // này chắc chắn bị BookingService.updateStatus từ chối.
+        model.addAttribute("validNextStatuses", bookingService.validNextStatuses(booking));
         model.addAttribute("passengers", bookingPassengerRepository.findByBookingId(booking.getId()));
         // Bổ sung A/B: dòng thời gian đổi trạng thái và các lần thanh toán.
         model.addAttribute("statusHistory", bookingStatusHistoryRepository.findByBookingCode(code));

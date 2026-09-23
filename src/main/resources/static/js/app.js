@@ -124,7 +124,17 @@ $(function () {
     // thì bấm đúp nút "Đặt tour" sẽ thêm hai lần vào giỏ.
     // Bỏ qua các biểu mẫu do AJAX xử lý: chúng không nạp lại trang nên nút bị
     // khoá sẽ nằm im mãi mãi.
-    $('form').not('[data-ajax-cart]').on('submit', function () {
+    //
+    // Biểu mẫu có [data-confirm] (ví dụ UC023 - tự huỷ đơn, mục 12.3) phải hiện
+    // hộp xác nhận TRƯỚC: câu hỏi đã được máy chủ dựng sẵn kèm số tiền sẽ hoàn,
+    // huỷ hộp thoại thì dừng hẳn - không khoá nút, không gửi biểu mẫu. Đây vẫn
+    // chỉ là lớp tăng cường: tắt JavaScript thì biểu mẫu gửi thẳng không hỏi lại.
+    $('form').not('[data-ajax-cart]').on('submit', function (e) {
+        const confirmMessage = $(this).data('confirm');
+        if (confirmMessage && !window.confirm(confirmMessage)) {
+            e.preventDefault();
+            return;
+        }
         const $button = $(this).find('button[type="submit"]');
         window.setTimeout(function () {
             $button.prop('disabled', true);
