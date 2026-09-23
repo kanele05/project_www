@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.tourbooking.service;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -65,6 +66,44 @@ public class BookingService {
     private final ApplicationEventPublisher eventPublisher;
     private final AppProperties appProperties;
     private final MessageHelper messages;
+    private final EntityManager entityManager;
+
+    /** Độ dài tối đa hợp lý cho một họ tên hành khách - khớp {@code booking_passengers.full_name NVARCHAR(100)}. */
+    private static final int MAX_PASSENGER_NAME_LENGTH = 100;
+
+    /**
+     * Khoá đơn theo mã tra cứu <b>TRƯỚC</b> khi đổi trạng thái/số khách (mục
+     * "NGHIÊM TRỌNG - 1", đã tái hiện bằng thao tác thật hai kịch bản: mất khoản
+     * đã thu khi khách tự huỷ trùng lúc admin đánh dấu đã thu tiền, và lách máy
+     * trạng thái khi admin xác nhận trùng lúc khách tự huỷ). Đây là dòng ĐẦU TIÊN
+     * của {@link #updateStatus}, {@link #cancelBySelf}, {@link #expirePendingBooking}
+     * và {@link #updateDetailQuantity} - bên thua phải đợi bên thắng commit xong
+     * rồi mới đọc lại đúng trạng thái mới nhất và bị chặn bằng
+     * {@link BusinessRuleException} (thông qua các phép kiểm trạng thái đã có sẵn
+     * ngay sau lời gọi này), không ghi đè lên nhau nữa.
+     *
+     * <p>Gotcha #60: chỉ khoá ở tầng CSDL thôi CHƯA ĐỦ -
+     * {@code entityManager.refresh(...)} bắt buộc ngay sau khi giữ được khoá, để
+     * không đọc nhầm bản entity cũ đã nằm sẵn trong cache cấp một của cùng giao
+     * dịch (giống hệt cách {@code PromotionService.recordUsage} đã làm với
+     * {@code Promotion}).</p>
+     */
+    private Booking lockBookingByCode(String code) {
+        Booking locked = bookingRepository.findByCodeForUpdate(code)
+                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
+        entityManager.refresh(locked);
+        return locked;
+    }
+
+    /** Cùng {@link #lockBookingByCode} nhưng theo khoá chính, trả {@code null} nếu không còn tồn tại. */
+    private Booking lockBookingById(Long id) {
+        Booking locked = bookingRepository.findByIdForUpdate(id).orElse(null);
+        if (locked == null) {
+            return null;
+        }
+        entityManager.refresh(locked);
+        return locked;
+    }
 
     /**
      * Chốt đơn đặt tour: <b>toàn bộ nằm trong một giao dịch duy nhất</b>.
@@ -318,8 +357,8 @@ public class BookingService {
      */
     @Transactional
     public Booking updateStatus(String code, BookingStatus newStatus, Long changedByUserId, String reason) {
-        Booking booking = bookingRepository.findDetailByCode(code)
-                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
+        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+        Booking booking = lockBookingByCode(code);
 
         BookingStatus oldStatus = booking.getStatus();
         if (oldStatus == newStatus) {
@@ -464,8 +503,11 @@ public class BookingService {
      */
     @Transactional
     public Booking cancelBySelf(String code, Long userId) {
-        Booking booking = bookingRepository.findDetailByCode(code)
-                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
+        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode. Đây
+        // chính là vế "khách tự huỷ" của kịch bản A/B đã tái hiện bằng thao tác
+        // thật: nếu thua cuộc đua với admin (updateStatus/markPaid), isCancellable()
+        // bên dưới sẽ đọc đúng trạng thái mới nhất và chặn lại bằng BusinessRuleException.
+        Booking booking = lockBookingByCode(code);
 
         if (!booking.getUser().getId().equals(userId)) {
             log.warn("Tài khoản id={} cố tự huỷ đơn {} của người khác", userId, code);
@@ -512,7 +554,8 @@ public class BookingService {
      */
     @Transactional
     public void expirePendingBooking(Long bookingId) {
-        Booking booking = bookingRepository.findDetailById(bookingId).orElse(null);
+        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+        Booking booking = lockBookingById(bookingId);
         if (booking == null || booking.getStatus() != BookingStatus.PENDING) {
             return;
         }
@@ -540,7 +583,7 @@ public class BookingService {
      * <b>chưa đổi gì cả</b> (kể cả số chỗ), gọi lại đúng nó kèm đủ tên
      * ({@code newAdultNames}/{@code newChildNames}) là xong (mục 12.7).
      */
-    public record PassengerNameGap(int adultsNeeded, int childrenNeeded) {
+    public record PassengerNameGap(int adultsNeeded, int childrenNeeded, List<String> droppedNames) {
         public boolean isEmpty() {
             return adultsNeeded <= 0 && childrenNeeded <= 0;
         }
@@ -575,8 +618,8 @@ public class BookingService {
     @Transactional
     public PassengerNameGap updateDetailQuantity(String code, Long detailId, int adults, int children,
                                                   List<String> newAdultNames, List<String> newChildNames) {
-        Booking booking = bookingRepository.findDetailByCode(code)
-                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", code));
+        // Khoá đơn TRƯỚC KHI đọc trạng thái - xem Javadoc lockBookingByCode.
+        Booking booking = lockBookingByCode(code);
 
         if (booking.getStatus().isFinal()) {
             throw new BusinessRuleException("error.booking.finalStatus");
@@ -623,7 +666,7 @@ public class BookingService {
         // trả phần còn thiếu để controller hiện lại đúng bấy nhiêu ô nhập tên.
         if ((adultGap > 0 && cleanAdultNames.size() < adultGap)
                 || (childGap > 0 && cleanChildNames.size() < childGap)) {
-            return new PassengerNameGap(Math.max(adultGap, 0), Math.max(childGap, 0));
+            return new PassengerNameGap(Math.max(adultGap, 0), Math.max(childGap, 0), List.of());
         }
 
         TourDeparture departure = detail.getDeparture();
@@ -654,22 +697,40 @@ public class BookingService {
         // Giữ bất biến (mục 12.7): đồng bộ danh sách hành khách theo đúng
         // chênh lệch vừa tính - PHẢI chạy sau khi đã chắc chắn đủ chỗ/đủ tên,
         // không thì một lần gọi lỗi giữa chừng có thể để lại hành khách "mồ côi".
-        syncPassengers(detail, PassengerType.ADULT, adultGap, cleanAdultNames);
-        syncPassengers(detail, PassengerType.CHILD, childGap, cleanChildNames);
+        // Nhẹ - 7: gom lại tên những người bị bỏ (nếu giảm số khách) để controller
+        // nêu đích danh trong thông báo thành công, không để quản trị viên tự hỏi
+        // "vừa xoá mất ai".
+        List<String> dropped = new ArrayList<>();
+        dropped.addAll(syncPassengers(detail, PassengerType.ADULT, adultGap, cleanAdultNames));
+        dropped.addAll(syncPassengers(detail, PassengerType.CHILD, childGap, cleanChildNames));
 
-        log.info("Đơn {}: sửa dòng {} thành {} người lớn, {} trẻ em (chênh lệch {} chỗ, hành khách {}A/{}C)",
-                code, detailId, adults, children, delta, adultGap, childGap);
-        return new PassengerNameGap(0, 0);
+        log.info("Đơn {}: sửa dòng {} thành {} người lớn, {} trẻ em (chênh lệch {} chỗ, hành khách {}A/{}C, bỏ {})",
+                code, detailId, adults, children, delta, adultGap, childGap, dropped);
+        return new PassengerNameGap(0, 0, dropped);
     }
 
+    /**
+     * Lọc bỏ tên rỗng và kiểm lại độ dài (Nhẹ - 4, đã tái hiện): gửi thẳng một
+     * tên dài quá cột {@code booking_passengers.full_name NVARCHAR(100)} trước
+     * đây rơi thẳng xuống Hibernate/JDBC, SQL Server trả lỗi cắt chuỗi và lộ
+     * nguyên văn tên bảng/cột trong trang 500 - chặn sớm bằng
+     * {@link BusinessRuleException} có message key để người dùng thấy một câu
+     * tiếng Việt tử tế thay vì chi tiết CSDL.
+     */
     private List<String> cleanNames(List<String> raw) {
         if (raw == null) {
             return List.of();
         }
-        return raw.stream()
+        List<String> cleaned = raw.stream()
                 .filter(s -> s != null && !s.isBlank())
                 .map(String::trim)
                 .toList();
+        for (String name : cleaned) {
+            if (name.length() > MAX_PASSENGER_NAME_LENGTH) {
+                throw new BusinessRuleException("error.checkout.passengerNameTooLong", MAX_PASSENGER_NAME_LENGTH);
+            }
+        }
+        return cleaned;
     }
 
     /**
@@ -677,7 +738,8 @@ public class BookingService {
      * {@code gap} (dương = cần thêm bấy nhiêu người tên trong {@code namesForAdd},
      * âm = cần bớt bấy nhiêu người - luôn chọn id LỚN NHẤT trước).
      */
-    private void syncPassengers(BookingDetail detail, PassengerType type, int gap, List<String> namesForAdd) {
+    private List<String> syncPassengers(BookingDetail detail, PassengerType type, int gap, List<String> namesForAdd) {
+        List<String> removedNames = new ArrayList<>();
         if (gap > 0) {
             for (int i = 0; i < gap; i++) {
                 BookingPassenger p = new BookingPassenger(namesForAdd.get(i), type);
@@ -692,9 +754,12 @@ public class BookingService {
                     Comparator.nullsLast(Comparator.naturalOrder())));
             int toRemove = -gap;
             for (int i = 0; i < toRemove && i < ofType.size(); i++) {
-                detail.getPassengers().remove(ofType.get(ofType.size() - 1 - i));
+                BookingPassenger p = ofType.get(ofType.size() - 1 - i);
+                removedNames.add(p.getFullName());
+                detail.getPassengers().remove(p);
             }
         }
+        return removedNames;
     }
 
     /**

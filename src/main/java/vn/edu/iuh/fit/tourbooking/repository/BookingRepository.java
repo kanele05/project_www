@@ -1,10 +1,12 @@
 package vn.edu.iuh.fit.tourbooking.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -77,6 +79,31 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
             WHERE b.id = :id
             """)
     Optional<Booking> findDetailById(@Param("id") Long id);
+
+    /**
+     * <b>Khoá bi quan trên chính đơn</b> (mục "NGHIÊM TRỌNG - 1", đã tái hiện bằng
+     * thao tác thật hai kịch bản mất khoản đã thu và lách máy trạng thái).
+     * {@code updateStatus}, {@code cancelBySelf}, {@code expirePendingBooking},
+     * {@code updateDetailQuantity} và {@code PaymentService.markPaid} (khoá đơn
+     * cha trước khi đụng khoản thu) đều phải gọi truy vấn này <b>ĐẦU TIÊN</b>,
+     * trước khi đọc {@code status} hay đụng vào {@code payments} - bên thua phải
+     * đợi bên thắng commit xong rồi mới đọc lại đúng trạng thái mới nhất.
+     *
+     * <p>Truy vấn TỐI GIẢN (không JOIN FETCH quan hệ nào): khoá xong còn phải gọi
+     * {@code entityManager.refresh(...)} ngay (gotcha #60 - entity có thể đã nằm
+     * sẵn trong cache cấp một của cùng giao dịch), JOIN FETCH ở bước khoá chỉ làm
+     * phức tạp thêm mà không cần thiết vì các phương thức gọi nó đều đang chạy
+     * trong chính giao dịch @Transactional của mình nên đụng quan hệ LAZY sau đó
+     * vẫn an toàn.</p>
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Booking b WHERE b.code = :code")
+    java.util.Optional<Booking> findByCodeForUpdate(@Param("code") String code);
+
+    /** Cùng {@link #findByCodeForUpdate} nhưng theo khoá chính - dùng ở {@code expirePendingBooking}. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Booking b WHERE b.id = :id")
+    java.util.Optional<Booking> findByIdForUpdate(@Param("id") Long id);
 
     long countByStatus(BookingStatus status);
 

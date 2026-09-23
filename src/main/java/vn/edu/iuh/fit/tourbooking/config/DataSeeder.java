@@ -9,13 +9,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
 import vn.edu.iuh.fit.tourbooking.entity.BookingDetail;
+import vn.edu.iuh.fit.tourbooking.entity.BookingPassenger;
 import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
+import vn.edu.iuh.fit.tourbooking.entity.BookingStatusHistory;
+import vn.edu.iuh.fit.tourbooking.entity.PassengerType;
+import vn.edu.iuh.fit.tourbooking.entity.Payment;
+import vn.edu.iuh.fit.tourbooking.entity.PaymentMethod;
+import vn.edu.iuh.fit.tourbooking.entity.PaymentStatus;
 import vn.edu.iuh.fit.tourbooking.entity.Role;
 import vn.edu.iuh.fit.tourbooking.entity.Tour;
 import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 import vn.edu.iuh.fit.tourbooking.entity.TourDeparture;
 import vn.edu.iuh.fit.tourbooking.entity.User;
 import vn.edu.iuh.fit.tourbooking.repository.BookingRepository;
+import vn.edu.iuh.fit.tourbooking.repository.BookingStatusHistoryRepository;
+import vn.edu.iuh.fit.tourbooking.repository.PaymentRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourCategoryRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourDepartureRepository;
 import vn.edu.iuh.fit.tourbooking.repository.TourRepository;
@@ -24,6 +32,7 @@ import vn.edu.iuh.fit.tourbooking.util.CodeGenerator;
 import vn.edu.iuh.fit.tourbooking.util.SlugUtil;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,6 +64,8 @@ public class DataSeeder implements CommandLineRunner {
     private final TourRepository tourRepository;
     private final TourDepartureRepository departureRepository;
     private final BookingRepository bookingRepository;
+    private final PaymentRepository paymentRepository;
+    private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -345,23 +356,109 @@ public class DataSeeder implements CommandLineRunner {
     // Đơn đặt tour mẫu
     // =====================================================================
 
+    /**
+     * Mục "VỪA - 3" (đã tái hiện: đơn giả bị bộ hẹn giờ mục 12.4 huỷ sạch sau 1
+     * phút, 0 hành khách dù đơn có dòng chi tiết, không dòng {@code payments}
+     * nào, đơn HOÀN TẤT trỏ đợt còn 14 ngày nữa mới đi). Năm đơn mẫu này nay
+     * đồng bộ với {@code database/03_seed_data.sql}:
+     * <ul>
+     *   <li>Hai đơn CHỜ XÁC NHẬN đặt <b>vài giờ</b> trước (không phải vài ngày) -
+     *       {@code app.booking.pending-expiry-hours} mặc định 24 giờ, và
+     *       {@code BookingExpiryScheduler} chạy lần đầu chỉ sau 1 phút khởi động.</li>
+     *   <li>Mọi dòng chi tiết đều có đủ hành khách khớp {@code numAdults}/
+     *       {@code numChildren} - đúng bất biến mục 12.7.</li>
+     *   <li>Mỗi đơn có ít nhất một dòng {@code payments} hợp lý theo đúng trạng
+     *       thái của nó (xem {@link #seedPayment}).</li>
+     *   <li>Đơn HOÀN TẤT trỏ tới một đợt khởi hành đã lùi về <b>quá khứ</b>
+     *       ({@link #rewindOneDepartureToPast}) và đã có khoản ĐÃ THANH TOÁN đủ
+     *       100% - đúng điều kiện mục 12.1 để một đơn được ở trạng thái này.</li>
+     * </ul>
+     */
     private void seedBookings(List<User> users, List<TourDeparture> departures) {
+        User admin = users.get(0);
         User an = users.get(1);
         User binh = users.get(2);
         User cuong = users.get(3);
 
         // Chỉ số 0, 3, 6... là đợt khởi hành đầu tiên của tour thứ 1, 2, 3...
-        createBooking(an, BookingStatus.CONFIRMED, 12,
+        TourDeparture completedDeparture = rewindOneDepartureToPast(departures.get(15));
+
+        // --- Đơn 1: CONFIRMED, đặt cọc 50%, còn nợ 50% ----------------------
+        Booking b1 = createBooking(an, BookingStatus.CONFIRMED, LocalDateTime.now().minusDays(12),
                 detail(departures.get(0), 2, 1));
-        createBooking(binh, BookingStatus.PENDING, 5,
+        attachPassengers(b1.getDetails().get(0),
+                List.of("Nguyễn Văn An", "Trần Thị Bích Ngọc"), List.of("Nguyễn Bảo Anh"));
+        bookingRepository.save(b1);
+        seedHistory(b1, null, BookingStatus.PENDING, an, "Khách đặt tour trên website");
+        seedHistory(b1, BookingStatus.PENDING, BookingStatus.CONFIRMED, admin, "Đã nhận tiền cọc, xác nhận chỗ");
+        seedPayment(b1, new BigDecimal("0.5"), PaymentMethod.BANK_TRANSFER, PaymentStatus.PAID,
+                "SEED-VCB-0001", b1.getBookingDate().plusDays(1), "Đặt cọc 50% khi giữ chỗ");
+        seedPayment(b1, new BigDecimal("0.5"), PaymentMethod.BANK_TRANSFER, PaymentStatus.PENDING,
+                null, null, "Còn lại, thu trước ngày khởi hành");
+
+        // --- Đơn 2: PENDING, đặt 5 GIỜ trước - còn nguyên trong hạn 24 giờ --
+        Booking b2 = createBooking(binh, BookingStatus.PENDING, LocalDateTime.now().minusHours(5),
                 detail(departures.get(3), 2, 0));
-        createBooking(cuong, BookingStatus.COMPLETED, 40,
-                detail(departures.get(15), 4, 2));
-        createBooking(an, BookingStatus.PENDING, 2,
+        attachPassengers(b2.getDetails().get(0), List.of("Trần Văn Bình", "Lê Thị Hồng"), List.of());
+        bookingRepository.save(b2);
+        seedHistory(b2, null, BookingStatus.PENDING, binh, "Khách đặt tour trên website");
+        seedPayment(b2, BigDecimal.ONE, PaymentMethod.MOMO, PaymentStatus.PENDING,
+                null, null, "Khách chọn thanh toán qua ví MoMo");
+
+        // --- Đơn 3: COMPLETED, trỏ đúng đợt vừa lùi về quá khứ, đã thu đủ ---
+        Booking b3 = createBooking(cuong, BookingStatus.COMPLETED, LocalDateTime.now().minusDays(40),
+                detail(completedDeparture, 4, 2));
+        attachPassengers(b3.getDetails().get(0),
+                List.of("Lê Minh Cường", "Phạm Thị Mai", "Lê Minh Khang", "Đặng Thị Kiều Ửng"),
+                List.of("Lê Bảo Ngọc", "Lê Gia Huy"));
+        bookingRepository.save(b3);
+        seedHistory(b3, null, BookingStatus.PENDING, cuong, "Khách đặt tour trên website");
+        seedHistory(b3, BookingStatus.PENDING, BookingStatus.CONFIRMED, admin, "Đã nhận đủ tiền, xác nhận chỗ");
+        seedHistory(b3, BookingStatus.CONFIRMED, BookingStatus.COMPLETED, admin, "Chuyến đi đã kết thúc");
+        seedPayment(b3, new BigDecimal("0.5"), PaymentMethod.BANK_TRANSFER, PaymentStatus.PAID,
+                "SEED-VCB-0002", b3.getBookingDate().plusDays(2), "Đặt cọc 50%");
+        seedPayment(b3, new BigDecimal("0.5"), PaymentMethod.CASH, PaymentStatus.PAID,
+                "SEED-PT-0001", b3.getBookingDate().plusDays(3), "Trả nốt tại văn phòng");
+
+        // --- Đơn 4: PENDING, đặt 3 GIỜ trước, hai dòng chi tiết -------------
+        Booking b4 = createBooking(an, BookingStatus.PENDING, LocalDateTime.now().minusHours(3),
                 detail(departures.get(24), 2, 2),
                 detail(departures.get(39), 1, 0));
-        createBooking(binh, BookingStatus.CANCELLED, 20,
+        attachPassengers(b4.getDetails().get(0),
+                List.of("Nguyễn Văn An", "Trần Thị Bích Ngọc"), List.of("Nguyễn Bảo Anh", "Nguyễn Minh Quân"));
+        attachPassengers(b4.getDetails().get(1), List.of("Nguyễn Văn An"), List.of());
+        bookingRepository.save(b4);
+        seedHistory(b4, null, BookingStatus.PENDING, an, "Khách đặt tour trên website");
+        seedPayment(b4, BigDecimal.ONE, PaymentMethod.BANK_TRANSFER, PaymentStatus.PENDING,
+                null, null, "Chờ chuyển khoản trước ngày khởi hành");
+
+        // --- Đơn 5: CANCELLED - đã thu đủ RỒI mới huỷ (mục 12.2: giữ dòng PAID
+        // làm lịch sử tiền vào, thêm một dòng REFUNDED mới) ------------------
+        Booking b5 = createBooking(binh, BookingStatus.CANCELLED, LocalDateTime.now().minusDays(20),
                 detail(departures.get(9), 3, 0));
+        attachPassengers(b5.getDetails().get(0),
+                List.of("Trần Văn Bình", "Lê Thị Hồng", "Trần Quốc Toản"), List.of());
+        bookingRepository.save(b5);
+        seedHistory(b5, null, BookingStatus.PENDING, binh, "Khách đặt tour trên website");
+        seedHistory(b5, BookingStatus.PENDING, BookingStatus.CANCELLED, binh, "Khách báo bận, xin huỷ đơn");
+        seedPayment(b5, BigDecimal.ONE, PaymentMethod.BANK_TRANSFER, PaymentStatus.PAID,
+                "SEED-VCB-0003", b5.getBookingDate().plusDays(1), "Đã thu đủ trước khi khách xin huỷ");
+        seedPayment(b5, BigDecimal.ONE, PaymentMethod.BANK_TRANSFER, PaymentStatus.REFUNDED,
+                "SEED-REFUND-0001", LocalDateTime.now().minusDays(19), "Đã hoàn tiền 100% sau khi khách xin huỷ");
+    }
+
+    /**
+     * Lùi <b>đúng một</b> đợt khởi hành (không phải cả 60 đợt) về quá khứ, dùng
+     * riêng cho đơn mẫu HOÀN TẤT - mục 12.1 chỉ cho một đơn sang trạng thái này
+     * khi ngày khởi hành đã tới. {@link #seedDepartures} luôn sinh đợt ở tương
+     * lai (+14/+30/+50 ngày) để trang danh sách/chi tiết tour lúc nào cũng còn
+     * tour đặt được, nên phải chỉnh riêng một đợt sau khi đã seed xong.
+     */
+    private TourDeparture rewindOneDepartureToPast(TourDeparture departure) {
+        LocalDate pastDeparture = LocalDate.now().minusDays(20);
+        departure.setDepartureDate(pastDeparture);
+        departure.setReturnDate(pastDeparture.plusDays(departure.getTour().getDurationDays() - 1L));
+        return departureRepository.save(departure);
     }
 
     private BookingDetail detail(TourDeparture departure, int adults, int children) {
@@ -369,15 +466,66 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     /**
-     * Tạo một đơn mẫu và trừ chỗ tương ứng - trừ đơn đã huỷ, vì huỷ đơn thì chỗ
-     * phải được trả lại. Giữ đúng bất biến này ngay từ dữ liệu mẫu để các con số
-     * trên màn hình quản trị luôn cộng khớp.
+     * Gắn đủ hành khách cho một dòng chi tiết - giữ đúng bất biến mục 12.7
+     * ("số hành khách theo loại luôn khớp numAdults/numChildren") ngay từ dữ
+     * liệu mẫu. Số tên truyền vào phải khớp chính xác số người lớn/trẻ em của
+     * dòng ({@code detail}) - đây là seed nội bộ nên không cần chống chịu dữ
+     * liệu sai như tầng service.
      */
-    private void createBooking(User user, BookingStatus status, int daysAgo, BookingDetail... details) {
+    private void attachPassengers(BookingDetail detail, List<String> adultNames, List<String> childNames) {
+        for (String name : adultNames) {
+            BookingPassenger p = new BookingPassenger(name, PassengerType.ADULT);
+            p.setDetail(detail);
+            detail.getPassengers().add(p);
+        }
+        for (String name : childNames) {
+            BookingPassenger p = new BookingPassenger(name, PassengerType.CHILD);
+            p.setDetail(detail);
+            detail.getPassengers().add(p);
+        }
+    }
+
+    /**
+     * Sinh một dòng {@code payments} cho đơn mẫu - đúng tinh thần Bổ sung B
+     * (SPEC_CHUNG.md mục 9): mỗi đơn phải có ít nhất một khoản thu để chức năng
+     * "Đã thu tiền" / hoàn tiền / thống kê có dữ liệu thật để thao tác, thay vì
+     * một đơn không bao giờ thu tiền/hoàn tất được.
+     *
+     * @param ratio   tỉ lệ trên {@code booking.totalAmount} (vd 0.5 = 50%, 1 = toàn bộ)
+     * @param txnRef  mã giao dịch, để {@code null} nếu khoản còn PENDING hoặc trả tiền mặt chưa có mã
+     * @param paidAt  thời điểm thu tiền, để {@code null} nếu chưa PAID/REFUNDED
+     */
+    private void seedPayment(Booking booking, BigDecimal ratio, PaymentMethod method, PaymentStatus status,
+                             String txnRef, LocalDateTime paidAt, String note) {
+        BigDecimal amount = booking.getTotalAmount().multiply(ratio).setScale(0, RoundingMode.HALF_UP);
+        Payment payment = new Payment(booking, amount, method);
+        payment.setStatus(status);
+        payment.setTxnRef(txnRef);
+        payment.setPaidAt(paidAt);
+        payment.setNote(note);
+        paymentRepository.save(payment);
+    }
+
+    /** Một dòng {@code booking_status_history} - Bổ sung A (SPEC_CHUNG.md mục 9). */
+    private void seedHistory(Booking booking, BookingStatus from, BookingStatus to, User changedBy, String reason) {
+        bookingStatusHistoryRepository.save(new BookingStatusHistory(booking, from, to, changedBy, reason));
+    }
+
+    /**
+     * Tạo một đơn mẫu (chưa lưu) và trừ chỗ tương ứng - trừ đơn đã huỷ, vì huỷ
+     * đơn thì chỗ phải được trả lại. Giữ đúng bất biến này ngay từ dữ liệu mẫu
+     * để các con số trên màn hình quản trị luôn cộng khớp.
+     *
+     * <p><b>Cố ý chưa gọi {@code bookingRepository.save}</b>: bên gọi cần gắn
+     * hành khách vào từng {@link BookingDetail} trước (mục 12.7) rồi mới lưu
+     * MỘT lần duy nhất, để {@code cascade = ALL} kéo theo cả chi tiết lẫn hành
+     * khách trong cùng một lượt ghi.</p>
+     */
+    private Booking createBooking(User user, BookingStatus status, LocalDateTime bookingDate, BookingDetail... details) {
         Booking booking = new Booking();
         booking.setCode(CodeGenerator.uniqueBookingCode(bookingRepository::existsByCode));
         booking.setUser(user);
-        booking.setBookingDate(LocalDateTime.now().minusDays(daysAgo));
+        booking.setBookingDate(bookingDate);
         booking.setCustomerName(user.getFullName());
         booking.setCustomerEmail(user.getEmail());
         booking.setCustomerPhone(user.getPhone());
@@ -393,6 +541,6 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
         booking.recalculateTotal();
-        bookingRepository.save(booking);
+        return booking;
     }
 }

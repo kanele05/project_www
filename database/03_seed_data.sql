@@ -350,6 +350,22 @@ SET IDENTITY_INSERT tour_departures OFF;
 GO
 
 /* ===========================================================================
+   5b. Lùi MỘT đợt về quá khứ cho đơn mẫu HOÀN TẤT (Nhẹ - 5, mục 12.1/12.2)
+
+   Đơn số 3 (bước 6 bên dưới) ở trạng thái COMPLETED nhưng đợt id 16 (Sa Pa,
+   thứ tự 1, "cách_ngay" = 14) vẫn nằm ở TƯƠNG LAI - vô lý cả về nghiệp vụ lẫn
+   máy trạng thái (mục 12.1: chỉ được HOÀN TẤT khi ngày khởi hành đã tới). Lùi
+   ĐÚNG MỘT đợt (không phải cả 60) về quá khứ, để 59 đợt còn lại vẫn giữ nguyên
+   tính chất "luôn còn tour đặt được" của toàn bộ file.
+   =========================================================================== */
+UPDATE tour_departures
+SET departure_date = DATEADD(DAY, -20, CAST(GETDATE() AS DATE)),
+    return_date = DATEADD(DAY, -20 + (SELECT duration_days FROM tours WHERE id = tour_departures.tour_id) - 1,
+                          CAST(GETDATE() AS DATE))
+WHERE id = 16;
+GO
+
+/* ===========================================================================
    6. bookings - 5 đơn mẫu đủ bốn trạng thái
 
    Mã đơn được ghép từ ngày đặt để trông giống mã do ứng dụng sinh ra
@@ -550,6 +566,13 @@ FROM (VALUES
     (2, NULL, 'MOMO',          'PENDING',  NULL,                0,  N'Khách chọn thanh toán qua ví MoMo'),
     (3, 0.5,  'BANK_TRANSFER', 'PAID',     N'VCB2026070500342', 3,  N'Đặt cọc 50%'),
     (3, 0.5,  'CASH',          'PAID',     N'PT-2026-0451',     72, N'Trả nốt tại văn phòng'),
+    -- Nhẹ - 5: đơn 4 (PENDING) trước đây KHÔNG có dòng payments nào - một đơn
+    -- không bao giờ thu tiền/hoàn tất được. Thêm một khoản PENDING hợp lý.
+    (4, NULL, 'BANK_TRANSFER', 'PENDING',  NULL,                0,  N'Chờ chuyển khoản trước ngày khởi hành'),
+    -- Nhẹ - 5: đơn 5 (CANCELLED) trước đây chỉ có dòng REFUNDED mà không có
+    -- dòng PAID gốc - mục 12.2 chỉ hoàn tiền khi đơn ĐÃ có khoản đã thu; giữ
+    -- nguyên dòng PAID làm lịch sử tiền vào, REFUNDED là khoản THÊM VÀO sau.
+    (5, NULL, 'BANK_TRANSFER', 'PAID',     N'VCB2026071200987', 1,  N'Đã thu đủ trước khi khách xin huỷ'),
     (5, NULL, 'BANK_TRANSFER', 'REFUNDED', N'VCB2026071200988', 5,  N'Đã hoàn tiền sau khi khách xin huỷ')
 ) AS x(booking_id, ty_le, hinh_thuc, trang_thai, ma_gd, sau_gio, ghi_chu)
 JOIN bookings b ON b.id = x.booking_id;

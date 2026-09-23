@@ -130,7 +130,16 @@ public class AdminBookingController {
             BookingService.PassengerNameGap gap = bookingService.updateDetailQuantity(
                     code, detailId, numAdults, numChildren, newAdultNames, newChildNames);
             if (gap.isEmpty()) {
-                ra.addFlashAttribute("successMessage", messages.get("admin.booking.detailUpdated"));
+                // Nhẹ - 7 (đã tái hiện): giảm số khách tự động bỏ bớt hành khách
+                // mà không nêu tên ai - quản trị viên phải tự đoán ai vừa "biến
+                // mất". Nêu đích danh ngay trong thông báo thành công.
+                String successMessage = messages.get("admin.booking.detailUpdated");
+                if (!gap.droppedNames().isEmpty()) {
+                    successMessage = successMessage + " "
+                            + messages.get("admin.booking.passengers.dropped",
+                                    String.join(", ", gap.droppedNames()));
+                }
+                ra.addFlashAttribute("successMessage", successMessage);
             } else {
                 // Chưa ghi gì cả - còn thiếu tên. Giữ lại đúng detailId/số khách
                 // đang chờ để trang chi tiết render tiếp phần "nhập tên" (xem

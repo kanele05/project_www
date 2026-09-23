@@ -1,15 +1,18 @@
 package vn.edu.iuh.fit.tourbooking.service;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.iuh.fit.tourbooking.entity.Booking;
+import vn.edu.iuh.fit.tourbooking.entity.BookingStatus;
 import vn.edu.iuh.fit.tourbooking.entity.Payment;
 import vn.edu.iuh.fit.tourbooking.entity.PaymentMethod;
 import vn.edu.iuh.fit.tourbooking.entity.PaymentStatus;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.exception.ResourceNotFoundException;
+import vn.edu.iuh.fit.tourbooking.repository.BookingRepository;
 import vn.edu.iuh.fit.tourbooking.repository.PaymentRepository;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
@@ -37,6 +40,8 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final BookingRepository bookingRepository;
+    private final EntityManager entityManager;
     private final MessageHelper messages;
 
     /**
@@ -190,17 +195,39 @@ public class PaymentService {
      * Javadoc lớp này. Mã trống thì bỏ qua phép kiểm: nhiều lần thanh toán tiền
      * mặt hoàn toàn có thể không có mã giao dịch nào cả.</p>
      *
-     * <p><b>Hai phép kiểm bổ sung, cả hai đều từng thiếu:</b> (1) {@code paymentId}
-     * phải thuộc đúng {@code bookingCode} trên URL - không thì
+     * <p><b>Ba phép kiểm bổ sung:</b> (1) {@code paymentId} phải thuộc đúng
+     * {@code bookingCode} trên URL - không thì
      * {@code POST /admin/bookings/TB-A/payments/7/mark-paid} với khoản 7 thuộc
      * TB-B sẽ đánh dấu nhầm khoản của TB-B; (2) khoản phải đang {@code PENDING} -
      * không thì gọi lại trên khoản đã {@code PAID} sẽ ghi đè {@code paid_at}/
-     * {@code txn_ref} đã đối soát.</p>
+     * {@code txn_ref} đã đối soát; (3) <b>đơn cha không được đang/vừa
+     * {@code CANCELLED}</b> (mục "NGHIÊM TRỌNG - 1", kịch bản A đã tái hiện bằng
+     * thao tác thật: khách tự huỷ trùng lúc admin bấm "Đã thu tiền" từng khiến
+     * khoản thu bị ghi đè PAID rồi FAILED, mất dấu tiền đã thu).</p>
      *
-     * @param bookingCode mã đơn lấy từ URL, dùng để đối chiếu quyền sở hữu khoản thu
+     * <p><b>Khoá đơn cha TRƯỚC khi đụng khoản thu</b> - đúng thứ tự khoá "đơn
+     * trước" đã thống nhất với {@code BookingService} (xem
+     * {@code BookingService.lockBookingByCode}): mọi phương thức có thể huỷ đơn
+     * này (giải phóng chỗ, đóng khoản PENDING, hoàn tiền) đều khoá đúng dòng
+     * {@code bookings} này trước tiên, nên bên thua ở đây cũng phải đợi rồi đọc
+     * lại đúng trạng thái mới nhất. {@code Payment} không có {@code @Version}
+     * riêng nên toàn bộ tính đúng đắn dựa hẳn vào khoá của đơn cha - tải
+     * {@link Payment} SAU khi đã giữ được khoá (không tải trước) để tránh đọc
+     * nhầm bản cũ trong cache cấp một (gotcha #60).</p>
+     *
+     * @param bookingCode mã đơn lấy từ URL, dùng để khoá đơn cha và đối chiếu quyền sở hữu khoản thu
      */
     @Transactional
     public void markPaid(Long paymentId, String bookingCode, String txnRef) {
+        Booking booking = bookingRepository.findByCodeForUpdate(bookingCode)
+                .orElseThrow(() -> ResourceNotFoundException.of("đơn đặt tour", bookingCode));
+        entityManager.refresh(booking);
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BusinessRuleException("error.payment.bookingCancelled", bookingCode);
+        }
+
+        // Tải Payment SAU khi đã khoá đơn cha - xem Javadoc phía trên.
         Payment payment = getById(paymentId);
 
         if (!payment.getBooking().getCode().equals(bookingCode)) {
