@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-// Nhóm hành khách (người lớn + trẻ em) ứng với một dòng giỏ hàng/đợt khởi hành.
+// Nhóm hành khách (người lớn + trẻ em) ứng với một dòng giỏ hàng/lịch khởi hành.
 public class PassengerGroupForm {
 
     private Long departureId;

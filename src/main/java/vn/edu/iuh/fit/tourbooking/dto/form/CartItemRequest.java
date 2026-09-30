@@ -24,7 +24,7 @@ public class CartItemRequest {
 
     @JsonIgnore
     @AssertTrue(message = "{validation.cart.target.required}")
-    // Phải chọn tour hoặc đợt khởi hành cụ thể để thêm vào giỏ.
+    // Phải chọn tour hoặc lịch khởi hành cụ thể để thêm vào giỏ.
     public boolean isTargetProvided() {
         return departureId != null || tourId != null;
     }

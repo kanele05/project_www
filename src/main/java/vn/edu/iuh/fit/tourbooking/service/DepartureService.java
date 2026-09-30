@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-// Nghiệp vụ quản lý đợt khởi hành - luôn kiểm đợt có đúng thuộc tourId truyền vào không.
+// Nghiệp vụ quản lý lịch khởi hành - luôn kiểm lịch có đúng thuộc tourId truyền vào không.
 public class DepartureService {
 
     private final TourDepartureRepository departureRepository;
@@ -34,15 +34,15 @@ public class DepartureService {
     @Transactional(readOnly = true)
     public TourDeparture getOfTour(Long tourId, Long departureId) {
         TourDeparture departure = departureRepository.findById(departureId)
-                .orElseThrow(() -> ResourceNotFoundException.of("đợt khởi hành", departureId));
+                .orElseThrow(() -> ResourceNotFoundException.of("lịch khởi hành", departureId));
 
         if (!departure.getTour().getId().equals(tourId)) {
-            throw ResourceNotFoundException.of("đợt khởi hành", departureId);
+            throw ResourceNotFoundException.of("lịch khởi hành", departureId);
         }
         return departure;
     }
 
-    // Tạo mới hoặc cập nhật một đợt: chặn ngày trùng, chặn đổi ngày/giảm chỗ khi đã có khách, ngày mới phải ở tương lai.
+    // Tạo mới hoặc cập nhật một lịch khởi hành: chặn ngày trùng, chặn đổi ngày/giảm chỗ khi đã có khách, ngày mới phải ở tương lai.
     @Transactional
     public TourDeparture save(Long tourId, DepartureForm form) {
         if (form.getReturnDate().isBefore(form.getDepartureDate())) {
@@ -89,12 +89,12 @@ public class DepartureService {
         departure.setActive(form.isActive());
 
         TourDeparture saved = departureRepository.save(departure);
-        log.info("{} đợt khởi hành {} của tour {}",
+        log.info("{} lịch khởi hành {} của tour {}",
                 creating ? "Đã thêm" : "Đã cập nhật", saved.getDepartureDate(), tour.getCode());
         return saved;
     }
 
-    // Xoá một đợt khởi hành; chặn nếu đã có lượt đặt.
+    // Xoá một lịch khởi hành; chặn nếu đã có lượt đặt.
     @Transactional
     public void delete(Long tourId, Long departureId) {
         long inBooking = bookingDetailRepository.countByDepartureId(departureId);
@@ -117,7 +117,7 @@ public class DepartureService {
         }
     }
 
-    // Chặn hai đợt của cùng một tour trùng ngày khởi hành.
+    // Chặn hai lịch khởi hành của cùng một tour trùng ngày khởi hành.
     private void requireUniqueDate(Long tourId, DepartureForm form) {
         boolean duplicated = form.getId() == null
                 ? departureRepository.existsByTourIdAndDepartureDate(tourId, form.getDepartureDate())

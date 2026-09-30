@@ -29,7 +29,7 @@
                     <a class="btn btn-outline-secondary btn-sm"
                        th:href="@{/admin/tours/{id}/departures(id=${detail.tour.id})}">
                         <i class="bi bi-calendar-event"></i>
-                        <span th:text="#{admin.action.departures}">Đợt khởi hành</span>
+                        <span th:text="#{admin.action.departures}">Lịch khởi hành</span>
                     </a>
                     <a class="btn btn-primary btn-sm" th:href="@{/admin/tours/form(id=${detail.tour.id})}">
                         <i class="bi bi-pencil"></i> <span th:text="#{admin.action.edit}">Sửa</span>
@@ -118,9 +118,9 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <h2 class="h6 mb-3" th:text="#{admin.action.departures}">Đợt khởi hành</h2>
+                            <h2 class="h6 mb-3" th:text="#{admin.action.departures}">Lịch khởi hành</h2>
                             <p th:if="${#lists.isEmpty(detail.departures)}" class="text-muted small mb-0"
-                               th:text="#{admin.departure.empty}">Tour này chưa có đợt khởi hành nào.</p>
+                               th:text="#{admin.departure.empty}">Tour này chưa có lịch khởi hành nào.</p>
                             <div class="table-responsive" th:unless="${#lists.isEmpty(detail.departures)}">
                                 <table class="table table-sm align-middle mb-0">
                                     <thead class="table-light">

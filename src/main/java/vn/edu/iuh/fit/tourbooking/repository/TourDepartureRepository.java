@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-// Truy vấn đợt khởi hành, kể cả tìm đợt gần nhất còn đủ chỗ cho ô chọn ngày AJAX và giỏ hàng.
+// Truy vấn lịch khởi hành, kể cả tìm lịch gần nhất còn đủ chỗ cho ô chọn ngày AJAX và giỏ hàng.
 @Repository
 public interface TourDepartureRepository extends JpaRepository<TourDeparture, Long> {
 
@@ -23,7 +23,7 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
 
     boolean existsByTourIdAndDepartureDateAndIdNot(Long tourId, LocalDate departureDate, Long id);
 
-    // Các đợt còn đặt được: tour và đợt đều đang bán, chưa quá hạn chót, còn ít nhất 1 chỗ.
+    // Các lịch khởi hành còn đặt được: tour và lịch đều đang bán, chưa quá hạn chót, còn ít nhất 1 chỗ.
     @Query("""
             SELECT d FROM TourDeparture d
             WHERE d.tour.id = :tourId
@@ -36,7 +36,7 @@ public interface TourDepartureRepository extends JpaRepository<TourDeparture, Lo
     List<TourDeparture> findBookable(@Param("tourId") Long tourId,
                                      @Param("minDepartureDate") LocalDate minDepartureDate);
 
-    // Đợt gần nhất còn ĐỦ chỗ cho minSeats khách (không chỉ còn chỗ, phải đủ) - dùng khi thêm giỏ theo tour.
+    // Lịch khởi hành gần nhất còn ĐỦ chỗ cho minSeats khách (không chỉ còn chỗ, phải đủ) - dùng khi thêm giỏ theo tour.
     default Optional<TourDeparture> findNextBookable(Long tourId, int minSeats, int cutoffDays) {
         return findBookable(tourId, LocalDate.now().plusDays(cutoffDays)).stream()
                 .filter(d -> d.hasEnoughSeats(minSeats))

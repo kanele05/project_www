@@ -155,7 +155,7 @@ public class CheckoutController {
         binding.reject("error.checkout.cartChangedRebuilt");
     }
 
-    // So khớp từng nhóm hành khách với từng dòng giỏ: đúng đợt khởi hành, đúng số người lớn/trẻ em.
+    // So khớp từng nhóm hành khách với từng dòng giỏ: đúng lịch khởi hành, đúng số người lớn/trẻ em.
     private boolean structureMatches(List<PassengerGroupForm> groups, List<CartItem> items) {
         if (groups == null || groups.size() != items.size()) {
             return false;
@@ -176,7 +176,7 @@ public class CheckoutController {
         return true;
     }
 
-    // Dựng lại nhóm hành khách khi cấu trúc lệch giỏ, giữ lại dữ liệu khách đã gõ nếu còn khớp đợt khởi hành.
+    // Dựng lại nhóm hành khách khi cấu trúc lệch giỏ, giữ lại dữ liệu khách đã gõ nếu còn khớp lịch khởi hành.
     private List<PassengerGroupForm> rebuildPassengerGroups(List<PassengerGroupForm> oldGroups, Cart cart,
                                                               String customerName, String customerPhone) {
         Map<Long, PassengerGroupForm> byDeparture = new HashMap<>();

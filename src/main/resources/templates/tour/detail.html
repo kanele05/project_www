@@ -214,7 +214,7 @@
                 <div class="panel panel__pad booking-panel">
 
                     <p th:if="${#lists.isEmpty(departures)}" class="text-muted small mb-0"
-                       th:text="#{tour.detail.noDeparture}">Chưa có đợt khởi hành.</p>
+                       th:text="#{tour.detail.noDeparture}">Chưa có lịch khởi hành.</p>
 
                     <form th:unless="${#lists.isEmpty(departures)}"
                           th:action="@{/cart/add}" method="post" data-ajax-cart>

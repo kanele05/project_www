@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tours")
 @RequiredArgsConstructor
-// REST: chi tiết tour và danh sách đợt khởi hành - phục vụ ô chọn ngày bằng AJAX ở trang chi tiết tour.
+// REST: chi tiết tour và danh sách lịch khởi hành - phục vụ ô chọn ngày bằng AJAX ở trang chi tiết tour.
 public class TourApiController {
 
     private final TourService tourService;

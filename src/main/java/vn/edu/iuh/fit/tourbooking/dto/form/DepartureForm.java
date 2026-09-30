@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-// Biểu mẫu thêm/sửa đợt khởi hành ở khu quản trị.
+// Biểu mẫu thêm/sửa lịch khởi hành ở khu quản trị.
 public class DepartureForm {
 
     private Long id;

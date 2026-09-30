@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-// Một dòng trong đơn: đợt khởi hành nào, mấy khách, tên tour và đơn giá được chép lại tại thời điểm đặt.
+// Một dòng trong đơn: lịch khởi hành nào, mấy khách, tên tour và đơn giá được chép lại tại thời điểm đặt.
 @Entity
 @Table(
         name = "booking_details",

@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-// Một đợt khởi hành cụ thể: ngày đi, giá, số chỗ còn lại - thứ khách hàng thực sự đặt.
+// Một lịch khởi hành cụ thể: ngày đi, giá, số chỗ còn lại - thứ khách hàng thực sự đặt.
 @Entity
 @Table(
         name = "tour_departures",
@@ -99,7 +99,7 @@ public class TourDeparture extends Auditable {
     public void holdSeats(int seats) {
         if (!hasEnoughSeats(seats)) {
             throw new IllegalStateException(
-                    "Không đủ chỗ cho đợt khởi hành id=" + id
+                    "Không đủ chỗ cho lịch khởi hành id=" + id
                             + " (còn " + availableSeats + ", cần " + seats + ")");
         }
         availableSeats -= seats;

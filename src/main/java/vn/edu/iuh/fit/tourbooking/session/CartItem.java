@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-// Một dòng trong giỏ hàng: chép lại thông tin tour/đợt khởi hành tại thời điểm thêm vào giỏ.
+// Một dòng trong giỏ hàng: chép lại thông tin tour/lịch khởi hành tại thời điểm thêm vào giỏ.
 public class CartItem implements Serializable {
 
     @Serial
@@ -73,7 +73,7 @@ public class CartItem implements Serializable {
         return durationDays + " ngày " + durationNights + " đêm";
     }
 
-    // Cộng dồn số khách khi thêm cùng một đợt khởi hành vào giỏ lần nữa.
+    // Cộng dồn số khách khi thêm cùng một lịch khởi hành vào giỏ lần nữa.
     public void merge(int moreAdults, int moreChildren) {
         this.numAdults += moreAdults;
         this.numChildren += moreChildren;

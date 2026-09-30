@@ -38,7 +38,7 @@ public class CartService {
         return cart;
     }
 
-    // Thêm vào giỏ theo tour: tự chọn đợt khởi hành gần nhất còn đủ chỗ rồi giao lại cho addByDeparture.
+    // Thêm vào giỏ theo tour: tự chọn lịch khởi hành gần nhất còn đủ chỗ rồi giao lại cho addByDeparture.
     @Transactional(readOnly = true)
     public CartItem addByTour(HttpSession session, Long tourId, int adults, int children) {
         if (!tourRepository.existsById(tourId)) {
@@ -52,7 +52,7 @@ public class CartService {
         return addByDeparture(session, departure.getId(), adults, children);
     }
 
-    // Thêm vào giỏ theo đợt cụ thể: kiểm còn bán, cộng dồn nếu đã có dòng cùng đợt, chặn vượt trần khách.
+    // Thêm vào giỏ theo lịch khởi hành cụ thể: kiểm còn bán, cộng dồn nếu đã có dòng cùng lịch khởi hành, chặn vượt trần khách.
     @Transactional(readOnly = true)
     public CartItem addByDeparture(HttpSession session, Long departureId, int adults, int children) {
         validateGuestNumbers(adults, children);
@@ -76,7 +76,7 @@ public class CartService {
         requireEnoughSeats(departure, wanted);
 
         cart.addOrMerge(new CartItem(departure, adults, children));
-        log.debug("Thêm vào giỏ: đợt {} (+{} người lớn, +{} trẻ em), giỏ còn {} dòng",
+        log.debug("Thêm vào giỏ: lịch khởi hành {} (+{} người lớn, +{} trẻ em), giỏ còn {} dòng",
                 departureId, adults, children, cart.getItemCount());
         return cart.getItem(departureId);
     }
@@ -92,7 +92,7 @@ public class CartService {
 
         if (adults + children <= 0) {
             cart.remove(departureId);
-            log.debug("Số lượng về 0 - đã xoá đợt {} khỏi giỏ", departureId);
+            log.debug("Số lượng về 0 - đã xoá lịch khởi hành {} khỏi giỏ", departureId);
             return true;
         }
 

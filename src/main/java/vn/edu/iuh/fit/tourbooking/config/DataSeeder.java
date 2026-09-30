@@ -42,7 +42,7 @@ import java.util.List;
 @Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
-// Đổ dữ liệu mẫu khi CSDL còn rỗng: 4 người dùng, 6 danh mục, 20 tour, đợt khởi hành, và vài đơn hàng tình huống thật.
+// Đổ dữ liệu mẫu khi CSDL còn rỗng: 4 người dùng, 6 danh mục, 20 tour, lịch khởi hành, và vài đơn hàng tình huống thật.
 public class DataSeeder implements CommandLineRunner {
 
     private static final String DEMO_PASSWORD = "123456";
@@ -56,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Điểm vào: bỏ qua nếu đã có dữ liệu, ngược lại đổ tuần tự người dùng -> danh mục -> tour -> đợt khởi hành -> đơn hàng.
+    // Điểm vào: bỏ qua nếu đã có dữ liệu, ngược lại đổ tuần tự người dùng -> danh mục -> tour -> lịch khởi hành -> đơn hàng.
     @Override
     @Transactional
     public void run(String... args) {
@@ -72,7 +72,7 @@ public class DataSeeder implements CommandLineRunner {
         List<TourDeparture> departures = seedDepartures(tours);
         seedBookings(users, departures);
 
-        log.info("Đổ dữ liệu mẫu xong: {} người dùng, {} danh mục, {} tour, {} đợt khởi hành, {} đơn.",
+        log.info("Đổ dữ liệu mẫu xong: {} người dùng, {} danh mục, {} tour, {} lịch khởi hành, {} đơn.",
                 userRepository.count(), categoryRepository.count(), tourRepository.count(),
                 departureRepository.count(), bookingRepository.count());
         log.info("Tài khoản thử nghiệm - quản trị: admin@tourbooking.vn / {} ; khách: an.nguyen@gmail.com / {}",
@@ -282,7 +282,7 @@ public class DataSeeder implements CommandLineRunner {
         return sb.toString();
     }
 
-    // Mỗi tour có 3 đợt khởi hành mẫu (14/30/50 ngày tới), giá tăng dần theo đợt.
+    // Mỗi tour có 3 lịch khởi hành mẫu (14/30/50 ngày tới), giá tăng dần theo lịch.
     private List<TourDeparture> seedDepartures(List<Tour> tours) {
         List<TourDeparture> all = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -375,7 +375,7 @@ public class DataSeeder implements CommandLineRunner {
                 "SEED-REFUND-0001", LocalDateTime.now().minusDays(19), "Đã hoàn tiền 100% sau khi khách xin huỷ");
     }
 
-    // Đẩy lùi ngày một đợt khởi hành về quá khứ, phục vụ đơn mẫu ở trạng thái COMPLETED.
+    // Đẩy lùi ngày một lịch khởi hành về quá khứ, phục vụ đơn mẫu ở trạng thái COMPLETED.
     private TourDeparture rewindOneDepartureToPast(TourDeparture departure) {
         LocalDate pastDeparture = LocalDate.now().minusDays(20);
         departure.setDepartureDate(pastDeparture);

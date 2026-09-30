@@ -207,7 +207,7 @@ public class TourService {
         return saved;
     }
 
-    // Xoá tour cùng mọi đợt khởi hành và file ảnh; chặn nếu đã có lượt đặt/đánh giá/liên hệ.
+    // Xoá tour cùng mọi lịch khởi hành và file ảnh; chặn nếu đã có lượt đặt/đánh giá/liên hệ.
     @Transactional
     public void delete(Long id) {
         long inBooking = bookingDetailRepository.countByDeparture_Tour_Id(id);

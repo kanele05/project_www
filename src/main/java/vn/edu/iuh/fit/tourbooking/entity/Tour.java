@@ -145,7 +145,7 @@ public class Tour extends Auditable {
         image.setTour(null);
     }
 
-    // Thêm một đợt khởi hành và gắn ngược lại tham chiếu tour.
+    // Thêm một lịch khởi hành và gắn ngược lại tham chiếu tour.
     public void addDeparture(TourDeparture departure) {
         departures.add(departure);
         departure.setTour(this);

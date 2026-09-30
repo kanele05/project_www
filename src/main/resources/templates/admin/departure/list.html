@@ -21,11 +21,11 @@
                     <li class="breadcrumb-item">
                         <a th:href="@{/admin/tours/form(id=${tour.id})}" th:text="${tour.name}">Tên tour</a>
                     </li>
-                    <li class="breadcrumb-item active" th:text="#{admin.action.departures}">Đợt khởi hành</li>
+                    <li class="breadcrumb-item active" th:text="#{admin.action.departures}">Lịch khởi hành</li>
                 </ol>
             </nav>
 
-            <h1 class="h5 mb-3" th:text="#{admin.departure.title(${tour.name})}">Đợt khởi hành</h1>
+            <h1 class="h5 mb-3" th:text="#{admin.departure.title(${tour.name})}">Lịch khởi hành</h1>
 
             <div th:replace="~{fragments/components :: alerts}"></div>
 
@@ -48,7 +48,7 @@
                                 <tbody>
                                 <tr th:if="${#lists.isEmpty(departures)}">
                                     <td colspan="6" class="text-center text-muted py-4"
-                                        th:text="#{admin.departure.empty}">Chưa có đợt nào.</td>
+                                        th:text="#{admin.departure.empty}">Chưa có lịch khởi hành nào.</td>
                                 </tr>
 
                                 <tr th:each="d : ${departures}">
@@ -100,7 +100,7 @@
                             <h2 class="h6 mb-3"
                                 th:text="${departureForm.id} != null
                                          ? #{admin.departure.formEdit} : #{admin.departure.formNew}">
-                                Thêm đợt khởi hành
+                                Thêm lịch khởi hành
                             </h2>
 
                             <form method="post" th:object="${departureForm}"

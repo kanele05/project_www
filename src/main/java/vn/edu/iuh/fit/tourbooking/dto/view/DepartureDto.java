@@ -3,7 +3,7 @@ package vn.edu.iuh.fit.tourbooking.dto.view;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-// DTO hiển thị đợt khởi hành, dùng cho ô chọn ngày AJAX ở trang chi tiết tour.
+// DTO hiển thị lịch khởi hành, dùng cho ô chọn ngày AJAX ở trang chi tiết tour.
 public record DepartureDto(Long id,
                            Long tourId,
                            LocalDate departureDate,

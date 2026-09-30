@@ -84,7 +84,7 @@ public class BookingService {
         return locked;
     }
 
-    // Đặt tour từ giỏ hàng: khoá và trừ chỗ từng đợt, ghi hành khách, áp mã giảm giá, sinh khoản thu PENDING và dòng lịch sử đầu tiên, phát sự kiện gửi thư.
+    // Đặt tour từ giỏ hàng: khoá và trừ chỗ từng lịch khởi hành, ghi hành khách, áp mã giảm giá, sinh khoản thu PENDING và dòng lịch sử đầu tiên, phát sự kiện gửi thư.
     @Transactional
     public Booking placeOrder(Long userId, CheckoutForm form, Cart cart) {
         if (cart == null || cart.isEmpty()) {
@@ -158,7 +158,7 @@ public class BookingService {
         return saved;
     }
 
-    // Tìm nhóm hành khách đã nhập trên form ứng với một đợt khởi hành trong giỏ.
+    // Tìm nhóm hành khách đã nhập trên form ứng với một lịch khởi hành trong giỏ.
     private PassengerGroupForm findGroup(CheckoutForm form, Long departureId) {
         if (form.getPassengerGroups() == null) {
             return null;
@@ -320,7 +320,7 @@ public class BookingService {
                 .anyMatch(date -> date.isAfter(LocalDate.now()));
     }
 
-    // Trả lại chỗ đã giữ ở mọi đợt khởi hành của đơn và trả lượt dùng mã giảm giá (nếu có).
+    // Trả lại chỗ đã giữ ở mọi lịch khởi hành của đơn và trả lượt dùng mã giảm giá (nếu có).
     private void releaseHold(Booking booking) {
         booking.getDetails().forEach(d -> d.getDeparture().releaseSeats(d.getTotalGuests()));
         promotionService.releaseUsage(booking);

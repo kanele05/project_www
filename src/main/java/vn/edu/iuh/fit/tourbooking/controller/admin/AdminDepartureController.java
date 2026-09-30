@@ -21,7 +21,7 @@ import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 @Controller
 @RequestMapping("/admin/tours/{tourId}/departures")
 @RequiredArgsConstructor
-// Khu quản trị: thêm/sửa/xoá/bật-tắt đợt khởi hành của một tour.
+// Khu quản trị: thêm/sửa/xoá/bật-tắt lịch khởi hành của một tour.
 public class AdminDepartureController {
 
     private final DepartureService departureService;
