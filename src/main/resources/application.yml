@@ -69,7 +69,7 @@ app:
     url-prefix: /uploads
   mail:
     mode: console
-    from: no-reply@tourbooking.iuh.edu.vn
+    from: ${MAIL_FROM:khanglehoang2602@gmail.com}
     from-name: IUH Tour Booking
 
   booking:
