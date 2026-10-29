@@ -28,7 +28,7 @@ import vn.edu.iuh.fit.tourbooking.ai.TourVectorStore;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-// Dựng thật chuỗi cấu hình Spring AI (đọc application.yml thật) để chứng minh: không khoá thì không có bean AI, có khoá thì nối đúng Gemini.
+// Dựng thật chuỗi cấu hình Spring AI (đọc application.properties thật) để chứng minh: không khoá thì không có bean AI, có khoá thì nối đúng Gemini.
 class AiWiringTest {
 
     @Configuration
@@ -45,7 +45,7 @@ class AiWiringTest {
         }
     }
 
-    // Chạy bằng SpringApplication thật (có EnvironmentPostProcessor và application.yml thật), không dùng web/DB.
+    // Chạy bằng SpringApplication thật (có EnvironmentPostProcessor và application.properties thật), không dùng web/DB.
     private ConfigurableApplicationContext start(String... properties) {
         List<String> all = new java.util.ArrayList<>(List.of("spring.main.web-application-type=none",
                 "spring.main.banner-mode=off", "logging.level.root=WARN"));

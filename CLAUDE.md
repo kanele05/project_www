@@ -2,7 +2,7 @@
 
 Đồ án môn **Lập trình WWW (Java)** — IUH. Spring Boot 3.5.16 + Thymeleaf + SQL Server.
 **Đọc [PLAN.md](PLAN.md) trước khi làm bất cứ việc gì** — nó có tiến độ từng phase, domain model,
-và **56 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
+và **79 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
 
 ## Chạy
 
@@ -51,6 +51,8 @@ Tài khoản mẫu, mật khẩu đều `123456`: `admin@tourbooking.vn` (ADMIN)
   vào truy vấn, đừng bật lại.
 - Lombok trên entity chỉ được dùng `@Getter @Setter @NoArgsConstructor @AllArgsConstructor`.
   **Cấm `@Data`/`@ToString`/`@EqualsAndHashCode`** (quan hệ hai chiều → `StackOverflowError`).
+- Cấu hình Spring nằm ở `application.properties` (môn học yêu cầu), **không dùng YAML**. Loader đọc `.properties` theo
+  ISO-8859-1: giá trị có dấu phải viết `\uXXXX`, comment thì tuỳ ý (gotcha #79).
 - Mọi POST kết thúc bằng `redirect:` + flash attribute (PRG).
 - Ghi chú nội bộ trong template dùng `<!--/* ... */-->` để không lọt ra HTML.
 

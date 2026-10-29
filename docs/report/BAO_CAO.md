@@ -1486,7 +1486,7 @@ Ba nhóm chức năng mới đều đi qua tầng dịch vụ sẵn có của �
 
 | Tour tương tự, gợi ý cá nhân hoá | RecommendationService |
 
-| Công tắc AI, cấu hình nhà cung cấp | AiProperties, AiEnabledCondition, AiEnvironmentPostProcessor, application.yml |
+| Công tắc AI, cấu hình nhà cung cấp | AiProperties, AiEnabledCondition, AiEnvironmentPostProcessor, application.properties |
 
 | Thu thập sự kiện ở trình duyệt | static/js/tracker.js |
 
@@ -1532,20 +1532,15 @@ Kho vector: dùng SimpleVectorStore của Spring AI và lưu ra tệp data/vecto
 
 | AI_VECTOR_STORE_PATH | Đường dẫn tệp kho vector | data/vector-store.json |
 
-Một đoạn cấu hình tiêu biểu trong tệp application.yml (giá trị mặc định: địa chỉ Gemini, mô hình gemini-2.5-flash và gemini-embedding-001):
+Một đoạn cấu hình tiêu biểu trong tệp application.properties (giá trị mặc định: địa chỉ Gemini, mô hình gemini-2.5-flash và gemini-embedding-001):
 
 ```
-spring:
-  ai:
-    openai:
-      api-key: ${GEMINI_API_KEY:}
-      base-url: ${app.ai.base-url}
-      chat:
-        completions-path: ${app.ai.chat-path}
-        options.model: ${app.ai.chat-model}
-      embedding:
-        embeddings-path: ${app.ai.embeddings-path}
-        options.model: ${app.ai.embedding-model}
+spring.ai.openai.api-key=${GEMINI_API_KEY:}
+spring.ai.openai.base-url=${app.ai.base-url}
+spring.ai.openai.chat.completions-path=${app.ai.chat-path}
+spring.ai.openai.chat.options.model=${app.ai.chat-model}
+spring.ai.openai.embedding.embeddings-path=${app.ai.embeddings-path}
+spring.ai.openai.embedding.options.model=${app.ai.embedding-model}
 ```
 
 Công tắc AI: tính năng được bật khi có khoá API hoặc khi đặt AI_ENABLED=true; đặt AI_ENABLED=false thì tắt dù có khoá. Một điểm kỹ thuật quan trọng nhóm gặp phải: cấu hình tự động của Spring AI ném lỗi ngay lúc khởi động nếu khoá rỗng, kể cả khi biến môi trường tồn tại nhưng để trống. Vì vậy một lớp xử lý môi trường riêng tắt luôn cấu hình tự động này khi AI tắt, bảo đảm ứng dụng luôn khởi động được.
@@ -1640,7 +1635,7 @@ Các kiểm thử dưới đây nằm trong thư mục src/test của dự án v
 
 | Chatbot và công cụ | Lời nhắc hệ thống, bộ nhớ theo phiên, giới hạn tốc độ, lỗi nhà cung cấp, công cụ chỉ có 3 phương thức, addToCart đi qua CartService | Đạt |
 
-| Cấu hình | Dựng thật cấu hình Spring AI từ application.yml: không khoá, khoá rỗng, tắt tường minh, có khoá nối đúng Gemini, đổi sang Ollama bằng biến môi trường | Đạt |
+| Cấu hình | Dựng thật cấu hình Spring AI từ application.properties: không khoá, khoá rỗng, tắt tường minh, có khoá nối đúng Gemini, đổi sang Ollama bằng biến môi trường | Đạt |
 
 | Toàn hệ thống (AI bật) | Chạy cả ứng dụng thật trên cơ sở dữ liệu H2 (chế độ SQL Server) với máy chủ giả giao thức OpenAI: lập chỉ mục 20 tour, tìm ngữ nghĩa có lọc giá, tour tương tự, theo dõi đủ 5 loại sự kiện và các trường hợp sai, chatbot gọi công cụ rồi thêm vào giỏ, trang thống kê, lập chỉ mục lại, phân quyền | Đạt |
 

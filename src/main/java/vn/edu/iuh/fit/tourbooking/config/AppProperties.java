@@ -2,7 +2,7 @@ package vn.edu.iuh.fit.tourbooking.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-// Gom các cấu hình riêng của ứng dụng (application.yml, tiền tố "app.") thành một record kiểu mạnh.
+// Gom các cấu hình riêng của ứng dụng (application.properties, tiền tố "app.") thành một record kiểu mạnh.
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(Upload upload, Mail mail, Booking booking) {
 

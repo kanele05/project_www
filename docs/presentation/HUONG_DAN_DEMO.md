@@ -211,7 +211,7 @@ Có thể quay thêm một video 1 đến 2 phút toàn bộ kịch bản. Báo 
 | similaritySearch, topK, threshold, filter | 10 | `TourVectorService.search()`, `ai/PriceHintParser.java` |
 | Tìm kiếm ngữ nghĩa trong dự án | 11, 22 | `ai/SemanticSearchService.java`, `TourController`, `TourApiController#semantic` |
 | Sản phẩm tương tự, gợi ý | 11, 32 | `service/RecommendationService.java` |
-| Cấu hình, khoá API, công tắc | 12, 19 | `config/AiProperties.java`, `AiEnabledCondition`, `AiEnvironmentPostProcessor`, `application.yml` |
+| Cấu hình, khoá API, công tắc | 12, 19 | `config/AiProperties.java`, `AiEnabledCondition`, `AiEnvironmentPostProcessor`, `application.properties` |
 | Mock ChatModel khi kiểm thử | 12, 34 | `src/test/.../ai/AiChatServiceTest.java`, `web/FakeOpenAiServer.java` |
 | Các chỉ số tracking, phễu | 13 | `service/BehaviorStatsService.java`, `UserEventRepository` |
 | Event delegation, Page Visibility, keepalive | 14 | `static/js/tracker.js` |

@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-// Chạy sau khi đọc application.yml: AI tắt thì cũng tắt luôn autoconfig OpenAI của Spring AI, để thiếu hoặc để trống khoá API không làm app sập lúc khởi động.
+// Chạy sau khi đọc application.properties: AI tắt thì cũng tắt luôn autoconfig OpenAI của Spring AI, để thiếu hoặc để trống khoá API không làm app sập lúc khởi động.
 public class AiEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     static final String SOURCE_NAME = "tourbookingAiDefaults";
