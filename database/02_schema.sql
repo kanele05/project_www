@@ -1,4 +1,4 @@
--- Cấu trúc 16 bảng của TourBookingDB. Không CHECK/Function/SP/Trigger - mọi ràng buộc nghiệp vụ nằm ở tầng Java.
+-- Cấu trúc 17 bảng của TourBookingDB. Không CHECK/Function/SP/Trigger - mọi ràng buộc nghiệp vụ nằm ở tầng Java.
 USE TourBookingDB;
 GO
 
@@ -342,6 +342,25 @@ CREATE TABLE password_reset_tokens (
         REFERENCES users (id)
 );
 CREATE INDEX idx_password_reset_tokens_user ON password_reset_tokens (user_id);
+GO
+
+CREATE TABLE user_events (
+    id           BIGINT IDENTITY(1,1) NOT NULL,
+    event_type   NVARCHAR(20)   NOT NULL,
+    session_id   NVARCHAR(64)   NOT NULL,
+    user_id      BIGINT             NULL,
+    tour_id      BIGINT             NULL,
+    departure_id BIGINT             NULL,
+    keyword      NVARCHAR(200)      NULL,
+    duration_ms  INT                NULL,
+    page_url     NVARCHAR(255)      NULL,
+    occurred_at  DATETIME2(6)   NOT NULL,
+    CONSTRAINT pk_user_events PRIMARY KEY (id)
+);
+CREATE INDEX idx_user_events_tour    ON user_events (tour_id, event_type);
+CREATE INDEX idx_user_events_time    ON user_events (occurred_at);
+CREATE INDEX idx_user_events_session ON user_events (session_id);
+CREATE INDEX idx_user_events_user    ON user_events (user_id);
 GO
 
 SELECT COUNT(*) AS so_check_constraint FROM sys.check_constraints;

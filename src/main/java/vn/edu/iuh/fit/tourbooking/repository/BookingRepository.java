@@ -107,4 +107,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long>,
     Page<Booking> adminSearch(@Param("keyword") String keyword,
                               @Param("status") BookingStatus status,
                               Pageable pageable);
+
+    // Số đơn đặt trong khoảng thời gian, không tính đơn đã huỷ (đáy của phễu chuyển đổi).
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE b.status <> vn.edu.iuh.fit.tourbooking.entity.BookingStatus.CANCELLED
+              AND b.bookingDate >= :from AND b.bookingDate < :to
+            """)
+    long countPlacedBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

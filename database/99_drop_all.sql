@@ -2,6 +2,7 @@
 USE TourBookingDB;
 GO
 
+DROP TABLE IF EXISTS user_events;
 DROP TABLE IF EXISTS booking_passengers;
 DROP TABLE IF EXISTS coupon_usages;
 DROP TABLE IF EXISTS payments;
