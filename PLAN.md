@@ -5,7 +5,7 @@
 > đặt trong chính thư mục project để không mất lần nữa. Nội dung lấy từ lịch sử phiên làm việc và
 > **đã đối chiếu với mã nguồn / CSDL hiện tại**. Chỗ nào không chắc đều ghi rõ.
 >
-> Cập nhật lần cuối: 2026-09-23 (Phase 10 - sửa 16 lỗi do agent rà lần hai).
+> Cập nhật lần cuối: 2026-10-29 (Phase 15 - AI + theo dõi hành vi). Các phase trước giữ nguyên.
 
 ## Bối cảnh
 
@@ -54,6 +54,7 @@ toàn vì Initializr nay chỉ sinh được Boot 4.x với các artifact không
 | **11** — Nghiệp vụ đợt B: máy trạng thái, hoàn tiền, UC023 tự huỷ, tự huỷ quá hạn, hạn chót đặt, khoá sửa đợt, thống kê (SPEC_CHUNG.md mục 12.1-12.6, 12.9) | ✅ xong 7/7, verify bằng lệnh thật + `curl` thao tác thật + dựng lại CSDL từ đầu (chi tiết bên dưới) |
 | **12** — Nghiệp vụ đợt C: nhập hành khách khi thanh toán, giữ bất biến khi admin sửa số khách, ba trang chi tiết CHỈ XEM cho admin (SPEC_CHUNG.md mục 12.7, 12.8) | ✅ xong 2/2, verify bằng lệnh thật + `curl` + **trình duyệt thật** (đặt tour thật qua UI) + dựng lại từ CSDL thật (chi tiết bên dưới) |
 | **13** — Sửa 7 lỗi do agent rà lần ba (1 nghiêm trọng khoá bi quan, 2 vừa, 4 nhẹ) | ✅ 7/7, verify bằng khoá SQL Server thật nới khe đua + hai request `curl` song song thật + dựng lại DB tạm bằng login sysadmin Windows Auth (chi tiết bên dưới) |
+| **15** — AI (Spring AI 1.1.8 + Gemini, tìm kiếm ngữ nghĩa, tour tương tự, chatbot RAG + tool) và theo dõi hành vi người dùng (bảng `user_events`, trang thống kê, gợi ý) | ✅ code + 73 kiểm thử tự động xanh, **chạy trọn vẹn trên H2 + máy chủ OpenAI giả**; 🔶 **chưa thử với SQL Server thật và chưa gọi Gemini thật** (chi tiết ở Phase 15 bên dưới) |
 
 ### 🎨 Bảng màu & hệ thống thiết kế *(user đã chọn, đừng tự đổi)*
 
@@ -81,7 +82,7 @@ tiếng Việt nên dấu thanh không chồng lên dấu mũ.
 - **`ddl-auto: validate`** — sửa entity thì **phải** sửa cả `database/02_schema.sql` rồi chạy lại,
   không thì app không khởi động.
 - **Câu chữ mới vào cả 3 file** `messages.properties`, `messages_vi.properties`,
-  `messages_en.properties` (hiện **712 khoá**, đã đối chiếu khớp). Lệnh đối chiếu ở cuối file.
+  `messages_en.properties` (hiện **850 khoá**, đã đối chiếu khớp). Lệnh đối chiếu ở cuối file.
 - **Đổi màu → sửa token ở mục 1 của `app.css`**, đừng rải mã màu vào template.
 - Cấm `columnDefinition` kiểu chuỗi trên entity (#14) · enum dùng `AttributeConverter`, cấm
   `@Enumerated` (#6) · tìm không dấu chạy trên `tours.search_text` (#7) · `th:each` phải ở ngoài
@@ -136,7 +137,7 @@ BookingDetail 1─N BookingPassenger · Booking 1─N Payment · Booking 1─N B
 Promotion 1─N CouponUsage · Booking N─1 Promotion · Tour/User 1─N Review · ContactMessage
 ```
 
-**CSDL hiện có 16 bảng** (7 lõi + 9 bổ sung). `Cart` / `CartItem` là **POJO `Serializable` trong
+**CSDL hiện có 17 bảng** (7 lõi + 9 bổ sung + `user_events` của Phase 15). `Cart` / `CartItem` là **POJO `Serializable` trong
 `session/`, KHÔNG phải entity** — đề bài bắt buộc giỏ hàng nằm trong Session.
 
 **Tại sao giữ `TourDeparture`** (thay vì nhét ngày/giá/chỗ thẳng vào `Tour`): nó khiến 3 yêu cầu khó
@@ -1095,6 +1096,67 @@ private nhỏ trong 41 file HTML (bản thân template không có khái niệm "
 đối chiếu hình ảnh (screenshot) từng trang một cách toàn diện như một bộ QA đầy đủ nhiều ngày mới làm
 được - phần kiểm bằng trình duyệt thật giới hạn ở bốn trang đại diện (trang chủ, chi tiết tour, đăng
 nhập, bảng điều khiển quản trị) nêu ở trên, không phải toàn bộ mọi trang trong hệ thống.
+
+
+---
+
+## Phase 15 — AI (Spring AI + vector search) và theo dõi hành vi người dùng
+
+Thiết kế bám `docs/presentation/SpringAI_VectorDB_UserTracking.pptx` (Phần 2) nhưng **đã chỉnh theo thực tế**; hướng dẫn trình diễn ở `docs/presentation/HUONG_DAN_DEMO.md`.
+
+### Quyết định (khác slide gốc)
+
+| Hạng mục | Slide gốc | Thực tế đã làm | Vì sao |
+|---|---|---|---|
+| Phiên bản | Spring AI 2.0.2 | **Spring AI 1.1.8** qua `spring-ai-bom`, `spring-ai-starter-model-openai` + `spring-ai-vector-store` + `spring-ai-advisors-vector-store` | 2.0.x dùng Jackson 3 (`tools.jackson`) nên nhắm tới Boot 4; 1.1.8 là bản 1.x mới nhất (Maven Central), chạy với Boot 3.5.16 (đã biên dịch + chạy thật) |
+| Nhà cung cấp | Ollama dev / OpenAI prod | **Google Gemini (gói miễn phí) qua endpoint tương thích OpenAI**, đổi sang OpenAI/Ollama chỉ bằng biến môi trường | Chốt theo yêu cầu người dùng; một starter, một đường mã |
+| Vector store | PgVector (prod) / Simple (dev) | **`SimpleVectorStore` lưu tệp `data/vector-store.json`** (lớp `TourVectorStore` kế thừa để có `ids()`/`clearAll()`) | Không có Postgres; SQL Server vẫn là nguồn gốc dữ liệu |
+| ADD_TO_CART | `tracker.js` bắt submit form | **Ghi ở server** (`CartApiController`, `CartController`, tool `addToCart`) sau khi thêm giỏ **thành công** | Số liệu chính xác, không đếm cả lúc hết chỗ/lỗi |
+| Bảng `user_events` | có `page_url`? không | thêm cột `page_url` (chỉ phần đường dẫn, bỏ query) | slide có nhắc cắt `pageUrl` |
+| Công tắc AI | — | `app.ai.enabled` (`AI_ENABLED`) để trống = **tự bật khi có `GEMINI_API_KEY`** | app phải chạy đủ chức năng khi không có khoá |
+
+### Cấu hình (`application.yml`, mọi thứ ghi đè được bằng biến môi trường)
+
+`GEMINI_API_KEY` · `AI_ENABLED` · `AI_BASE_URL` (mặc định `https://generativelanguage.googleapis.com`) · `AI_CHAT_PATH` (`/v1beta/openai/chat/completions`) · `AI_EMBEDDINGS_PATH` (`/v1beta/openai/embeddings`) · `AI_CHAT_MODEL` (`gemini-2.5-flash`; dự phòng hạn mức cao hơn: `gemini-2.5-flash-lite`) · `AI_EMBEDDING_MODEL` (`gemini-embedding-001`, 3072 chiều) · `AI_EMBEDDING_DIMENSIONS` (trống = mặc định của mô hình) · `AI_SIMILARITY_THRESHOLD` (0.5) · `AI_EMBEDDING_MIN_INTERVAL_MS` (700) · `AI_VECTOR_STORE_PATH`. Đổi sang OpenAI: `AI_BASE_URL=https://api.openai.com`, hai đường dẫn `/v1/...`, hai tên mô hình. Đổi sang Ollama: `AI_BASE_URL=http://localhost:11434`, khoá giả `ollama`.
+
+### Lớp chính
+
+- `config/`: `AiProperties`, `AiEnabledCondition`, `AiEnvironmentPostProcessor` (đăng ký ở `META-INF/spring.factories`), `AiConfig` (bean `TourVectorStore`, `ChatMemory`, `ChatClient tourAssistant`), `TrackingProperties`.
+- `ai/`: `TourVectorService` (nạp/lập lại/upsert/search/similar), `TourDocumentFactory`, `ThrottledEmbeddingModel`, `SemanticSearchService`, `PriceHintParser`, `TourTools` (`searchTours`, `getDepartures`, `addToCart`), `AiChatService`, `TourIndexInitializer` (lúc `ApplicationReadyEvent`), `TourIndexListener` + `TourChangedEvent` (đồng bộ sau commit khi admin sửa tour).
+- `service/`: `TrackingService`, `BehaviorStatsService`, `RecommendationService`.
+- `controller/`: `api/TrackingApiController` (`POST /api/tracking`), `api/ChatApiController` (`POST /api/chat`), `api/TourApiController#semantic` (`GET /api/tours/semantic`), `admin/AdminAnalyticsController` (`/admin/analytics`), `admin/AdminAiController` (`/admin/ai`, `POST /admin/ai/reindex` → redirect + flash).
+- `entity/`: `UserEvent`, `EventType` + `EventTypeConverter`; `repository/UserEventRepository` (JPQL thuần, không native).
+- Giao diện: `static/js/tracker.js`, `static/js/chat.js`, `fragments/chat-widget.html` (nằm trong fragment `scripts` nên mọi trang công khai đều có), khối "Có thể bạn thích" (`index.html`), "Tour tương tự" (`tour/detail.html`), công tắc "Tìm bằng AI" (`tour/list.html`), mục 15 của `app.css`.
+- CSDL: `02_schema.sql` (+`user_events`, 17 bảng), `99_drop_all.sql`, **`05_user_events.sql`** (idempotent, cho CSDL đã có sẵn). `user_events` **không có khoá ngoại** (ghi nhanh, không cản xoá tour/tài khoản; cũng tránh lỗ hổng gotcha #42) nên xoá tour để lại dòng mồ côi vô hại — mọi truy vấn thống kê đều JOIN `tours`.
+
+### Quy tắc phía server của tracking
+
+`userId` lấy từ `SecurityContext`, `sessionId` từ `HttpSession` và **băm SHA-256** trước khi lưu (không lưu mã phiên đang sống); loại sự kiện chặt (enum), thiếu trường → 400; bot (User-Agent) → 202 nhưng không ghi; 60 sự kiện/phút/phiên (429); `TIME_ON_PAGE` < 0,5 s bị bỏ, > 30 phút bị cắt; từ khoá cắt 200 ký tự; `page_url` chỉ giữ đường dẫn; tour không tồn tại → bỏ; lỗi ghi CSDL → nuốt + log (tracking không được làm hỏng nghiệp vụ); `@Scheduled` 03:15 xoá sự kiện quá `retention-days` (180). `tracker.js` tôn trọng `Do Not Track`.
+
+### Cách AI "tắt" hoạt động
+
+`AiEnvironmentPostProcessor` đặt `spring.ai.model.chat/embedding=none` khi AI tắt → autoconfig OpenAI của Spring AI không chạy; `AiConfig` (`@Conditional(AiEnabledCondition)`) không tạo `TourVectorStore`/`ChatClient`. Mọi service dùng `ObjectProvider` nên trả "không khả dụng" thay vì lỗi: tìm ngữ nghĩa → lùi về LIKE (bỏ cụm "dưới 5 triệu" khỏi câu và đổi thành bộ lọc giá), chatbot → 503 + câu thân thiện, widget hiện "AI chưa được cấu hình", "Tour tương tự"/"Có thể bạn thích" lùi về cùng danh mục / phổ biến.
+
+### Đã kiểm bằng gì (đọc kỹ — đây là chỗ dễ nói quá)
+
+- `./mvnw -q -DskipTests compile` sạch; `./mvnw test` = **73 kiểm thử xanh** (không cần SQL Server): parser giá, rate limiter, `TrackingService`, validate `TrackingRequest`, thống kê, gợi ý, `TourVectorService` với mô hình nhúng giả (lưu/nạp tệp, upsert, lọc giá, tour tương tự), `ThrottledEmbeddingModel`, `AiChatService` với `ChatModel` giả, `TourTools`, `AiProperties`, và `AiWiringTest` (dựng thật cấu hình Spring AI từ `application.yml`).
+- `AiEnabledSmokeTest` / `AiDisabledSmokeTest`: **chạy cả ứng dụng thật** (Thymeleaf, Security + CSRF, `DataSeeder` 20 tour, JPA validate/create) trên **H2 (chế độ SQL Server)** với **máy chủ giả giao thức OpenAI** (`FakeOpenAiServer`, đúng đường dẫn `/v1beta/openai/...`): lập chỉ mục 20 tour, tìm ngữ nghĩa + lọc giá, tour tương tự, tracking đủ 5 loại + ca sai, vòng tool-calling thật (`searchTours` rồi `addToCart` vào giỏ), thống kê admin, reindex PRG, phân quyền, và toàn bộ nhánh AI tắt/khoá rỗng/nhà cung cấp lỗi 500.
+- **CHƯA kiểm**: SQL Server thật (H2 không bắt được lỗi riêng của SQL Server, xem #58 — nên chạy `05_user_events.sql` và mở `/admin/analytics` trên máy có SQL Server); **Gemini thật** (đường dẫn, tên tham số, độ giống cosine thực tế của `gemini-embedding-001`, ngưỡng 0.5 là ước đoán cần chỉnh); giao diện bằng mắt/trình duyệt (không có trình duyệt trong môi trường này — widget chat, bố cục trang thống kê chưa được nhìn thấy).
+
+### Hạn chế đã biết
+
+Bộ nhớ hội thoại giữ trong RAM theo phiên (không giới hạn số phiên); mã phiên đổi khi đăng nhập nên phễu của khách ẩn danh bị tách làm hai; không có banner xin đồng ý theo dõi (chỉ tôn trọng DNT); `SimpleVectorStore` nạp cả tệp vào RAM, đủ cho vài trăm tour; tìm LIKE dự phòng vẫn khớp nguyên cụm; thứ tự sắp xếp của người dùng bị bỏ qua ở chế độ ngữ nghĩa (xếp theo độ giống); gói miễn phí của Gemini có thể dùng prompt để cải thiện sản phẩm Google — không đưa dữ liệu khách thật vào lúc demo.
+
+### Gotcha mới
+
+71. ⚠️ **Autoconfig OpenAI của Spring AI ném `OpenAI API key must be set` lúc khởi động** nếu khoá rỗng — và `${GEMINI_API_KEY:mặc-định}` **không cứu được** khi biến môi trường tồn tại nhưng để trống (placeholder chỉ dùng mặc định khi biến vắng mặt). Dòng "biến môi trường rỗng" trong cấu hình chạy IntelliJ là kịch bản thật. Cách xử lý: `AiEnvironmentPostProcessor` tắt `spring.ai.model.chat/embedding` khi AI tắt. Có kiểm thử (`AiWiringTest`).
+72. ⚠️ **`SimpleVectorStore.add` gọi API nhúng TỪNG tài liệu một** (`embed(Document)`), không gộp lô — 20 tour = 20 request liên tiếp, dễ chạm 429 ở gói miễn phí. `ThrottledEmbeddingModel` giãn cách tối thiểu 700 ms; `spring.ai.retry.on-http-codes: 429` (mặc định Spring AI **không** thử lại 4xx). Và không bao giờ nhúng lại lúc khởi động: tệp `data/vector-store.json` + `.meta.json` (khoá = nhà cung cấp|mô hình|số chiều; đổi một trong ba thì lập lại).
+73. ⚠️ **Toán tử ba ngôi `cond ? Long.longValue() : Long` tự mở hộp (unbox) cả nhánh sau** → `NullPointerException` khi nhánh sau là `null`. Vấp thật ở `SemanticSearchService` (mọi tìm ngữ nghĩa không có giá tối thiểu đều lùi về từ khoá một cách im lặng); chỉ lộ ra nhờ kiểm thử. Dùng `Long.valueOf(...)` cho nhánh đầu.
+74. ⚠️ **Lập chỉ mục khi khởi động phải chờ `DataSeeder`**: `ApplicationRunner @Order(100)` chạy trước `CommandLineRunner` không `@Order` nên lập chỉ mục **0 tour** rồi lưu tệp rỗng — lần khởi động sau nạp tệp rỗng và không bao giờ lập lại. Giờ dùng `ApplicationReadyEvent`, và tệp nạp lên mà rỗng thì lập lại.
+75. **`@DynamicPropertySource` đến muộn hơn `EnvironmentPostProcessor`** (và khoá ngữ cảnh của Spring Test **không** gồm system property): kiểm thử cần biến sớm thì đặt bằng `System.setProperty` trong khối `static`, và đổi `@SpringBootTest(properties=...)` để hai lớp kiểm thử không dùng chung một ngữ cảnh đã cache.
+76. **JSON có enum lạ (`"type":"HACK"`) ném `HttpMessageNotReadableException`** — `ApiExceptionHandler` cũ chỉ có handler `Exception` chung nên trả **500**. Đã thêm handler → 400.
+77. **`app.js` khoá nút submit của MỌI form** sau khi gửi (trừ `[data-ajax-cart]`); form chat gửi bằng AJAX nên phải có `data-no-lock`, nếu không nút Gửi bị vô hiệu vĩnh viễn sau lần gửi đầu.
+78. `SimpleVectorStoreContent` là lớp package-private nhưng trường `store` của `SimpleVectorStore` là `protected`: lớp con vẫn gọi được `store.keySet()/clear()` (không nêu tên kiểu), nhờ đó có `ids()`/`clearAll()` mà không phải sao chép thư viện.
 
 ---
 

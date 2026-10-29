@@ -52,7 +52,7 @@
 </nav>
 
 <div th:fragment="tourCard(tour)" class="col-12 col-sm-6 col-lg-4 reveal">
-    <article class="tour-card">
+    <article class="tour-card" th:data-track-tour="${tour.id}">
 
         <div class="tour-card__media">
             <a th:href="@{/tours/{id}/{slug}(id=${tour.id}, slug=${tour.slug})}"

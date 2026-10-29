@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.edu.iuh.fit.tourbooking.entity.Tour;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,4 +79,19 @@ public interface TourRepository extends JpaRepository<Tour, Long>, JpaSpecificat
     Page<Tour> adminSearch(@Param("keyword") String keyword,
                            @Param("categoryId") Long categoryId,
                            Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    List<Tour> findByActiveTrue();
+
+    @EntityGraph(attributePaths = "category")
+    Page<Tour> findByActiveTrue(Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    List<Tour> findByIdInAndActiveTrue(Collection<Long> ids);
+
+    @EntityGraph(attributePaths = "category")
+    Optional<Tour> findWithCategoryById(Long id);
+
+    @EntityGraph(attributePaths = "category")
+    Page<Tour> findByCategoryIdAndIdNotAndActiveTrue(Long categoryId, Long excludedId, Pageable pageable);
 }

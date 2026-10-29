@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -69,6 +70,27 @@ public class ApiExceptionHandler {
                                                        HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "error.api.badParameter",
                 messages.get("error.api.badParameter", e.getName()), request);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException e,
+                                                     HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "error.api.unreadable",
+                messages.get("error.api.unreadable"), request);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiError> handleRateLimit(RateLimitExceededException e,
+                                                    HttpServletRequest request) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, e.getMessageKey(),
+                messages.get(e.getMessageKey()), request);
+    }
+
+    @ExceptionHandler(AiUnavailableException.class)
+    public ResponseEntity<ApiError> handleAiUnavailable(AiUnavailableException e,
+                                                        HttpServletRequest request) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, e.getMessageKey(),
+                messages.get(e.getMessageKey()), request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

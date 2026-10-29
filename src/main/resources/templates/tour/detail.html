@@ -5,7 +5,7 @@
 
 <header th:replace="~{fragments/layout :: header(false)}"></header>
 
-<main class="flex-grow-1">
+<main class="flex-grow-1" th:data-track-view="${tour.id}">
 
     <section class="page-head bg-jade pb-0" style="padding-bottom: 6rem !important">
         <div class="container">
@@ -281,6 +281,19 @@
                 </div>
             </div>
         </div>
+
+        <section class="mt-5" th:if="${not #lists.isEmpty(similarTours)}" id="similar-tours">
+            <div class="mb-3">
+                <h2 class="h4 mb-1" th:text="#{tour.similar.title}">Tour tương tự</h2>
+                <p class="text-muted small mb-0"
+                   th:text="${similarSource == 'VECTOR'} ? #{tour.similar.lead.ai} : #{tour.similar.lead.category}">Gợi ý</p>
+            </div>
+            <div class="row g-4">
+                <th:block th:each="t : ${similarTours}">
+                    <div th:replace="~{fragments/components :: tourCard(${t})}"></div>
+                </th:block>
+            </div>
+        </section>
     </div>
 </main>
 

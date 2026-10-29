@@ -13,6 +13,16 @@ export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/B
 ./mvnw -o spring-boot:run        # http://localhost:8081  (8080 bị XAMPP chiếm)
 ```
 
+Tính năng AI (tuỳ chọn, mặc định **tắt** khi không có khoá — app vẫn chạy đủ chức năng):
+
+```bash
+export GEMINI_API_KEY="..."        # khoá miễn phí ở https://aistudio.google.com/apikey ; thiếu/rỗng = AI tắt
+# đổi nhà cung cấp: AI_BASE_URL, AI_CHAT_PATH, AI_EMBEDDINGS_PATH, AI_CHAT_MODEL, AI_EMBEDDING_MODEL (xem PLAN.md Phase 15)
+bash ./mvnw test                   # 73 kiểm thử, không cần SQL Server (H2 + máy chủ OpenAI giả)
+```
+
+CSDL đã có sẵn muốn có bảng theo dõi hành vi: chạy `database/05_user_events.sql` (idempotent). `data/` (chỉ mục vector) bị `.gitignore`.
+
 Tài khoản mẫu, mật khẩu đều `123456`: `admin@tourbooking.vn` (ADMIN) · `an.nguyen@gmail.com` ·
 `binh.tran@gmail.com` · `cuong.le@gmail.com`.
 
@@ -23,7 +33,7 @@ Tài khoản mẫu, mật khẩu đều `123456`: `admin@tourbooking.vn` (ADMIN)
 2. **Enum mới phải có `AttributeConverter` riêng**, cấm `@Enumerated` — nếu không Hibernate sinh
    ràng buộc `CHECK` mà đề bài cấm. Cũng **cấm `columnDefinition` kiểu chuỗi** trên entity.
 3. **Câu chữ mới vào cả ba file** `messages.properties`, `messages_vi.properties`,
-   `messages_en.properties` (hiện 540 khoá, khớp nhau — lệnh đối chiếu ở cuối PLAN.md).
+   `messages_en.properties` (hiện 850 khoá, khớp nhau — lệnh đối chiếu ở cuối PLAN.md).
 4. **Đổi màu thì sửa token ở mục 1 của `static/css/app.css`**, đừng rải mã màu vào template.
 5. **Sửa `resources/` xong phải `./mvnw -o process-resources`** — `spring-boot:run` không tự nạp lại
    template/CSS/messages.

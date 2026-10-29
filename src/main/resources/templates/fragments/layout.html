@@ -234,9 +234,12 @@
 </footer>
 
 <th:block th:fragment="scripts">
+    <div th:replace="~{fragments/chat-widget :: widget}"></div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/tracker.js}"></script>
+    <script th:src="@{/js/chat.js}"></script>
 </th:block>
 
 </body>

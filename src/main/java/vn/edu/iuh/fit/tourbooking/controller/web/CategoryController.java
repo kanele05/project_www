@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import vn.edu.iuh.fit.tourbooking.ai.SemanticSearchService;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourSearchForm;
 import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
 import vn.edu.iuh.fit.tourbooking.service.CategoryService;
@@ -19,6 +20,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
     private final TourService tourService;
+    private final SemanticSearchService semanticSearchService;
 
     @GetMapping("/categories/{slug}")
     public String byCategory(@PathVariable String slug,
@@ -30,7 +32,10 @@ public class CategoryController {
         form.setCategoryId(category.getId());
 
         model.addAttribute("category", category);
-        model.addAttribute("toursPage", tourService.search(form, page));
+        SemanticSearchService.Outcome outcome = semanticSearchService.search(form, page);
+        model.addAttribute("toursPage", outcome.page());
+        model.addAttribute("searchMode", outcome.mode().name());
+        model.addAttribute("aiAvailable", semanticSearchService.isAiAvailable());
         model.addAttribute("destinations", tourService.findAllDestinations());
         model.addAttribute("pageUrlPrefix", form.toQueryPrefix("/categories/" + slug));
         return "tour/list";

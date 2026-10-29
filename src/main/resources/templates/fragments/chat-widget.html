@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Khung chat nổi "Trợ lý tour". AI tắt thì hiện trạng thái "chưa cấu hình" thân thiện thay vì ô nhập. */-->
+<div th:fragment="widget" class="ai-chat" id="aiChat" th:if="${aiEnabled != null}"
+     th:data-enabled="${aiEnabled}"
+     th:data-msg-error="#{ai.chat.error}"
+     th:data-msg-thinking="#{ai.chat.thinking}">
+
+    <button class="ai-chat__toggle" type="button" id="aiChatToggle"
+            th:aria-label="#{ai.chat.open}" th:title="#{ai.chat.open}" aria-expanded="false">
+        <i class="bi bi-chat-dots"></i>
+    </button>
+
+    <section class="ai-chat__panel d-none" id="aiChatPanel" role="dialog" th:aria-label="#{ai.chat.title}">
+        <header class="ai-chat__head">
+            <div>
+                <strong th:text="#{ai.chat.title}">Trợ lý tour</strong>
+                <span class="ai-chat__sub" th:text="#{ai.chat.subtitle}">Hỏi về tour, giá, lịch khởi hành</span>
+            </div>
+            <button class="ai-chat__close" type="button" id="aiChatClose" th:aria-label="#{ai.chat.close}">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+
+        <div class="ai-chat__body" id="aiChatLog" aria-live="polite">
+            <div th:if="${aiEnabled}" class="ai-chat__msg ai-chat__msg--bot" th:text="#{ai.chat.welcome}">Xin chào!</div>
+            <div th:unless="${aiEnabled}" class="ai-chat__notice">
+                <i class="bi bi-plug"></i>
+                <p class="mb-1 fw-semibold" th:text="#{ai.chat.disabled.title}">AI chưa được cấu hình</p>
+                <p class="mb-2 small" th:text="#{ai.chat.disabled.hint}">Bạn vẫn có thể tìm tour bằng từ khoá.</p>
+                <a class="btn btn-primary btn-sm" th:href="@{/tours}" th:text="#{ai.chat.disabled.cta}">Xem tất cả tour</a>
+            </div>
+        </div>
+
+        <div class="ai-chat__chips" th:if="${aiEnabled}">
+            <button type="button" class="ai-chat__chip" th:text="#{ai.chat.sample1}">Tour biển yên tĩnh cho gia đình dưới 5 triệu</button>
+            <button type="button" class="ai-chat__chip" th:text="#{ai.chat.sample2}">Tour nào đi 4 ngày, có máy bay?</button>
+        </div>
+
+        <form class="ai-chat__form" id="aiChatForm" autocomplete="off" data-no-lock th:if="${aiEnabled}">
+            <input class="form-control form-control-sm" type="text" id="aiChatInput" maxlength="500"
+                   th:placeholder="#{ai.chat.placeholder}" th:aria-label="#{ai.chat.placeholder}" required>
+            <button class="btn btn-primary btn-sm" type="submit" th:aria-label="#{ai.chat.send}">
+                <i class="bi bi-send"></i>
+            </button>
+        </form>
+    </section>
+</div>
+
+</body>
+</html>
