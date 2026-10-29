@@ -4,7 +4,7 @@ Trong những năm gần đây, ngành du lịch Việt Nam phát triển nhanh 
 
 Đồ án "Website giới thiệu tour du lịch và cho phép đăng ký tour trực tuyến" (TourBooking) được thực hiện trong khuôn khổ môn học **Lập trình WWW (Java)** tại Khoa Công nghệ Thông tin, Trường Đại học Công nghiệp Thành phố Hồ Chí Minh. Đồ án là dịp để nhóm vận dụng các kiến thức đã học về lập trình Java và cơ sở dữ liệu quan hệ vào một bài toán có thật: một website thương mại điện tử cỡ vừa, có luồng nghiệp vụ đặt hàng hoàn chỉnh, có phân quyền nhiều vai trò và có khu vực quản trị riêng.
 
-Hệ thống TourBooking gồm hai khu vực chính: các trang phục vụ khách truy cập (xem, tìm kiếm, đặt tour, quản lý tài khoản) và một khu vực quản trị riêng dành cho nhân viên vận hành, có hỗ trợ các thao tác cập nhật nhanh không cần tải lại trang (giỏ hàng, kiểm tra mã giảm giá, xem biểu đồ thống kê, chọn đợt khởi hành). Dữ liệu được tổ chức thành 16 bảng có quan hệ chặt chẽ với nhau; toàn bộ quy tắc nghiệp vụ - đặc biệt là các quy tắc chặn xoá dữ liệu khi còn ràng buộc - được kiểm tra ngay trong chương trình thay vì phó mặc cho cơ sở dữ liệu, đúng theo yêu cầu của đề bài.
+Hệ thống TourBooking gồm hai khu vực chính: các trang phục vụ khách truy cập (xem, tìm kiếm, đặt tour, quản lý tài khoản) và một khu vực quản trị riêng dành cho nhân viên vận hành, có hỗ trợ các thao tác cập nhật nhanh không cần tải lại trang (giỏ hàng, kiểm tra mã giảm giá, xem biểu đồ thống kê, chọn đợt khởi hành). Dữ liệu được tổ chức thành 17 bảng có quan hệ chặt chẽ với nhau; toàn bộ quy tắc nghiệp vụ - đặc biệt là các quy tắc chặn xoá dữ liệu khi còn ràng buộc - được kiểm tra ngay trong chương trình thay vì phó mặc cho cơ sở dữ liệu, đúng theo yêu cầu của đề bài.
 
 Báo cáo này trình bày toàn bộ quá trình thực hiện đồ án: từ khảo sát và phân tích yêu cầu, xây dựng mô hình use case và mô hình lớp, thiết kế cơ sở dữ liệu, đến hiện thực các chức năng và kiểm thử hệ thống. Báo cáo cũng nêu rõ những khó khăn kỹ thuật thực sự gặp phải trong quá trình xây dựng (ví dụ: tìm kiếm tiếng Việt không dấu, chống bán quá chỗ khi nhiều người đặt cùng lúc, giữ giỏ hàng sống sót qua phiên đăng nhập) cùng cách nhóm đã giải quyết.
 
@@ -841,7 +841,7 @@ Mô hình miền được chia làm hai lớp biểu đồ để dễ đọc: bi
 
 [[HINH: 02b. Biểu đồ lớp - Chín bảng bổ sung]]
 
-Toàn bộ mô hình gồm 16 thực thể ứng với 16 bảng trong cơ sở dữ liệu, cộng hai lớp `Cart`/`CartItem` dùng riêng cho giỏ hàng trong phiên làm việc, không có bảng tương ứng. Quan hệ trung tâm của mô hình là chuỗi Danh mục tour → Tour → Đợt khởi hành → Dòng chi tiết đơn → Đơn đặt tour → Tài khoản, phản ánh đúng lý do nghiệp vụ: một chương trình tour có thể mở nhiều đợt khởi hành với giá và số chỗ khác nhau, và một đơn có thể gồm nhiều dòng đặt cho các đợt khởi hành khác nhau.
+Toàn bộ mô hình gồm 16 thực thể ứng với 17 bảng trong cơ sở dữ liệu, cộng hai lớp `Cart`/`CartItem` dùng riêng cho giỏ hàng trong phiên làm việc, không có bảng tương ứng. Quan hệ trung tâm của mô hình là chuỗi Danh mục tour → Tour → Đợt khởi hành → Dòng chi tiết đơn → Đơn đặt tour → Tài khoản, phản ánh đúng lý do nghiệp vụ: một chương trình tour có thể mở nhiều đợt khởi hành với giá và số chỗ khác nhau, và một đơn có thể gồm nhiều dòng đặt cho các đợt khởi hành khác nhau.
 
 ## 3.2 Đặc tả sơ đồ lớp
 
@@ -1225,7 +1225,7 @@ Sơ đồ thực thể và mối kết hợp (ERD):
 
 [[HINH: 03. Biểu đồ ERD - TourBookingDB]]
 
-Cơ sở dữ liệu của hệ thống chạy trên Microsoft SQL Server, có hỗ trợ tiếng Việt, gồm đúng **16 bảng**: `users`, `tour_categories`, `tours`, `tour_images`, `tour_departures`, `tour_itineraries`, `bookings`, `booking_details`, `booking_passengers`, `booking_status_history`, `payments`, `promotions`, `coupon_usages`, `reviews`, `contact_messages`, `password_reset_tokens`. Cấu trúc các bảng được thiết kế và kiểm soát thủ công theo đúng mô hình lớp thực thể ở mục 3.1-3.2, đảm bảo chương trình chỉ khởi động được khi cấu trúc dữ liệu khớp đúng với thiết kế.
+Cơ sở dữ liệu của hệ thống chạy trên Microsoft SQL Server, có hỗ trợ tiếng Việt, gồm đúng **17 bảng**: `users`, `tour_categories`, `tours`, `tour_images`, `tour_departures`, `tour_itineraries`, `bookings`, `booking_details`, `booking_passengers`, `booking_status_history`, `payments`, `promotions`, `coupon_usages`, `reviews`, `contact_messages`, `password_reset_tokens`. Cấu trúc các bảng được thiết kế và kiểm soát thủ công theo đúng mô hình lớp thực thể ở mục 3.1-3.2, đảm bảo chương trình chỉ khởi động được khi cấu trúc dữ liệu khớp đúng với thiết kế.
 
 ### 3.4.2 Các ràng buộc toàn vẹn trong CSDL
 
@@ -1406,19 +1406,275 @@ Chức năng của màn hình: cho quản trị viên xử lý các liên hệ k
 
 Ngoài các tình huống nghiệp vụ trên, các phép đo chất lượng giao diện cũng đã được kiểm chứng bằng công cụ thật trong quá trình phát triển: tương phản màu chữ trên nền đạt chuẩn WCAG ở toàn bộ 12/12 cặp màu được đo (tỉ lệ tối thiểu 4,5:1), không có hiện tượng tràn ngang ở các bề rộng khung nhìn 375px/1024px/1440px, và không có lỗi hiển thị nào khi cuộn qua toàn bộ hiệu ứng hiện dần trên trang.
 
-# CHƯƠNG 5: KẾT LUẬN
+# CHƯƠNG 5: ỨNG DỤNG TRÍ TUỆ NHÂN TẠO VÀ THEO DÕI HÀNH VI NGƯỜI DÙNG
 
-## 5.1 Kết quả đạt được
+Chương này trình bày phần mở rộng của đồ án theo chuyên đề trí tuệ nhân tạo (AI) gồm ba nội dung: Spring AI, cơ sở dữ liệu vector và theo dõi hành vi người dùng trên giao diện. Phần lý thuyết bám theo Chương 7 "Spring AI" trong bài giảng của giảng viên; phần còn lại mô tả cách nhóm áp dụng vào TourBooking, từ kiến trúc, cấu hình, các lớp chính, bảng dữ liệu mới, cách chạy cho đến những gì đã kiểm chứng và những gì chưa thể kiểm chứng. Các tính năng AI là tuỳ chọn: khi không có khoá truy cập mô hình, website vẫn chạy đầy đủ như trước.
+
+## 5.1 Cơ sở lý thuyết
+
+### 5.1.1 Spring AI (theo Chương 7 của bài giảng)
+
+Spring AI là dự án thuộc hệ sinh thái Spring giúp đưa các mô hình AI sinh nội dung vào ứng dụng Java theo cách quen thuộc của lập trình viên Spring: cấu hình bằng tệp cấu hình, tiêm phụ thuộc, và đổi nhà cung cấp mô hình chủ yếu bằng cấu hình mà mã Java gần như giữ nguyên. Dự án lấy cảm hứng từ LangChain và LlamaIndex nhưng không phải bản chuyển ngữ của chúng. Các khái niệm chính được dùng trong đồ án gồm:
+
+- ChatClient: giao diện lập trình theo kiểu chuỗi lời gọi (fluent API) để gửi lời nhắc tới mô hình, tương tự RestClient của Spring; có thể gắn sẵn lời nhắc hệ thống, các advisor và các công cụ cho mọi lần gọi.
+
+- PromptTemplate và Structured Output: lời nhắc có biến để tái sử dụng, và việc ánh xạ câu trả lời của mô hình sang đối tượng Java.
+
+- Advisor và Chat Memory: advisor là bộ chặn bao quanh lời gọi mô hình; bộ nhớ hội thoại lưu lịch sử trò chuyện theo mã hội thoại để mô hình nhớ ngữ cảnh các câu trước.
+
+- Tool Calling: mô hình yêu cầu ứng dụng chạy một phương thức Java (chú thích @Tool), ứng dụng chạy và trả kết quả lại cho mô hình. Điểm an toàn then chốt: mô hình không bao giờ trực tiếp chạm tới cơ sở dữ liệu hay API; mọi thao tác do mã của ứng dụng thực thi và kiểm tra.
+
+- RAG (Retrieval-Augmented Generation): trước khi hỏi mô hình, hệ thống tìm trong kho vector những đoạn dữ liệu liên quan tới câu hỏi rồi ghép vào lời nhắc, nhờ đó câu trả lời dựa trên dữ liệu thật của cửa hàng thay vì kiến thức chung của mô hình. Trong Spring AI việc này do QuestionAnswerAdvisor đảm nhiệm.
+
+Bài giảng dùng Spring AI 2.0.x. Do đồ án chạy trên Spring Boot 3.5 còn nhánh 2.0.x nhắm tới Spring Boot 4, nhóm dùng nhánh 1.1.x (bản 1.1.8) có cùng các khái niệm trên; chi tiết lựa chọn ở mục 5.2.2.
+
+### 5.1.2 Cơ sở dữ liệu vector và embedding
+
+Embedding là cách biến một đoạn văn bản thành một vector số thực sao cho các văn bản gần nghĩa nằm gần nhau trong không gian nhiều chiều. Độ giống giữa hai văn bản được đo bằng độ tương đồng cosine, tức cosine của góc giữa hai vector: gần 1 nghĩa là rất giống, gần 0 là không liên quan. Một Document trong Spring AI gồm mã định danh, nội dung văn bản, siêu dữ liệu (metadata) và vector; kho vector (VectorStore) cho phép thêm tài liệu và tìm kiếm tương đồng với các tham số: số kết quả tối đa (topK), ngưỡng giống nhau tối thiểu (similarityThreshold) và biểu thức lọc theo metadata (ví dụ giá nhỏ hơn một mức). Vector được tính bởi mô hình embedding.
+
+Cơ sở dữ liệu vector tối ưu cho việc tìm tương đồng, nhưng không thay thế SQL cho các phép cộng, nhóm và đếm. Vì vậy hệ thống kết hợp cả hai: SQL Server vẫn là nguồn dữ liệu gốc và nơi thống kê; kho vector chỉ là chỉ mục phụ phục vụ tìm theo ý nghĩa, tìm tour tương tự và làm ngữ cảnh cho trợ lý.
+
+<!-- Bảng 5.1: So sánh tìm kiếm theo từ khoá và tìm kiếm theo ngữ nghĩa -->
+
+| Tiêu chí | Từ khoá (LIKE) | Ngữ nghĩa (vector) |
+
+|---|---|---|
+
+| Cách khớp | Chuỗi ký tự giống nhau | Ý nghĩa gần nhau |
+
+| Ví dụ "biển yên tĩnh cho gia đình" | Không ra kết quả nếu mô tả không chứa đúng cụm này | Ra các tour biển, nghỉ dưỡng phù hợp |
+
+| Chi phí | Rất thấp, chạy ngay trong SQL Server | Cần gọi API embedding (hạn mức, độ trễ) |
+
+| Lọc giá, danh mục | Điều kiện SQL | Biểu thức lọc theo metadata |
+
+| Vai trò trong đồ án | Mặc định và phương án dự phòng | Bật khi có khoá API |
+
+### 5.1.3 Theo dõi hành vi người dùng trên giao diện (UI user tracking)
+
+Theo dõi hành vi là ghi nhận những gì người dùng làm trên giao diện để hiểu họ và cải thiện sản phẩm. Năm chỉ số tiêu biểu: thời gian ở lại trang, số lần bấm vào sản phẩm, số lần thêm vào giỏ, sản phẩm được đặt nhiều nhất và từ khoá tìm kiếm. Các chỉ số này nối thành phễu chuyển đổi (xem, bấm, thêm giỏ, đặt hàng) giúp thấy khách rơi rụng ở bước nào.
+
+Về kỹ thuật thu thập ở trình duyệt: dùng một bộ lắng nghe sự kiện chung cho cả trang (event delegation) để bắt lượt bấm; dùng Page Visibility API để chỉ tính thời gian trang thực sự hiển thị; và gửi sự kiện bằng fetch với tuỳ chọn keepalive để vẫn gửi được khi người dùng đóng tab. Nhóm không dùng sendBeacon vì sendBeacon không đặt được tiêu đề yêu cầu, trong khi hệ thống bật CSRF và cần tiêu đề này.
+
+Về quyền riêng tư và chất lượng dữ liệu: thu thập tối thiểu (dùng mã phiên thay cho thông tin cá nhân), không tin dữ liệu do trình duyệt tự khai (máy chủ tự xác định người dùng và phiên), lọc trình thu thập tự động và giới hạn tốc độ để số liệu không bị nhiễu, có chính sách lưu trữ có thời hạn, và tách việc ghi hành vi khỏi luồng nghiệp vụ để lỗi ghi hành vi không làm hỏng việc đặt tour. Việc thu thập dữ liệu người dùng cần tuân thủ Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân (thông báo và xin đồng ý).
+
+## 5.2 Thiết kế và hiện thực trong TourBooking
+
+### 5.2.1 Kiến trúc tổng thể
+
+Ba nhóm chức năng mới đều đi qua tầng dịch vụ sẵn có của ứng dụng và dùng lại giỏ hàng, truy vấn tour cũ. SQL Server vẫn là nguồn dữ liệu gốc; kho vector là chỉ mục phụ có thể lập lại bất cứ lúc nào từ dữ liệu trong SQL Server.
+
+[[HINH: Kiến trúc các thành phần AI và theo dõi hành vi trong TourBooking]]
+
+<!-- Bảng 5.2: Đối chiếu khái niệm lý thuyết với lớp và tệp trong mã nguồn -->
+
+| Khái niệm (Phần lý thuyết) | Lớp / tệp trong TourBooking |
+
+|---|---|
+
+| ChatClient, advisor, bộ nhớ hội thoại, RAG | AiConfig (bean tourAssistant), AiChatService, ChatApiController |
+
+| Tool Calling | TourTools: searchTours, getDepartures, addToCart |
+
+| Document, metadata, id xác định | TourDocumentFactory |
+
+| VectorStore / SimpleVectorStore | TourVectorStore, TourVectorService (lập chỉ mục, upsert, similaritySearch) |
+
+| Lọc metadata và ngưỡng giống nhau | TourVectorService.search, PriceHintParser |
+
+| Tìm kiếm ngữ nghĩa kèm dự phòng | SemanticSearchService, TourController, TourApiController |
+
+| Tour tương tự, gợi ý cá nhân hoá | RecommendationService |
+
+| Công tắc AI, cấu hình nhà cung cấp | AiProperties, AiEnabledCondition, AiEnvironmentPostProcessor, application.yml |
+
+| Thu thập sự kiện ở trình duyệt | static/js/tracker.js |
+
+| Nhận và kiểm tra sự kiện ở máy chủ | TrackingApiController, TrackingRequest, TrackingService |
+
+| Bảng sự kiện | UserEvent, EventType, EventTypeConverter, UserEventRepository, bảng user_events |
+
+| Thống kê và phễu chuyển đổi | BehaviorStatsService, AdminAnalyticsController, admin/analytics.html |
+
+| Khung chat trên giao diện | fragments/chat-widget.html, static/js/chat.js |
+
+### 5.2.2 Lựa chọn công nghệ và cấu hình
+
+Phiên bản Spring AI: Spring AI 2.0.x dùng Jackson 3 nên nhắm tới Spring Boot 4, trong khi đồ án chạy trên Spring Boot 3.5.16. Nhóm chọn Spring AI 1.1.8, bản 1.x mới nhất tại Maven Central, khai báo qua spring-ai-bom với ba thành phần: spring-ai-starter-model-openai, spring-ai-vector-store và spring-ai-advisors-vector-store. Việc chọn này đã được kiểm chứng bằng biên dịch và chạy thật cùng Spring Boot 3.5.16.
+
+Nhà cung cấp mô hình: chỉ dùng một starter của OpenAI nhưng trỏ tới điểm truy cập tương thích OpenAI của Google Gemini, vì Gemini có gói miễn phí phù hợp với sinh viên. Mô hình chat mặc định là gemini-2.5-flash (có thể đổi sang gemini-2.5-flash-lite nếu cần hạn mức cao hơn) và mô hình embedding mặc định là gemini-embedding-001. Cũng chính cấu hình này đổi được sang OpenAI hoặc Ollama chạy cục bộ chỉ bằng biến môi trường, không sửa mã.
+
+Kho vector: dùng SimpleVectorStore của Spring AI và lưu ra tệp data/vector-store.json (tệp này bị loại khỏi kho mã nguồn). Lý do: môi trường đồ án không có PostgreSQL, và SQL Server không nằm trong danh sách kho vector của bài giảng nên được giữ làm nguồn dữ liệu gốc. Ứng dụng chỉ gọi API embedding khi tệp chưa có hoặc khi đổi mô hình; những lần khởi động sau nạp thẳng từ tệp để tiết kiệm hạn mức.
+
+<!-- Bảng 5.3: Các biến môi trường cấu hình tính năng AI -->
+
+| Biến môi trường | Ý nghĩa | Mặc định |
+
+|---|---|---|
+
+| GEMINI_API_KEY | Khoá API Gemini; thiếu hoặc rỗng thì AI tắt | (trống) |
+
+| AI_ENABLED | Công tắc tường minh; để trống = tự bật khi có khoá | (trống) |
+
+| AI_BASE_URL | Địa chỉ nhà cung cấp | https://generativelanguage.googleapis.com |
+
+| AI_CHAT_PATH / AI_EMBEDDINGS_PATH | Đường dẫn gọi chat và embedding | /v1beta/openai/chat/completions và /v1beta/openai/embeddings |
+
+| AI_CHAT_MODEL | Mô hình chat | gemini-2.5-flash |
+
+| AI_EMBEDDING_MODEL | Mô hình embedding | gemini-embedding-001 (3072 chiều) |
+
+| AI_EMBEDDING_DIMENSIONS | Số chiều vector yêu cầu; để trống dùng mặc định của mô hình | (trống) |
+
+| AI_SIMILARITY_THRESHOLD | Ngưỡng giống nhau tối thiểu | 0,5 |
+
+| AI_EMBEDDING_MIN_INTERVAL_MS | Khoảng cách tối thiểu giữa hai lần gọi embedding | 700 |
+
+| AI_VECTOR_STORE_PATH | Đường dẫn tệp kho vector | data/vector-store.json |
+
+Một đoạn cấu hình tiêu biểu trong tệp application.yml (giá trị mặc định: địa chỉ Gemini, mô hình gemini-2.5-flash và gemini-embedding-001):
+
+```
+spring:
+  ai:
+    openai:
+      api-key: ${GEMINI_API_KEY:}
+      base-url: ${app.ai.base-url}
+      chat:
+        completions-path: ${app.ai.chat-path}
+        options.model: ${app.ai.chat-model}
+      embedding:
+        embeddings-path: ${app.ai.embeddings-path}
+        options.model: ${app.ai.embedding-model}
+```
+
+Công tắc AI: tính năng được bật khi có khoá API hoặc khi đặt AI_ENABLED=true; đặt AI_ENABLED=false thì tắt dù có khoá. Một điểm kỹ thuật quan trọng nhóm gặp phải: cấu hình tự động của Spring AI ném lỗi ngay lúc khởi động nếu khoá rỗng, kể cả khi biến môi trường tồn tại nhưng để trống. Vì vậy một lớp xử lý môi trường riêng tắt luôn cấu hình tự động này khi AI tắt, bảo đảm ứng dụng luôn khởi động được.
+
+### 5.2.3 Kho vector và lập chỉ mục
+
+Mỗi tour đang bán được chuyển thành một Document. Nội dung gồm tên tour, danh mục, điểm đến, nơi khởi hành, thời lượng, phương tiện, phần điểm nhấn và một đoạn đầu của mô tả; metadata gồm mã tour, mã danh mục, tên danh mục, điểm đến, giá (đồng) và số ngày. Mã Document được tạo xác định từ mã tour (dạng "tour-5") nên lập chỉ mục lại luôn là cập nhật chứ không sinh bản trùng.
+
+Chỉ mục được nạp khi ứng dụng sẵn sàng (sau bước đổ dữ liệu mẫu) trên một luồng riêng để không làm chậm việc mở web: nếu tệp lưu và tệp ghi chú đi kèm khớp với mô hình hiện tại thì nạp tệp, ngược lại gọi API embedding để lập mới. Quản trị viên có thể lập chỉ mục lại bằng nút ở trang "Trợ lý AI" (yêu cầu POST rồi chuyển hướng kèm thông báo). Khi quản trị viên thêm, sửa, xoá hoặc đổi trạng thái một tour, chỉ mục được cập nhật tự động sau khi giao dịch hoàn tất; tour ngừng bán hoặc bị xoá bị gỡ khỏi chỉ mục. Vì SimpleVectorStore gọi API embedding từng tài liệu một, hệ thống giãn cách tối thiểu 700 ms giữa hai lần gọi và cho phép thử lại khi nhà cung cấp trả mã 429 (vượt hạn mức) để phù hợp với gói miễn phí.
+
+### 5.2.4 Tìm kiếm ngữ nghĩa
+
+Ở trang danh sách tour có thêm công tắc "Tìm bằng AI". Khi bật, người dùng gõ một mô tả tự nhiên như "biển yên tĩnh cho gia đình dưới 5 triệu": hệ thống tách cụm chỉ giá ("dưới 5 triệu", "từ 2 đến 4 triệu", "tối đa 3tr") thành bộ lọc giá, rồi tìm tương đồng trong kho vector với số kết quả tối đa, ngưỡng giống nhau và bộ lọc metadata theo giá hoặc danh mục. Các tour trả về được xếp theo độ phù hợp và phân trang như danh sách thường. Cùng chức năng này còn có đường dẫn REST GET /api/tours/semantic.
+
+Phương án dự phòng: nếu AI chưa được cấu hình, nhà cung cấp lỗi, hoặc không có kết quả nào đủ giống, hệ thống lùi về tìm theo từ khoá sẵn có (loại cụm chỉ giá khỏi câu và đổi thành bộ lọc giá), đồng thời hiện thông báo thân thiện. Công tắc bị khoá và có chú thích "AI chưa được cấu hình" khi không có khoá API.
+
+### 5.2.5 Tour tương tự và gợi ý "Có thể bạn thích"
+
+Ở trang chi tiết tour, khối "Tour tương tự" lấy mô tả của chính tour đang xem làm truy vấn, loại bỏ chính nó và hiển thị các tour giống nhất; kết quả được nhớ trong bộ nhớ đến lần lập chỉ mục sau để không gọi API lặp lại. Khi AI tắt, khối này lấy các tour cùng danh mục được xem nhiều nhất.
+
+Ở trang chủ, khối "Có thể bạn thích" gợi ý cho từng tài khoản hoặc từng phiên. Hệ thống đọc các sự kiện trong 30 ngày gần nhất với trọng số xem 1, bấm 2, thêm giỏ 3, lấy tối đa ba tour có điểm cao nhất làm hạt giống, tìm các tour giống chúng bằng vector (loại những tour đã xem) rồi xếp hạng lại theo công thức 0,7 x độ giống + 0,3 x độ phổ biến. Khi AI tắt thì dùng các tour cùng danh mục với tour quan tâm nhất; khi chưa có lịch sử thì hiển thị các tour phổ biến nhất.
+
+### 5.2.6 Trợ lý tour (chatbot)
+
+Khung chat nổi ở góc phải dưới của mọi trang công khai cho phép khách hỏi bằng tiếng Việt. Phía máy chủ, một ChatClient được dựng một lần với lời nhắc hệ thống tiếng Việt, bộ nhớ hội thoại theo từng phiên (mã hội thoại là mã phiên đã băm), QuestionAnswerAdvisor để lấy ngữ cảnh từ kho vector (RAG) và ba công cụ:
+
+- searchTours: tìm tour theo nhu cầu và giá tối đa (dùng lại đúng đường tìm kiếm ngữ nghĩa kèm dự phòng).
+
+- getDepartures: lấy các lịch khởi hành còn chỗ, kèm ngày đi, số chỗ còn và giá.
+
+- addToCart: thêm một lịch khởi hành vào giỏ hàng của phiên, chỉ sau khi khách đồng ý rõ ràng; công cụ gọi lại CartService sẵn có nên mọi kiểm tra (còn bán, đủ chỗ, tối đa 30 khách) vẫn do mã Java đảm nhiệm.
+
+Chatbot không có công cụ nào để thanh toán hay chốt đơn: lời nhắc hệ thống yêu cầu hướng khách vào Giỏ hàng và Thanh toán (cần đăng nhập), và kiểm thử tự động xác nhận lớp công cụ chỉ có đúng ba phương thức trên. Danh tính (phiên, mã tài khoản) được truyền qua ngữ cảnh công cụ ở phía máy chủ chứ không đưa cho mô hình. Mỗi phiên bị giới hạn 8 tin nhắn mỗi phút và mỗi tin tối đa 500 ký tự; khi AI tắt hoặc nhà cung cấp lỗi, API trả mã 503 kèm câu tiếng Việt thân thiện và khung chat hiển thị trạng thái "AI chưa được cấu hình".
+
+### 5.2.7 Theo dõi hành vi người dùng
+
+Bảng user_events (thực thể UserEvent, mô tả ở mục 3.2.19) ghi mỗi sự kiện một dòng. Bảng cố ý không có khoá ngoại để việc ghi nhanh và không cản việc xoá tour hay tài khoản; mọi truy vấn thống kê nối với bảng tour nên dòng mồ côi không ảnh hưởng. Loại sự kiện là một kiểu liệt kê lưu dạng chuỗi qua bộ chuyển đổi riêng (không dùng ràng buộc kiểm tra của CSDL, đúng quy ước của đồ án).
+
+<!-- Bảng 5.4: Các loại sự kiện và nơi ghi nhận -->
+
+| Loại sự kiện | Khi nào ghi | Nơi ghi nhận |
+
+|---|---|---|
+
+| VIEW | Mở trang chi tiết tour | tracker.js, thuộc tính data-track-view trên trang chi tiết |
+
+| CLICK | Bấm vào ảnh hoặc tên một thẻ tour | tracker.js, thuộc tính data-track-tour trên thẻ tour |
+
+| ADD_TO_CART | Thêm vào giỏ thành công (kể cả qua chatbot) | Phía máy chủ, trong CartApiController, CartController và công cụ addToCart |
+
+| SEARCH | Gửi biểu mẫu tìm kiếm | tracker.js, biểu mẫu có ô tên "q" |
+
+| TIME_ON_PAGE | Rời hoặc ẩn trang chi tiết tour | tracker.js, Page Visibility API |
+
+Quy tắc phía máy chủ khi nhận một sự kiện: chỉ nhận loại sự kiện hợp lệ và đủ trường cần thiết (thiếu thì trả mã 400); mã người dùng lấy từ phiên đăng nhập chứ không tin giá trị trình duyệt gửi; mã phiên được băm SHA-256 trước khi lưu nên không lưu mã phiên đang sống; bỏ qua yêu cầu từ trình thu thập tự động; giới hạn 60 sự kiện mỗi phút cho mỗi phiên (vượt thì trả mã 429); bỏ lượt xem dưới 0,5 giây và cắt ở 30 phút; cắt độ dài từ khoá, chỉ giữ phần đường dẫn của trang (bỏ phần tham số); bỏ sự kiện của tour không tồn tại; lỗi khi ghi CSDL chỉ được ghi nhật ký chứ không làm hỏng nghiệp vụ. Dữ liệu quá 180 ngày được xoá tự động mỗi đêm. Trình duyệt bật chế độ "Do Not Track" sẽ không gửi sự kiện nào.
+
+### 5.2.8 Thống kê hành vi trong khu quản trị
+
+Trang "Hành vi người dùng" trong khu quản trị (cùng phong cách các trang quản trị khác) có bộ lọc khoảng ngày (mặc định 30 ngày, nút nhanh 7/30/90 ngày) và hiển thị: số sự kiện, số phiên truy cập, thời gian xem trung bình; top tour được xem nhiều và được bấm nhiều; phễu chuyển đổi gồm số phiên có xem tour, số phiên có thêm vào giỏ và số đơn đặt (lấy từ các bảng đơn hàng hiện có, không tính đơn đã huỷ) cùng tỉ lệ xem sang giỏ và giỏ sang đơn; phễu chi tiết từng tour (xem, bấm, thêm giỏ, đơn, tỉ lệ bấm/xem, giỏ/xem, đơn/giỏ); tour được đặt nhiều nhất; từ khoá tìm kiếm hàng đầu; và các tour được xem lâu nhất. Mọi số liệu đều dùng truy vấn JPQL, không dùng thủ tục lưu trữ.
+
+[Chèn hình: Hình 5.2 - Màn hình thống kê hành vi người dùng trong khu quản trị (chụp khi chạy với dữ liệu thật)]
+
+[Chèn hình: Hình 5.3 - Khung chat Trợ lý tour và kết quả "Tìm bằng AI" (chụp khi chạy với khoá Gemini thật)]
+
+## 5.3 Hướng dẫn cấu hình và chạy
+
+- Bước 1: Lấy khoá miễn phí tại https://aistudio.google.com/apikey (cần tài khoản Google). Gói miễn phí có giới hạn số yêu cầu mỗi phút và Google có thể dùng nội dung gửi lên để cải thiện sản phẩm, vì vậy không đưa dữ liệu khách hàng thật vào lúc trình diễn.
+
+- Bước 2: Đặt biến môi trường GEMINI_API_KEY. Trong Git Bash: export GEMINI_API_KEY="khoá của bạn". Trong PowerShell: $env:GEMINI_API_KEY="khoá của bạn". Trong IntelliJ: thêm vào mục Environment variables của cấu hình chạy. Không đưa khoá vào mã nguồn.
+
+- Bước 3: Với CSDL đã có sẵn, chạy tệp database/05_user_events.sql để tạo bảng user_events (chạy lại nhiều lần vẫn an toàn). CSDL dựng mới từ 02_schema.sql đã có sẵn bảng này.
+
+- Bước 4: Chạy ứng dụng như thường lệ. Mở trang quản trị "Trợ lý AI" (/admin/ai) để xem trạng thái và số tour đã lập chỉ mục; lần đầu có thể mất vài chục giây vì phải gọi API embedding cho 20 tour.
+
+- Bước 5: Thử "Tìm bằng AI" ở danh sách tour, khung chat ở góc phải, rồi duyệt vài tour và mở trang "Hành vi người dùng" để xem số liệu. Không đặt khoá thì mọi chức năng vẫn chạy, riêng phần AI hiện thông báo chưa được cấu hình.
+
+- Chạy kiểm thử tự động bằng: bash ./mvnw test (không cần SQL Server và không cần khoá).
+
+## 5.4 Kiểm thử và kết quả
+
+Các kiểm thử dưới đây nằm trong thư mục src/test của dự án và chạy bằng một lệnh duy nhất. Kết quả: 73 kiểm thử, tất cả đạt.
+
+<!-- Bảng 5.5: Phạm vi các kiểm thử tự động của chuyên đề AI -->
+
+| Nhóm kiểm thử | Nội dung kiểm chứng | Kết quả |
+
+|---|---|---|
+
+| Đơn vị | Tách cụm chỉ giá; bộ giới hạn tốc độ; TrackingService (lọc bot, băm phiên, hạn mức, cắt thời gian, lỗi CSDL); kiểm tra dữ liệu sự kiện; tính phễu và khoảng ngày; thuật toán gợi ý | Đạt |
+
+| Kho vector | Lập chỉ mục, lưu và nạp tệp không gọi lại API, upsert, gỡ tour cũ, lọc theo giá và danh mục, tour tương tự, đổi mô hình thì lập lại, nhà cung cấp lỗi giữ nguyên chỉ mục cũ | Đạt |
+
+| Chatbot và công cụ | Lời nhắc hệ thống, bộ nhớ theo phiên, giới hạn tốc độ, lỗi nhà cung cấp, công cụ chỉ có 3 phương thức, addToCart đi qua CartService | Đạt |
+
+| Cấu hình | Dựng thật cấu hình Spring AI từ application.yml: không khoá, khoá rỗng, tắt tường minh, có khoá nối đúng Gemini, đổi sang Ollama bằng biến môi trường | Đạt |
+
+| Toàn hệ thống (AI bật) | Chạy cả ứng dụng thật trên cơ sở dữ liệu H2 (chế độ SQL Server) với máy chủ giả giao thức OpenAI: lập chỉ mục 20 tour, tìm ngữ nghĩa có lọc giá, tour tương tự, theo dõi đủ 5 loại sự kiện và các trường hợp sai, chatbot gọi công cụ rồi thêm vào giỏ, trang thống kê, lập chỉ mục lại, phân quyền | Đạt |
+
+| Toàn hệ thống (AI tắt) | Khoá để trống: trang chủ, tìm kiếm lùi về từ khoá, chatbot trả 503 thân thiện, tour tương tự và gợi ý lùi về cùng danh mục, thống kê tổng hợp đúng trên dữ liệu mẫu | Đạt |
+
+Những gì chưa kiểm chứng được và cần nói rõ: (1) chưa chạy trên SQL Server thật vì môi trường phát triển của chuyên đề này không có SQL Server, nên cần chạy tệp 05_user_events.sql và mở trang thống kê trên máy có SQL Server trước khi trình diễn; (2) chưa gọi Gemini thật, nên độ giống cosine thực tế và ngưỡng 0,5 là ước lượng cần chỉnh khi chạy thật; (3) giao diện chưa được kiểm bằng mắt trên trình duyệt, nên các hình 5.2 và 5.3 là chỗ chờ chèn ảnh chụp.
+
+## 5.5 Hạn chế
+
+- Bộ nhớ hội thoại của chatbot giữ trong bộ nhớ máy chủ theo từng phiên, chưa có cơ chế giới hạn số phiên hay lưu bền.
+
+- Mã phiên đổi khi khách đăng nhập nên phễu của khách ẩn danh bị tách làm hai phần; số liệu theo tài khoản vẫn liền mạch.
+
+- Chưa có biểu ngữ xin đồng ý theo dõi; hiện mới tôn trọng chế độ Do Not Track và chỉ lưu mã phiên đã băm.
+
+- SimpleVectorStore nạp toàn bộ chỉ mục vào bộ nhớ, đủ cho vài trăm tour; nếu dữ liệu lớn hơn cần chuyển sang kho vector chuyên dụng (ví dụ PostgreSQL với pgvector), không phải sửa các lớp nghiệp vụ nhờ lớp trừu tượng VectorStore.
+
+- Ở chế độ ngữ nghĩa, thứ tự sắp xếp do người dùng chọn bị bỏ qua (kết quả xếp theo độ giống); tìm theo từ khoá dự phòng vẫn khớp nguyên cụm từ.
+
+- Gói miễn phí của Gemini giới hạn số yêu cầu và có thể dùng nội dung để cải thiện sản phẩm của Google; khi triển khai thật cần dùng gói trả phí hoặc chạy mô hình cục bộ.
+
+# CHƯƠNG 6: KẾT LUẬN
+
+## 6.1 Kết quả đạt được
 
 Sau quá trình phân tích, thiết kế và hiện thực, đồ án TourBooking đã đạt được các kết quả cụ thể sau:
 
 Về mặt nghiệp vụ: hệ thống hiện thực đầy đủ **22/22 use case** theo đúng ba nhóm tác nhân đã phân tích, gồm trọn vẹn luồng đặt tour trực tuyến - từ tìm kiếm, giỏ hàng, đăng nhập, áp mã giảm giá, đến xác nhận đơn - lẫn các use case hoàn thành sau cùng (đánh giá tour, quản lý mã khuyến mãi, kiểm duyệt đánh giá, gửi/quản lý liên hệ), tất cả đã được kiểm thử bằng dữ liệu và thao tác thật chứ không chỉ trên lý thuyết. Đáng chú ý nhất: **bốn bảng dữ liệu mở rộng** (đánh giá, liên hệ, thanh toán, lịch sử trạng thái đơn) ban đầu chỉ tồn tại để phục vụ quy tắc chặn xoá, nay **ba trong số đó** đã có chức năng thật ghi/đọc dữ liệu mà **không đổi cấu trúc dữ liệu nào**. Hệ quả đo được bằng thao tác thật: điểm trung bình của tour đổi từ "Chưa có đánh giá" sang **3,0** ngay sau khi duyệt một đánh giá 3 sao; và các quy tắc chặn xoá vốn "chết" trên dữ liệu không phải mẫu có sẵn nay đã "sống dậy" - ví dụ xoá một tour đang có liên hệ hỏi thăm bị chặn, xoá một tài khoản quản trị viên đã từng đổi trạng thái đơn cũng bị chặn - xem Chương 4. Riêng bảng vé đặt lại mật khẩu vẫn là bảng "chết" duy nhất còn lại, có chủ đích vì đồ án chưa xây luồng quên mật khẩu qua email thật.
 
-Về mặt kỹ thuật: dự án xây dựng theo kiến trúc phân tầng rõ ràng, tách bạch giữa tầng giao diện, tầng xử lý nghiệp vụ và tầng dữ liệu; toàn bộ 16 bảng dữ liệu được thiết kế đúng chuẩn hoá, không có bất kỳ ràng buộc, hàm tính toán, thủ tục lưu trữ hay cơ chế tự động kích hoạt nào đặt trong cơ sở dữ liệu (đã kiểm chứng bằng lệnh thật, số lượng bằng 0), mọi quy tắc nghiệp vụ - kể cả các quy tắc khó như chặn xoá dữ liệu theo nhiều tầng tham chiếu và chống bán quá chỗ khi có nhiều người đặt cùng lúc - đều được thực thi minh bạch ngay trong chương trình ứng dụng.
+Về mặt kỹ thuật: dự án xây dựng theo kiến trúc phân tầng rõ ràng, tách bạch giữa tầng giao diện, tầng xử lý nghiệp vụ và tầng dữ liệu; toàn bộ 17 bảng dữ liệu được thiết kế đúng chuẩn hoá, không có bất kỳ ràng buộc, hàm tính toán, thủ tục lưu trữ hay cơ chế tự động kích hoạt nào đặt trong cơ sở dữ liệu (đã kiểm chứng bằng lệnh thật, số lượng bằng 0), mọi quy tắc nghiệp vụ - kể cả các quy tắc khó như chặn xoá dữ liệu theo nhiều tầng tham chiếu và chống bán quá chỗ khi có nhiều người đặt cùng lúc - đều được thực thi minh bạch ngay trong chương trình ứng dụng.
 
 Về trải nghiệm người dùng: giao diện được xây dựng theo một hệ thống thiết kế nhất quán (bảng màu "Ngọc bích & Đất nung", bộ token màu sắc - khoảng cách - bo góc tập trung), hỗ trợ song ngữ Việt/Anh, hiển thị tốt trên nhiều kích thước màn hình, và đã đo đạc thật các chỉ số tương phản màu sắc đạt chuẩn WCAG.
 
-## 5.2 Hạn chế của đồ án
+## 6.2 Hạn chế của đồ án
 
 Bên cạnh những kết quả đạt được, đồ án vẫn còn một số hạn chế do giới hạn về thời gian thực hiện:
 
@@ -1428,7 +1684,7 @@ Dự án chưa có bộ kiểm thử tự động (unit test/integration test) h
 
 Quy tắc "không xoá được quản trị viên cuối cùng" vẫn chưa được chứng minh bằng đúng kịch bản thật. Trước đây lý do là dữ liệu mẫu chỉ có một tài khoản quản trị viên nên quy tắc "không tự xoá chính mình" luôn nổ trước; nay đã có tài khoản quản trị viên thứ hai (`admin2`, id=5) nhưng tài khoản này lại vừa đổi trạng thái đơn ở TS23 nên bị chặn bởi quy tắc `error.user.delete.hasBookingHistory` trước khi kịp chạm tới quy tắc "quản trị viên cuối cùng" (xem TS25). Cần một tài khoản quản trị viên thứ ba hoàn toàn "sạch" - chưa từng đổi trạng thái đơn, chưa từng xử lý liên hệ hay duyệt đánh giá - mới cô lập được đúng tình huống này.
 
-## 5.3 Hướng phát triển
+## 6.3 Hướng phát triển
 
 Trong thời gian tới, nhóm dự kiến tiếp tục hoàn thiện đồ án theo các hướng sau:
 
@@ -1509,3 +1765,35 @@ Vào "Quản lý đơn đặt tour" để xem danh sách, lọc theo trạng th�
 ### 5. Đổi ngôn ngữ
 
 Bấm vào nút chọn ngôn ngữ (VI/EN) ở thanh điều hướng để chuyển đổi giữa tiếng Việt và tiếng Anh; trang đang xem và các bộ lọc đang áp dụng sẽ được giữ nguyên.
+
+### 6. Tìm tour bằng AI và dùng Trợ lý tour
+
+Ở trang "Tất cả tour", bật công tắc "Tìm bằng AI" rồi gõ mô tả bằng lời, ví dụ "biển yên tĩnh cho gia đình dưới 5 triệu", bấm "Áp dụng". Kết quả được xếp theo độ phù hợp. Bấm biểu tượng khung chat ở góc phải dưới để hỏi Trợ lý tour về tour, giá và chỗ còn trống; trợ lý có thể thêm lịch khởi hành vào giỏ khi bạn đồng ý, nhưng việc thanh toán luôn do bạn tự thực hiện ở trang Giỏ hàng. Nếu thấy thông báo "AI chưa được cấu hình", quản trị viên chưa đặt khoá API; bạn vẫn dùng ô tìm kiếm thường bình thường.
+
+### 7. Xem thống kê hành vi người dùng (dành cho quản trị viên)
+
+Đăng nhập quản trị viên, chọn "Hành vi người dùng" ở menu bên trái. Chọn khoảng ngày (hoặc bấm 7, 30, 90 ngày) để xem top tour được xem và bấm, phễu chuyển đổi, từ khoá tìm kiếm và thời gian xem trung bình. Chọn "Trợ lý AI" để xem trạng thái AI, số tour đã lập chỉ mục và bấm "Lập chỉ mục lại" sau khi nhập hàng loạt tour mới.
+
+<!-- Mục 3.2.19 (UserEvent) cần chèn thủ công sau 3.2.18; khối nguồn: -->
+<!--
+### 3.2.19 Thực thể UserEvent
+
+Bảng CSDL tương ứng: user_events
+
+>>ENTITY
+| 1 | Khai báo thuộc tính |  |  |  |
+| 1.1 | id | Long | Khoá chính, tự tăng |  |
+| 1.2 | type | EventType | Bắt buộc | VIEW, CLICK, ADD_TO_CART, SEARCH, TIME_ON_PAGE; lưu dạng chuỗi qua bộ chuyển đổi |
+| 1.3 | sessionId | String | Bắt buộc, tối đa 64 ký tự | Mã phiên đã băm SHA-256 |
+| 1.4 | userId | Long | Có thể để trống | Lấy từ phiên đăng nhập; không có khoá ngoại |
+| 1.5 | tourId | Long | Có thể để trống | Không có khoá ngoại để ghi nhanh |
+| 1.6 | departureId | Long | Có thể để trống |  |
+| 1.7 | keyword | String | Có thể để trống, tối đa 200 ký tự | Chỉ dùng cho sự kiện tìm kiếm |
+| 1.8 | durationMs | Integer | Có thể để trống | Thời gian xem (mili giây), tối đa 30 phút |
+| 1.9 | pageUrl | String | Có thể để trống, tối đa 255 ký tự | Chỉ phần đường dẫn, bỏ tham số |
+| 1.10 | occurredAt | LocalDateTime | Bắt buộc | Thời điểm xảy ra sự kiện |
+| 2 | Phương thức |  |  |  |
+| 2.1 | Getter/Setter | - | Theo ràng buộc trên |  |
+>>END
+
+-->
