@@ -2,7 +2,12 @@ package vn.edu.iuh.fit.tourbooking.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
+import com.google.genai.Client;
+import org.springframework.ai.google.genai.GoogleGenAiChatModel;
+import org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration;
+import org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatProperties;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration;
 import org.springframework.ai.model.chat.memory.autoconfigure.ChatMemoryAutoConfiguration;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration;
@@ -36,7 +41,7 @@ class AiWiringTest {
     @Import(AiConfig.class)
     @ImportAutoConfiguration({RestClientAutoConfiguration.class, WebClientAutoConfiguration.class,
             SpringAiRetryAutoConfiguration.class, ToolCallingAutoConfiguration.class,
-            OpenAiChatAutoConfiguration.class, OpenAiEmbeddingAutoConfiguration.class,
+            GoogleGenAiChatAutoConfiguration.class, OpenAiChatAutoConfiguration.class, OpenAiEmbeddingAutoConfiguration.class,
             ChatClientAutoConfiguration.class, ChatMemoryAutoConfiguration.class})
     static class Support {
         @Bean
@@ -59,6 +64,8 @@ class AiWiringTest {
             assertThat(ctx.getBeansOfType(TourVectorStore.class)).isEmpty();
             assertThat(ctx.getBeansOfType(ChatClient.class)).isEmpty();
             assertThat(ctx.getBeansOfType(OpenAiChatModel.class)).isEmpty();
+            assertThat(ctx.getBeansOfType(GoogleGenAiChatModel.class)).isEmpty();
+            assertThat(ctx.getBeansOfType(Client.class)).isEmpty();
             assertThat(ctx.getBean(AiProperties.class).active()).isFalse();
         }
     }
@@ -79,19 +86,27 @@ class AiWiringTest {
     }
 
     @Test
-    void with_a_key_the_assistant_is_wired_to_gemini_through_the_openai_starter() {
+    void with_a_key_chat_goes_through_the_native_gemini_sdk_and_embeddings_through_the_openai_compat_endpoint() {
         try (var ctx = start("GEMINI_API_KEY=AIza-test")) {
             assertThat(ctx.getBeansOfType(TourVectorStore.class)).hasSize(1);
             assertThat(ctx.containsBean("tourAssistant")).isTrue();
+            assertThat(ctx.containsBean("tourAssistantRagOnly")).isTrue();
 
+            // Chat: Google GenAI SDK (giữ thought signature), KHÔNG phải mô hình chat OpenAI-compat.
+            assertThat(ctx.getBeansOfType(GoogleGenAiChatModel.class)).hasSize(1);
+            assertThat(ctx.getBeansOfType(OpenAiChatModel.class)).isEmpty();
+            assertThat(ctx.getBeansOfType(Client.class)).hasSize(1);
+            GoogleGenAiChatProperties chat = ctx.getBean(GoogleGenAiChatProperties.class);
+            assertThat(chat.getOptions().getModel()).isEqualTo("gemini-2.5-flash");
+            assertThat(chat.getOptions().getTemperature()).isEqualTo(0.3);
+            // KHÔNG bật includeThoughts: Spring AI 1.1.8 không lọc phần "thought" nên bật sẽ làm lọt tóm tắt suy nghĩ vào câu trả lời.
+            assertThat(chat.getOptions().getIncludeThoughts()).isNull();
+
+            // Nhúng vector: vẫn qua starter OpenAI trỏ tới endpoint tương thích của Gemini, cùng mô hình/số chiều như chỉ mục đã lưu.
+            assertThat(ctx.getBeansOfType(OpenAiEmbeddingModel.class)).hasSize(1);
             OpenAiConnectionProperties connection = ctx.getBean(OpenAiConnectionProperties.class);
             assertThat(connection.getBaseUrl()).isEqualTo("https://generativelanguage.googleapis.com");
             assertThat(connection.getApiKey()).isEqualTo("AIza-test");
-
-            OpenAiChatProperties chat = ctx.getBean(OpenAiChatProperties.class);
-            assertThat(chat.getCompletionsPath()).isEqualTo("/v1beta/openai/chat/completions");
-            assertThat(chat.getOptions().getModel()).isEqualTo("gemini-2.5-flash");
-
             OpenAiEmbeddingProperties embedding = ctx.getBean(OpenAiEmbeddingProperties.class);
             assertThat(embedding.getEmbeddingsPath()).isEqualTo("/v1beta/openai/embeddings");
             assertThat(embedding.getOptions().getModel()).isEqualTo("gemini-embedding-001");
@@ -100,10 +115,28 @@ class AiWiringTest {
     }
 
     @Test
-    void provider_can_be_switched_to_ollama_or_openai_with_environment_variables_only() {
-        try (var ctx = start("GEMINI_API_KEY=ollama", "AI_BASE_URL=http://localhost:11434",
+    void the_chat_model_follows_AI_CHAT_MODEL_including_gemini_3() {
+        try (var ctx = start("GEMINI_API_KEY=AIza-test", "AI_CHAT_MODEL=gemini-3.5-flash-lite")) {
+            assertThat(ctx.getBean(GoogleGenAiChatProperties.class).getOptions().getModel()).isEqualTo("gemini-3.5-flash-lite");
+        }
+    }
+
+    @Test
+    void enabled_with_an_empty_key_still_starts() {
+        try (var ctx = start("GEMINI_API_KEY=", "AI_ENABLED=true")) {
+            assertThat(ctx.getBeansOfType(Client.class)).hasSize(1);
+            assertThat(ctx.getBeansOfType(ChatClient.class)).hasSize(2);
+        }
+    }
+
+    @Test
+    void chat_can_be_switched_to_ollama_or_openai_with_environment_variables_only() {
+        try (var ctx = start("GEMINI_API_KEY=ollama", "AI_CHAT_PROVIDER=openai", "AI_BASE_URL=http://localhost:11434",
                 "AI_CHAT_PATH=/v1/chat/completions", "AI_EMBEDDINGS_PATH=/v1/embeddings",
                 "AI_CHAT_MODEL=qwen2.5", "AI_EMBEDDING_MODEL=bge-m3", "AI_EMBEDDING_DIMENSIONS=1024")) {
+            assertThat(ctx.getBeansOfType(OpenAiChatModel.class)).hasSize(1);
+            assertThat(ctx.getBeansOfType(GoogleGenAiChatModel.class)).isEmpty();
+            assertThat(ctx.getBeansOfType(Client.class)).isEmpty();
             assertThat(ctx.getBean(OpenAiConnectionProperties.class).getBaseUrl()).isEqualTo("http://localhost:11434");
             assertThat(ctx.getBean(OpenAiChatProperties.class).getOptions().getModel()).isEqualTo("qwen2.5");
             assertThat(ctx.getBean(OpenAiEmbeddingProperties.class).getOptions().getDimensions()).isEqualTo(1024);

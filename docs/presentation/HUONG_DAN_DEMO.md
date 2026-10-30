@@ -4,8 +4,8 @@ Tài liệu đi kèm bài thuyết trình `SpringAI_VectorDB_UserTracking.pptx` 
 Thời lượng demo trực tiếp khoảng **10 đến 15 phút**. Mọi đường dẫn dưới đây tính từ thư mục gốc dự án
 `C:\Users\Khangg\Downloads\www\project_www`.
 
-> **Đọc trước khi lên lớp.** Code đã được kiểm bằng 73 kiểm thử tự động và chạy cả ứng dụng trên H2 với
-> máy chủ giả giao thức OpenAI. **Chưa ai chạy với SQL Server thật và Gemini thật trong môi trường làm bài**, và
+> **Đọc trước khi lên lớp.** Code đã được kiểm bằng 86 kiểm thử tự động và chạy cả ứng dụng trên H2 với
+> máy chủ giả của Gemini (có ép luật `thought_signature` của Gemini 3). **Chưa ai chạy với SQL Server thật và Gemini thật trong môi trường làm bài**, và
 > giao diện chưa được nhìn bằng mắt trên trình duyệt. Hãy **chạy thử toàn bộ kịch bản một lần trước giờ trình bày**
 > (mục 8) và chụp sẵn ảnh dự phòng (mục 7).
 
@@ -58,13 +58,16 @@ export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/B
    Có danh sách mô hình là khoá dùng được; lỗi 400/403 là khoá sai hoặc chưa bật.
 
 Mặc định (không cần đặt thêm): chat `gemini-2.5-flash`, embedding `gemini-embedding-001` (3072 chiều),
-địa chỉ `https://generativelanguage.googleapis.com`, đường dẫn `/v1beta/openai/...`.
+địa chỉ `https://generativelanguage.googleapis.com`. Chat đi qua SDK Gemini gốc (starter `google-genai`), còn embedding qua đường `/v1beta/openai/embeddings`.
+
+> **Lần đầu build sau khi cập nhật bản này phải có mạng** (Maven tải thêm khoảng 25 jar của SDK Gemini): chạy `./mvnw clean spring-boot:run` **không** kèm `-o`.
+> Chỉ mục vector đã lập **không** bị lập lại (mô hình và số chiều embedding không đổi).
 
 **Các biến tuỳ chọn:**
 
 | Biến | Dùng khi | Ví dụ |
 |---|---|---|
-| `AI_CHAT_MODEL` | bị giới hạn tốc độ, muốn hạn mức cao hơn | `gemini-2.5-flash-lite` |
+| `AI_CHAT_MODEL` | bị giới hạn tốc độ, muốn hạn mức cao hơn, hoặc dùng dòng Gemini 3 | `gemini-2.5-flash-lite`, `gemini-3.5-flash-lite` |
 | `AI_SIMILARITY_THRESHOLD` | tìm ngữ nghĩa ra quá ít hoặc quá nhiều kết quả | `0.4` (ít chặt hơn) hoặc `0.6` |
 | `AI_ENABLED` | ép tắt AI dù có khoá (demo chế độ dự phòng) | `false` |
 | `AI_VECTOR_STORE_PATH` | đổi chỗ lưu chỉ mục | `data/vector-store.json` |
@@ -78,11 +81,14 @@ Mặc định (không cần đặt thêm): chat `gemini-2.5-flash`, embedding `g
 - **Quyền riêng tư:** ở gói miễn phí, Google có thể dùng nội dung gửi lên để cải thiện sản phẩm. **Không đưa dữ liệu khách thật vào lúc demo**
   (dùng tài khoản mẫu `an.nguyen@gmail.com`, nội dung câu hỏi chỉ về tour).
 
-### 2.2. Đổi nhà cung cấp (một dòng)
+### 2.2. Đổi nhà cung cấp chat (OpenAI, Ollama)
 
-- **OpenAI:** `AI_BASE_URL=https://api.openai.com`, `AI_CHAT_PATH=/v1/chat/completions`, `AI_EMBEDDINGS_PATH=/v1/embeddings`,
+Mặc định chat dùng SDK Gemini. Muốn dùng OpenAI hoặc Ollama phải thêm `AI_CHAT_PROVIDER=openai` (đường này dùng API tương thích OpenAI nên
+**không dùng cho Gemini 3**: nó làm rơi `thought_signature`, xem `PLAN.md` gotcha #80).
+
+- **OpenAI:** `AI_CHAT_PROVIDER=openai`, `AI_BASE_URL=https://api.openai.com`, `AI_CHAT_PATH=/v1/chat/completions`, `AI_EMBEDDINGS_PATH=/v1/embeddings`,
   `AI_CHAT_MODEL=gpt-4o-mini`, `AI_EMBEDDING_MODEL=text-embedding-3-small`, và `GEMINI_API_KEY=<khoá OpenAI>` (tên biến không đổi, chỉ là nơi chứa khoá).
-- **Ollama chạy máy mình:** `AI_BASE_URL=http://localhost:11434`, hai đường dẫn như OpenAI, `AI_CHAT_MODEL=qwen2.5`, `AI_EMBEDDING_MODEL=bge-m3`,
+- **Ollama chạy máy mình:** `AI_CHAT_PROVIDER=openai`, `AI_BASE_URL=http://localhost:11434`, hai đường dẫn như OpenAI, `AI_CHAT_MODEL=qwen2.5`, `AI_EMBEDDING_MODEL=bge-m3`,
   `GEMINI_API_KEY=ollama` (khoá giả để bật AI). Mỗi lần **đổi mô hình nhúng hoặc nhà cung cấp**, ứng dụng tự nhận ra và lập lại chỉ mục.
 
 ---
@@ -123,7 +129,7 @@ Mở sẵn 2 cửa sổ trình duyệt: **(A)** khách chưa đăng nhập (cử
 | # | Thời gian | Slide | Thao tác trên màn hình | Nói gì |
 |---|---|---|---|---|
 | 0 | 1' | 16, 17 | Chỉ slide kiến trúc | "Website đặt tour vốn dùng SQL Server và giỏ trong session. Nhóm thêm ba thứ: tìm theo ý, trợ lý chat, và ghi hành vi để thống kê. SQL Server vẫn là nguồn gốc, kho vector chỉ là chỉ mục phụ lưu ra tệp." |
-| 1 | 1' | 18, 19, 20 | Cửa sổ B, `/admin/ai` | "Dùng một starter OpenAI trỏ sang Gemini miễn phí nên đổi nhà cung cấp chỉ cần đổi biến môi trường. Đây là Spring AI 1.1.8 vì bản 2.0 của Chương 7 nhắm tới Spring Boot 4. 20 tour đã được nhúng thành vector và lưu ra tệp, khởi động lại không phải gọi API nữa." |
+| 1 | 1' | 18, 19, 20 | Cửa sổ B, `/admin/ai` | "Chat dùng starter Google GenAI của Spring AI với khoá Gemini miễn phí, còn nhúng vector dùng starter OpenAI trỏ sang Gemini; đổi sang OpenAI hay Ollama chỉ cần đổi biến môi trường. Đây là Spring AI 1.1.8 vì bản 2.0 của Chương 7 nhắm tới Spring Boot 4. 20 tour đã được nhúng thành vector và lưu ra tệp, khởi động lại không phải gọi API nữa." |
 | 2 | 2' | 21, 22 | Cửa sổ A, **Tất cả tour**, bật **Tìm bằng AI**, gõ câu 1 rồi câu 2 (bảng dưới) | "Ô tìm cũ chỉ khớp chuỗi ký tự. Giờ tôi mô tả bằng lời, hệ thống tách cụm 'dưới 5 triệu' thành bộ lọc giá rồi so ý nghĩa với vector của từng tour." Tắt công tắc, gõ lại cùng câu: "Cùng câu mà tìm từ khoá thì không ra gì." |
 | 3 | 1' | 21 | Mở **Nha Trang** (hoặc **Sa Pa**), kéo xuống khối **Tour tương tự** | "Vector của tour đang xem được so với các tour còn lại, đây là tính năng 'khách xem X cũng quan tâm Y'." |
 | 4 | 3' | 23, 24 | Mở khung chat, hội thoại mẫu (bảng dưới) | "Đây là Product Assistant của Chương 7. Mô hình không chạm cơ sở dữ liệu: nó chỉ yêu cầu ứng dụng chạy tool `searchTours`, `getDepartures`, `addToCart`. Mọi kiểm tra còn chỗ, tối đa 30 khách vẫn do `CartService` làm. Chatbot **không có** công cụ thanh toán." Sau đó bấm biểu tượng giỏ để chứng minh giỏ đã có tour. |
@@ -162,6 +168,7 @@ trong khoảng ngày đã chọn (đơn đã huỷ không tính).
 | **Không có khoá / để trống** | Khung chat báo *AI chưa được cấu hình*; `/admin/ai` báo *Đang tắt* | **Đây vẫn là một phần demo hợp lệ.** Nói: "Hệ thống thiết kế để chạy đủ khi AI không khả dụng": bật *Tìm bằng AI* thì công tắc bị khoá và tìm lùi về từ khoá; *Tour tương tự* lùi về cùng danh mục; *Có thể bạn thích* lùi về tour phổ biến; tracking và thống kê vẫn chạy. |
 | **Mạng đứt khi chạy** | Chat trả *Trợ lý AI tạm thời chưa phản hồi*, tìm AI hiện thông báo vàng | Website không sập. Chuyển sang cửa sổ ảnh chụp/video (mục 7) cho phần chatbot và tìm ngữ nghĩa; tracking và thống kê chạy offline bình thường. |
 | **Lỗi 429 (hết hạn mức)** | `/admin/ai` hiện lỗi gần nhất chứa `429` | Đợi 1 phút. Hoặc dừng app, đặt `AI_CHAT_MODEL=gemini-2.5-flash-lite` rồi chạy lại. Đừng bấm *Lập chỉ mục lại* lúc đang demo. |
+| **Chat báo lỗi `thought_signature` / chỉ trả lời chung chung, không báo giá** | Log WARN `Vòng gọi công cụ bị nhà cung cấp từ chối, thử lại một lần KHÔNG công cụ`; `/admin/ai` hiện lỗi `400` | Bản này **tự thử lại không công cụ**: khách vẫn nhận câu trả lời dựa trên RAG và được mời dùng trang *Danh sách tour*, nhưng chatbot không tra giá/lịch hay thêm giỏ được. Kiểm tra `AI_CHAT_PROVIDER` không bị đặt thành `openai` khi dùng Gemini 3; thử `AI_CHAT_MODEL=gemini-2.5-flash` để so sánh. Chưa kiểm với Gemini thật. |
 | **Khoá sai (401/403)** | Chat báo chưa phản hồi, log có `401` | Kiểm tra lại biến (không có dấu cách, không thừa dấu nháy), thử `curl` ở mục 2.1. |
 | **Tìm ngữ nghĩa trả quá ít hoặc quá nhiều** | Luôn hiện thông báo vàng (lùi về từ khoá) hoặc ra cả 20 tour | Chỉnh `AI_SIMILARITY_THRESHOLD` (hạ xuống `0.4` nếu ít, nâng lên `0.6` nếu nhiều), chạy lại, không cần lập chỉ mục lại. |
 | **Muốn ép chế độ dự phòng để so sánh** | | `AI_ENABLED=false` rồi chạy lại. |
@@ -185,7 +192,8 @@ Có thể quay thêm một video 1 đến 2 phút toàn bộ kịch bản. Báo 
 
 ## 8. Chạy thử toàn bộ kịch bản (checklist trước giờ trình bày, 20 phút)
 
-- [ ] `./mvnw test` xanh (73 kiểm thử).
+- [ ] `./mvnw test` xanh (86 kiểm thử).
+- [ ] Hội thoại chatbot có gọi tool (câu hỏi giá/lịch) trả được số liệu thật; log **không** có dòng WARN `KHÔNG công cụ`.
 - [ ] Đã chạy `05_user_events.sql`, không có `Msg`.
 - [ ] `/admin/ai` báo 20 tour, khoá *Đã có*.
 - [ ] Cả 6 câu tìm kiếm mẫu: chọn ra 2 câu cho kết quả đẹp; ghi lại.
@@ -211,8 +219,8 @@ Có thể quay thêm một video 1 đến 2 phút toàn bộ kịch bản. Báo 
 | similaritySearch, topK, threshold, filter | 10 | `TourVectorService.search()`, `ai/PriceHintParser.java` |
 | Tìm kiếm ngữ nghĩa trong dự án | 11, 22 | `ai/SemanticSearchService.java`, `TourController`, `TourApiController#semantic` |
 | Sản phẩm tương tự, gợi ý | 11, 32 | `service/RecommendationService.java` |
-| Cấu hình, khoá API, công tắc | 12, 19 | `config/AiProperties.java`, `AiEnabledCondition`, `AiEnvironmentPostProcessor`, `application.properties` |
-| Mock ChatModel khi kiểm thử | 12, 34 | `src/test/.../ai/AiChatServiceTest.java`, `web/FakeOpenAiServer.java` |
+| Cấu hình, khoá API, công tắc | 12, 19 | `config/AiProperties.java`, `AiEnabledCondition`, `AiEnvironmentPostProcessor`, `AiConfig`, `ai/GenAiClientFactory.java`, `application.properties` |
+| Mock ChatModel khi kiểm thử | 12, 34 | `src/test/.../ai/AiChatServiceTest.java`, `web/FakeGeminiServer.java`, `ai/GeminiToolLoopTest.java` |
 | Các chỉ số tracking, phễu | 13 | `service/BehaviorStatsService.java`, `UserEventRepository` |
 | Event delegation, Page Visibility, keepalive | 14 | `static/js/tracker.js` |
 | Quyền riêng tư, không tin client, rate limit | 15 | `service/TrackingService.java`, `dto/form/TrackingRequest.java`, `util/SlidingWindowRateLimiter.java` |

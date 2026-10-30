@@ -1417,9 +1417,9 @@ Ba nhóm chức năng mới đều đi qua tầng dịch vụ sẵn có của �
 
 ### 5.2.2 Lựa chọn công nghệ và cấu hình
 
-Phiên bản Spring AI: Spring AI 2.0.x dùng Jackson 3 nên nhắm tới Spring Boot 4, trong khi đồ án chạy trên Spring Boot 3.5.16. Nhóm chọn Spring AI 1.1.8, bản 1.x mới nhất tại Maven Central, khai báo qua spring-ai-bom với ba thành phần: spring-ai-starter-model-openai, spring-ai-vector-store và spring-ai-advisors-vector-store. Việc chọn này đã được kiểm chứng bằng biên dịch và chạy thật cùng Spring Boot 3.5.16.
+Phiên bản Spring AI: Spring AI 2.0.x dùng Jackson 3 nên nhắm tới Spring Boot 4, trong khi đồ án chạy trên Spring Boot 3.5.16. Nhóm chọn Spring AI 1.1.8, bản 1.x mới nhất tại Maven Central, khai báo qua spring-ai-bom với bốn thành phần: spring-ai-starter-model-google-genai (chat), spring-ai-starter-model-openai (embedding), spring-ai-vector-store và spring-ai-advisors-vector-store. Việc chọn này đã được kiểm chứng bằng biên dịch và chạy thật cùng Spring Boot 3.5.16.
 
-Nhà cung cấp mô hình: chỉ dùng một starter của OpenAI nhưng trỏ tới điểm truy cập tương thích OpenAI của Google Gemini, vì Gemini có gói miễn phí phù hợp với sinh viên. Mô hình chat mặc định là gemini-2.5-flash (có thể đổi sang gemini-2.5-flash-lite nếu cần hạn mức cao hơn) và mô hình embedding mặc định là gemini-embedding-001. Cũng chính cấu hình này đổi được sang OpenAI hoặc Ollama chạy cục bộ chỉ bằng biến môi trường, không sửa mã.
+Nhà cung cấp mô hình: dùng Google Gemini vì Gemini có gói miễn phí phù hợp với sinh viên. Phần chat đi qua starter Google GenAI của Spring AI (SDK Gemini chính thức); phần embedding đi qua starter OpenAI trỏ tới điểm truy cập tương thích OpenAI của Gemini. Nhóm tách như vậy vì các mô hình Gemini 3 bắt buộc gửi lại "thought signature" (chữ ký suy luận) của lời gọi hàm trong cùng lượt, mà lớp OpenAI của Spring AI 1.1.8 làm rơi trường này nên chatbot gặp lỗi HTTP 400 ngay khi mô hình gọi công cụ; đường Google GenAI giữ và gửi lại chữ ký. Mô hình chat mặc định là gemini-2.5-flash (có thể đổi sang gemini-2.5-flash-lite nếu cần hạn mức cao hơn) và mô hình embedding mặc định là gemini-embedding-001. Phần chat đổi được sang OpenAI hoặc Ollama chạy cục bộ bằng biến môi trường (thêm AI_CHAT_PROVIDER=openai), không sửa mã; đường này không dùng được cho Gemini 3.
 
 Kho vector: dùng SimpleVectorStore của Spring AI và lưu ra tệp data/vector-store.json (tệp này bị loại khỏi kho mã nguồn). Lý do: môi trường đồ án không có PostgreSQL, và SQL Server không nằm trong danh sách kho vector của bài giảng nên được giữ làm nguồn dữ liệu gốc. Ứng dụng chỉ gọi API embedding khi tệp chưa có hoặc khi đổi mô hình; những lần khởi động sau nạp thẳng từ tệp để tiết kiệm hạn mức.
 
@@ -1435,7 +1435,7 @@ Kho vector: dùng SimpleVectorStore của Spring AI và lưu ra tệp data/vecto
 
 | AI_BASE_URL | Địa chỉ nhà cung cấp | https://generativelanguage.googleapis.com |
 
-| AI_CHAT_PATH / AI_EMBEDDINGS_PATH | Đường dẫn gọi chat và embedding | /v1beta/openai/chat/completions và /v1beta/openai/embeddings |
+| AI_CHAT_PATH / AI_EMBEDDINGS_PATH | Đường dẫn gọi chat (chỉ khi AI_CHAT_PROVIDER=openai) và embedding | /v1beta/openai/chat/completions và /v1beta/openai/embeddings |
 
 | AI_CHAT_MODEL | Mô hình chat | gemini-2.5-flash |
 
@@ -1452,15 +1452,16 @@ Kho vector: dùng SimpleVectorStore của Spring AI và lưu ra tệp data/vecto
 Một đoạn cấu hình tiêu biểu trong tệp application.properties (giá trị mặc định: địa chỉ Gemini, mô hình gemini-2.5-flash và gemini-embedding-001):
 
 ```
+spring.ai.model.chat=${app.ai.chat-provider}
+spring.ai.google.genai.api-key=${GEMINI_API_KEY:}
+spring.ai.google.genai.chat.options.model=${app.ai.chat-model}
 spring.ai.openai.api-key=${GEMINI_API_KEY:}
 spring.ai.openai.base-url=${app.ai.base-url}
-spring.ai.openai.chat.completions-path=${app.ai.chat-path}
-spring.ai.openai.chat.options.model=${app.ai.chat-model}
 spring.ai.openai.embedding.embeddings-path=${app.ai.embeddings-path}
 spring.ai.openai.embedding.options.model=${app.ai.embedding-model}
 ```
 
-Công tắc AI: tính năng được bật khi có khoá API hoặc khi đặt AI_ENABLED=true; đặt AI_ENABLED=false thì tắt dù có khoá. Một điểm kỹ thuật quan trọng nhóm gặp phải: cấu hình tự động của Spring AI ném lỗi ngay lúc khởi động nếu khoá rỗng, kể cả khi biến môi trường tồn tại nhưng để trống. Vì vậy một lớp xử lý môi trường riêng tắt luôn cấu hình tự động này khi AI tắt, bảo đảm ứng dụng luôn khởi động được.
+Công tắc AI: tính năng được bật khi có khoá API hoặc khi đặt AI_ENABLED=true; đặt AI_ENABLED=false thì tắt dù có khoá. Một điểm kỹ thuật quan trọng nhóm gặp phải: cấu hình tự động của Spring AI ném lỗi ngay lúc khởi động nếu khoá rỗng, kể cả khi biến môi trường tồn tại nhưng để trống. Vì vậy một lớp xử lý môi trường riêng tắt luôn cấu hình tự động của cả hai starter (chat và embedding) khi AI tắt, bảo đảm ứng dụng luôn khởi động được.
 
 ### 5.2.3 Kho vector và lập chỉ mục
 
@@ -1490,7 +1491,7 @@ Khung chat nổi ở góc phải dưới của mọi trang công khai cho phép 
 
 - addToCart: thêm một lịch khởi hành vào giỏ hàng của phiên, chỉ sau khi khách đồng ý rõ ràng; công cụ gọi lại CartService sẵn có nên mọi kiểm tra (còn bán, đủ chỗ, tối đa 30 khách) vẫn do mã Java đảm nhiệm.
 
-Chatbot không có công cụ nào để thanh toán hay chốt đơn: lời nhắc hệ thống yêu cầu hướng khách vào Giỏ hàng và Thanh toán (cần đăng nhập), và kiểm thử tự động xác nhận lớp công cụ chỉ có đúng ba phương thức trên. Danh tính (phiên, mã tài khoản) được truyền qua ngữ cảnh công cụ ở phía máy chủ chứ không đưa cho mô hình. Mỗi phiên bị giới hạn 8 tin nhắn mỗi phút và mỗi tin tối đa 500 ký tự; khi AI tắt hoặc nhà cung cấp lỗi, API trả mã 503 kèm câu tiếng Việt thân thiện và khung chat hiển thị trạng thái "AI chưa được cấu hình".
+Chatbot không có công cụ nào để thanh toán hay chốt đơn: lời nhắc hệ thống yêu cầu hướng khách vào Giỏ hàng và Thanh toán (cần đăng nhập), và kiểm thử tự động xác nhận lớp công cụ chỉ có đúng ba phương thức trên. Danh tính (phiên, mã tài khoản) được truyền qua ngữ cảnh công cụ ở phía máy chủ chứ không đưa cho mô hình. Mỗi phiên bị giới hạn 8 tin nhắn mỗi phút và mỗi tin tối đa 500 ký tự; nếu nhà cung cấp từ chối vòng gọi công cụ bằng lỗi 4xx (ví dụ báo thiếu thought signature) thì hệ thống thử lại đúng một lần không có công cụ (chỉ dùng RAG, nhắc khách vào trang danh sách tour) và ghi nhật ký mức cảnh báo; khi AI tắt hoặc nhà cung cấp vẫn lỗi, API trả mã 503 kèm câu tiếng Việt thân thiện và khung chat hiển thị trạng thái "AI chưa được cấu hình".
 
 ### 5.2.7 Theo dõi hành vi người dùng
 
@@ -1538,7 +1539,7 @@ Trang "Hành vi người dùng" trong khu quản trị (cùng phong cách các t
 
 ## 5.4 Kiểm thử và kết quả
 
-Các kiểm thử dưới đây nằm trong thư mục src/test của dự án và chạy bằng một lệnh duy nhất. Kết quả: 73 kiểm thử, tất cả đạt.
+Các kiểm thử dưới đây nằm trong thư mục src/test của dự án và chạy bằng một lệnh duy nhất. Kết quả: 86 kiểm thử, tất cả đạt.
 
 <!-- Bảng 5.5: Phạm vi các kiểm thử tự động của chuyên đề AI -->
 
@@ -1550,15 +1551,15 @@ Các kiểm thử dưới đây nằm trong thư mục src/test của dự án v
 
 | Kho vector | Lập chỉ mục, lưu và nạp tệp không gọi lại API, upsert, gỡ tour cũ, lọc theo giá và danh mục, tour tương tự, đổi mô hình thì lập lại, nhà cung cấp lỗi giữ nguyên chỉ mục cũ | Đạt |
 
-| Chatbot và công cụ | Lời nhắc hệ thống, bộ nhớ theo phiên, giới hạn tốc độ, lỗi nhà cung cấp, công cụ chỉ có 3 phương thức, addToCart đi qua CartService | Đạt |
+| Chatbot và công cụ | Lời nhắc hệ thống, bộ nhớ theo phiên, giới hạn tốc độ, lỗi nhà cung cấp, thử lại không công cụ khi bị 4xx (khôi phục bộ nhớ, ghi cảnh báo, không thử lại với 401/403/429), vòng gọi công cụ trả lại đúng chữ ký, thử lại 429, công cụ chỉ có 3 phương thức, addToCart đi qua CartService | Đạt |
 
-| Cấu hình | Dựng thật cấu hình Spring AI từ application.properties: không khoá, khoá rỗng, tắt tường minh, có khoá nối đúng Gemini, đổi sang Ollama bằng biến môi trường | Đạt |
+| Cấu hình | Dựng thật cấu hình Spring AI từ application.properties: không khoá, khoá rỗng, tắt tường minh, có khoá thì chat nối SDK Gemini còn embedding nối điểm truy cập tương thích OpenAI, đổi chat sang Ollama bằng biến môi trường | Đạt |
 
-| Toàn hệ thống (AI bật) | Chạy cả ứng dụng thật trên cơ sở dữ liệu H2 (chế độ SQL Server) với máy chủ giả giao thức OpenAI: lập chỉ mục 20 tour, tìm ngữ nghĩa có lọc giá, tour tương tự, theo dõi đủ 5 loại sự kiện và các trường hợp sai, chatbot gọi công cụ rồi thêm vào giỏ, trang thống kê, lập chỉ mục lại, phân quyền | Đạt |
+| Toàn hệ thống (AI bật) | Chạy cả ứng dụng thật trên cơ sở dữ liệu H2 (chế độ SQL Server) với máy chủ giả của Gemini (ép luật thought signature): lập chỉ mục 20 tour, tìm ngữ nghĩa có lọc giá, tour tương tự, theo dõi đủ 5 loại sự kiện và các trường hợp sai, chatbot gọi công cụ rồi thêm vào giỏ, trang thống kê, lập chỉ mục lại, phân quyền | Đạt |
 
 | Toàn hệ thống (AI tắt) | Khoá để trống: trang chủ, tìm kiếm lùi về từ khoá, chatbot trả 503 thân thiện, tour tương tự và gợi ý lùi về cùng danh mục, thống kê tổng hợp đúng trên dữ liệu mẫu | Đạt |
 
-Những gì chưa kiểm chứng được và cần nói rõ: (1) chưa chạy trên SQL Server thật vì môi trường phát triển của chuyên đề này không có SQL Server, nên cần chạy tệp 05_user_events.sql và mở trang thống kê trên máy có SQL Server trước khi trình diễn; (2) chưa gọi Gemini thật, nên độ giống cosine thực tế và ngưỡng 0,5 là ước lượng cần chỉnh khi chạy thật; (3) giao diện chưa được kiểm bằng mắt trên trình duyệt, nên các hình 5.2 và 5.3 là chỗ chờ chèn ảnh chụp.
+Những gì chưa kiểm chứng được và cần nói rõ: (1) chưa chạy trên SQL Server thật vì môi trường phát triển của chuyên đề này không có SQL Server, nên cần chạy tệp 05_user_events.sql và mở trang thống kê trên máy có SQL Server trước khi trình diễn; (2) chưa gọi Gemini thật, nên độ giống cosine thực tế và ngưỡng 0,5 là ước lượng cần chỉnh khi chạy thật, và việc Gemini 3 trả chữ ký suy luận cho vòng gọi công cụ chỉ mới được kiểm bằng máy chủ giả ép đúng luật đó (chưa xác nhận với dịch vụ thật); (3) giao diện chưa được kiểm bằng mắt trên trình duyệt, nên các hình 5.2 và 5.3 là chỗ chờ chèn ảnh chụp.
 
 ## 5.5 Hạn chế
 
