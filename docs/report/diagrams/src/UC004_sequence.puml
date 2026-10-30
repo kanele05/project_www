@@ -1,0 +1,103 @@
+@startuml UC004_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC004_Quản lý giỏ hàng]
+
+actor "Khách vãng lai" as kh
+boundary "GiaoDien_GioHang" as ui
+control "Ctrl_GioHang" as ctrl
+control "Svc_GioHang" as svc
+entity "DotKhoiHanh" as dot
+entity "GioHang" as gh
+kh -> ui : 1: Bấm “Thêm vào giỏ”
+ui -> ctrl : 1.1: them(dotKhoiHanh, soNguoiLon, soTreEm)
+ctrl -> svc : 1.1.1: themVaoGio(phien, dotKhoiHanh, ...)
+svc -> svc : 1.1.2: kiemTraSoKhach(): ≥ 1 người lớn, ≤ 30
+svc -> dot : 1.1.3: findById(dotKhoiHanh)
+dot --> svc : 1.1.4: dotKhoiHanh
+svc -> gh : 1.1.5: layDong(dotKhoiHanh)
+gh --> svc : 1.1.6: dongHienCo
+alt Không hợp lệ, lịch đã đóng/quá hạn hoặc không đủ chỗ
+  svc --> ctrl : 1.1.7: lỗi nghiệp vụ
+  ctrl --> ui : 1.2: thông báo lỗi
+  ui --> kh : 1.3: Hiện lỗi ngay trên trang, giỏ nguyên vẹn
+else Hợp lệ và đủ chỗ
+  svc -> gh : 1.1.8: themHoacCongDon(dong)
+  gh --> svc : 1.1.9: dongGioHang
+  svc --> ctrl : 1.1.10: dongGioHang
+  ctrl --> ui : 1.2: tổng số dòng, thông báo thành công
+  ui --> kh : 1.3: Cập nhật biểu tượng giỏ + thông báo, không tải lại
+end
+kh -> ui : 2: Mở trang giỏ hàng
+ui -> ctrl : 2.1: xem()
+ctrl -> gh : 2.1.1: layGioHang(phien)
+gh --> ctrl : 2.1.2: dsDongGioHang
+ctrl --> ui : 2.2: render(gioHang)
+ui --> kh : 2.3: Hiển thị các dòng và tổng tiền
+kh -> ui : 3: Sửa số khách / Xoá dòng / Xoá toàn bộ giỏ
+alt Sửa số khách của một dòng
+  ui -> ctrl : 3.1: capNhat(dotKhoiHanh, soNguoiLon, soTreEm)
+  ctrl -> svc : 3.1.1: capNhatSoLuong(phien, ...)
+  alt Tổng số khách = 0
+    svc -> gh : 3.1.2: xoaDong(dotKhoiHanh)
+    gh --> svc : 3.1.3: xong
+  else Tổng số khách > 0
+    svc -> dot : 3.1.4: findById(dotKhoiHanh)
+    dot --> svc : 3.1.5: dotKhoiHanh
+    svc -> svc : 3.1.6: kiemTraSoKhach(), kiemTraDuCho()
+    opt Không hợp lệ hoặc không đủ chỗ
+      svc --> ctrl : 3.1.7: lỗi nghiệp vụ (giữ nguyên dòng cũ)
+    end
+    svc -> gh : 3.1.8: datSoKhach(dong)
+    gh --> svc : 3.1.9: xong
+  end
+  svc --> ctrl : 3.1.10: ketQua
+  ctrl --> ui : 3.2: thông báo kết quả
+else Xoá một dòng hoặc xoá toàn bộ giỏ
+  ui -> ctrl : 3.3: xoaDong(dotKhoiHanh) / xoaTatCa()
+  ctrl -> svc : 3.3.1: xoaDong(...) / lamRong(phien)
+  svc -> gh : 3.3.2: xoa(...)
+  gh --> svc : 3.3.3: xong
+  svc --> ctrl : 3.3.4: xong
+  ctrl --> ui : 3.4: thông báo kết quả
+end
+ui --> kh : 3.5: Tải lại trang giỏ hàng với số liệu đã cập nhật
+@enduml

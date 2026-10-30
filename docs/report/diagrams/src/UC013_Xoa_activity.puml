@@ -1,0 +1,50 @@
+@startuml UC013_Xoa_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC013_Quản lý danh mục tour - Xoá danh mục]
+|Quản trị viên|
+start
+:Từ danh sách danh mục, bấm “Xoá” ở một danh mục;
+|Hệ thống|
+:Hiển thị hộp xác nhận\n“Bạn chắc chắn muốn xoá mục này?”;
+|Quản trị viên|
+if (Xác nhận xoá?) then (Không)
+  :Không xoá, danh mục giữ nguyên;
+  stop
+endif
+|Hệ thống|
+:Đếm số tour đang thuộc danh mục;
+if (Còn tour thuộc danh mục?) then (Có)
+  :Không xoá gì cả, hiện ngay trên trang danh sách\n“Không xoá được: danh mục này còn N tour...”;
+else (Không)
+  :Xoá danh mục (và ảnh đại diện nếu là ảnh tự tải lên);
+  :Báo xoá thành công và bỏ dòng vừa xoá\nngay trên trang, không tải lại;
+endif
+|Quản trị viên|
+stop
+@enduml

@@ -1,0 +1,78 @@
+@startuml UC005_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC005_Đăng nhập]
+
+actor "Khách vãng lai" as kh
+boundary "GiaoDien_DangNhap" as ui
+control "Ctrl_XacThuc" as ctrl
+control "Loc_BaoMat" as sec
+entity "TaiKhoan" as tk
+kh -> ui : 1: Bấm “Đăng nhập”
+ui -> ctrl : 1.1: trangDangNhap()
+ctrl --> ui : 1.2: bieuMau
+ui --> kh : 1.3: Hiển thị trang đăng nhập
+kh -> ui : 2: Nhập email, mật khẩu,\nbấm “Đăng nhập”
+ui -> sec : 2.1: xacThuc(email, matKhau, ghiNho)
+sec -> tk : 2.1.1: timTheoEmail(email)
+tk --> sec : 2.1.2: taiKhoan
+sec -> sec : 2.1.3: soKhopMatKhau(), kiemTraConHoatDong()
+alt Email không tồn tại, sai mật khẩu hoặc tài khoản bị vô hiệu hoá
+  sec --> ui : 2.2: quay lại trang đăng nhập kèm lỗi
+  ui --> kh : 2.3: Hiển thị “Email hoặc mật khẩu không đúng.”
+else Xác thực thành công
+  sec -> sec : 2.1.4: taoPhienMoi(): giữ nguyên giỏ hàng
+  alt Quản trị viên và không có trang đang chờ
+    sec --> ui : 2.4: chuyển tới trang tổng quan
+    ui --> kh : 2.5: Hiển thị trang tổng quan khu quản trị
+  else Còn lại
+    sec --> ui : 2.6: chuyển tới trang đã yêu cầu hoặc trang chủ
+    ui --> kh : 2.7: Hiển thị trang tương ứng
+  end
+end
+opt «extend» Đăng xuất
+  kh -> ui : 3: Bấm “Đăng xuất”
+  ui -> sec : 3.1: dangXuat()
+  sec -> sec : 3.1.1: huyPhien(): xoá giỏ hàng trong phiên,\nxoá thông tin đăng nhập
+  sec --> ui : 3.2: chuyển về trang chủ
+  ui --> kh : 3.3: Hiển thị “Bạn đã đăng xuất.”
+end
+@enduml

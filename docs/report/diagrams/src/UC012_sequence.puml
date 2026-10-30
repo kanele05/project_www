@@ -1,0 +1,76 @@
+@startuml UC012_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC012_Đổi mật khẩu]
+actor "Khách hàng" as kh
+boundary "GiaoDien_DoiMatKhau" as ui
+control "Ctrl_DoiMatKhau" as ctrl
+control "Svc_TaiKhoan" as svc
+entity "TaiKhoan" as tk
+kh -> ui : 1: Chọn “Đổi mật khẩu”
+ui -> ctrl : 1.1: trangDoiMatKhau()
+ctrl --> ui : 1.2: bieuMau (3 ô)
+ui --> kh : 1.3: Hiển thị biểu mẫu ba ô
+kh -> ui : 2: Nhập đủ ba ô, bấm “Đổi mật khẩu”
+ui -> ctrl : 2.1: doiMatKhau(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): ba ô bắt buộc,\nmật khẩu mới 6-50 ký tự, khớp ô nhập lại
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi tại đúng ô
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: doiMatKhau(taiKhoan, bieuMau)
+  svc -> tk : 2.1.3: findById(taiKhoan)
+  tk --> svc : 2.1.4: taiKhoan
+  svc -> svc : 2.1.5: soKhopMatKhauHienTai(matKhauHienTai, matKhauDaLuu)
+  alt Mật khẩu hiện tại sai
+    svc --> ctrl : 2.1.6: lỗi “Mật khẩu hiện tại không đúng.”
+    ctrl --> ui : 2.4: trả lại biểu mẫu kèm lỗi tại ô mật khẩu hiện tại
+    ui --> kh : 2.5: Hiển thị lỗi tại ô mật khẩu hiện tại
+  else Mật khẩu hiện tại đúng
+    svc -> svc : 2.1.7: maHoaMatKhau(matKhauMoi)
+    svc -> tk : 2.1.8: datMatKhau(matKhauDaBam)
+    tk --> svc : 2.1.9: xong
+    svc --> ctrl : 2.1.10: xong
+    ctrl --> ui : 2.6: hiển thị lại trang đổi mật khẩu kèm thông báo
+    ui --> kh : 2.7: Hiển thị đổi mật khẩu thành công
+  end
+end
+@enduml

@@ -1,0 +1,86 @@
+@startuml UC007_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC007_Áp dụng mã giảm giá]
+actor "Khách hàng" as kh
+boundary "GiaoDien_ThanhToan" as ui
+control "Ctrl_KhuyenMai" as ctrl
+control "Svc_KhuyenMai" as svc
+entity "MaGiamGia" as ma
+entity "LuotDungMa" as luot
+kh -> ui : 1: Nhập mã, bấm “Áp dụng”
+alt Ô mã để trống
+  ui --> kh : 1.1: Ẩn dòng giảm giá, giữ nguyên tổng tiền
+else Ô mã có nội dung
+  ui -> ctrl : 1.2: kiemTra(ma)
+  ctrl -> ctrl : 1.2.1: layTongTienGioHang(phien)
+  ctrl -> svc : 1.2.2: kiemTra(ma, taiKhoan, tongTien)
+  svc -> ma : 1.2.3: findTheoMa(ma)
+  ma --> svc : 1.2.4: maGiamGia
+  alt Mã không tồn tại
+    svc --> ctrl : 1.2.5: lỗi “Mã không tồn tại”
+  else Mã đã tắt, chưa tới ngày hoặc quá hạn
+    svc --> ctrl : 1.2.6: lỗi “đã hết hạn hoặc chưa tới ngày áp dụng”
+  else Hết lượt sử dụng chung
+    svc --> ctrl : 1.2.7: lỗi “đã hết lượt sử dụng”
+  else Mã còn hiệu lực
+    svc -> luot : 1.2.8: demLuotDung(ma, taiKhoan)
+    luot --> svc : 1.2.9: soLuot
+    alt Tài khoản đã dùng đủ lượt
+      svc --> ctrl : 1.2.10: lỗi “Mỗi tài khoản chỉ được dùng ... lần”
+    else Còn lượt riêng
+      svc -> svc : 1.2.11: tinhSoTienGiam(tongTien)
+      alt Chưa đạt giá trị tối thiểu
+        svc --> ctrl : 1.2.12: lỗi “chỉ áp dụng cho đơn từ ... trở lên”
+      else Đạt giá trị tối thiểu
+        svc --> ctrl : 1.2.13: ketQuaKiemTra(soTienGiam)
+      end
+    end
+  end
+  alt Mã bị từ chối
+    ctrl --> ui : 1.3: thông báo lý do, tổng tiền giữ nguyên
+    ui --> kh : 1.4: Hiển thị lý do bị từ chối
+  else Mã được chấp nhận
+    ctrl --> ui : 1.5: tenChuongTrinh, soTienGiam, tongTruoc, tongSau
+    ui --> kh : 1.6: Hiển thị số tiền giảm và tổng tiền mới, không tải lại trang
+  end
+end
+@enduml

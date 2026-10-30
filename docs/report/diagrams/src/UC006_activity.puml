@@ -1,0 +1,64 @@
+@startuml UC006_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC006_Đặt tour]
+|Khách hàng|
+start
+:Bấm “Tiến hành đặt tour” từ trang giỏ hàng;
+|Hệ thống|
+if (Đã đăng nhập và\ngiỏ hàng không trống?) then (Không)
+  :Chuyển sang đăng nhập (UC005) rồi quay lại;\nhoặc quay về trang giỏ hàng nếu giỏ trống;
+  stop
+endif
+:Hiển thị trang thanh toán: tóm tắt giỏ, thông tin liên hệ\nđiền sẵn, ô họ tên hành khách, ô mã giảm giá;
+|Khách hàng|
+:Sửa thông tin liên hệ, chọn hình thức thanh toán,\nnhập họ tên từng hành khách;
+if (Áp mã giảm giá?) then (Có)
+  :Nhập mã, bấm “Áp dụng” (UC007);
+  |Hệ thống|
+  :Kiểm tra mã, hiển thị lại tổng tiền sau giảm;
+  |Khách hàng|
+endif
+:Bấm “Xác nhận đặt tour”;
+|Hệ thống|
+:Kiểm tra thông tin liên hệ và danh sách hành khách\nkhớp với giỏ hàng;
+if (Dữ liệu hợp lệ?) then (Không)
+  :Trả lại trang thanh toán kèm lỗi tại ô nhập,\ngiữ tên đã nhập;
+  stop
+endif
+:Với từng lịch khởi hành: khoá và đọc lại số chỗ, kiểm tra\ncòn mở bán, chưa quá hạn chót, đủ chỗ, tên hành khách;\ntrừ số chỗ; kiểm tra lại mã giảm giá, sinh mã đơn, tính tiền;
+if (Mọi kiểm tra đạt?) then (Không)
+  :Không ghi nhận phần nào của đơn,\nquay về trang giỏ hàng kèm thông báo lỗi;
+  stop
+endif
+:Ghi nhận đơn, hành khách, lượt dùng mã, mốc lịch sử\n“Chờ xác nhận”, khoản thanh toán “Chờ thanh toán”;
+:Làm rỗng giỏ, gửi email xác nhận (lỗi gửi thư\nkhông ảnh hưởng đơn), chuyển tới trang thành công;
+|Khách hàng|
+:Xem mã đơn và thông tin đơn đặt;
+stop
+@enduml

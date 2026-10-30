@@ -1,0 +1,54 @@
+@startuml UC013_Sua_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC013_Quản lý danh mục tour - Sửa danh mục]
+|Quản trị viên|
+start
+:Từ danh sách danh mục, bấm “Sửa” ở một danh mục;
+|Hệ thống|
+:Hiển thị biểu mẫu sửa với dữ liệu hiện tại;
+|Quản trị viên|
+:Sửa tên, mô tả, ảnh đại diện hoặc trạng thái\nhiển thị, bấm “Lưu”;
+|Hệ thống|
+:Kiểm tra dữ liệu nhập và tên không trùng\ndanh mục khác (trừ chính nó);
+if (Dữ liệu hợp lệ và\ntên không trùng?) then (Không)
+  :Trả lại biểu mẫu kèm lỗi tại ô tương ứng,\ngiữ nguyên giá trị vừa sửa;
+  stop
+endif
+:Sinh lại đường dẫn thân thiện từ tên (giữ không trùng);
+if (Có chọn ảnh mới?) then (Có)
+  :Lưu ảnh mới;
+endif
+:Cập nhật thông tin danh mục;
+if (Có ảnh mới và ảnh cũ là\nảnh tự tải lên?) then (Có)
+  :Sau khi lưu thành công, xoá ảnh cũ;
+endif
+:Hiển thị lại danh sách kèm\nthông báo cập nhật thành công;
+|Quản trị viên|
+stop
+@enduml

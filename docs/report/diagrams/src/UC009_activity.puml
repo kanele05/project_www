@@ -1,0 +1,48 @@
+@startuml UC009_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC009_Xem lịch sử đơn đặt]
+|Khách hàng|
+start
+:Mở menu tài khoản, chọn “Đơn của tôi”;
+|Hệ thống|
+:Lấy danh sách đơn của tài khoản đang đăng nhập,\nphân trang, mới nhất trước, hiển thị danh sách;
+|Khách hàng|
+:Bấm vào một đơn để xem chi tiết;
+|Hệ thống|
+if (Đơn tồn tại và thuộc về\ntài khoản đang đăng nhập?) then (Không)
+  :Không tồn tại: trang không tìm thấy;\nkhông thuộc tài khoản: từ chối truy cập;
+  stop
+endif
+:Hiển thị chi tiết: thông tin liên hệ, các dòng lịch khởi hành,\nmã giảm giá, hành khách, lịch sử trạng thái, thanh toán;
+if (Đơn còn được tự huỷ?) then (Có)
+  :Hiện thêm khối “Huỷ đơn” (UC008);
+endif
+|Khách hàng|
+stop
+@enduml

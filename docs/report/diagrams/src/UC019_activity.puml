@@ -1,0 +1,50 @@
+@startuml UC019_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC019_Xem thống kê doanh thu]
+|Quản trị viên|
+start
+:Đăng nhập quản trị viên hoặc chọn “Quản trị”;
+|Hệ thống|
+:Tính số liệu: số tour, số khách hàng đang hoạt động,\nsố đơn, tổng doanh thu, số đơn theo trạng thái;\nlấy 5 tour bán chạy và 5 đơn mới nhất;
+:Hiển thị thẻ số liệu, tour bán chạy, đơn mới nhất;
+:Khi trang mở xong, truy xuất doanh thu theo tháng;
+:Tổng hợp 12 tháng gần nhất, chỉ tính đơn\n“Đã xác nhận” hoặc “Hoàn thành”;
+if (Có dữ liệu doanh thu?) then (Có)
+  :Vẽ biểu đồ cột doanh thu theo tháng\nkèm bảng số liệu chi tiết;
+else (Không)
+  :Biểu đồ hiển thị “chưa có dữ liệu”;
+endif
+|Quản trị viên|
+if (Bấm nút tải lại biểu đồ?) then (Có)
+  |Hệ thống|
+  :Truy xuất và vẽ lại biểu đồ,\nkhông tải lại trang;
+endif
+|Quản trị viên|
+stop
+@enduml

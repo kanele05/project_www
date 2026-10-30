@@ -1,0 +1,56 @@
+@startuml UC013_Them_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC013_Quản lý danh mục tour - Thêm danh mục]
+|Quản trị viên|
+start
+:Mở “Quản lý danh mục”, bấm “Thêm danh mục”;
+|Hệ thống|
+:Hiển thị biểu mẫu thêm danh mục trống;
+|Quản trị viên|
+:Nhập tên (bắt buộc), mô tả, ảnh đại diện (tuỳ chọn),\ntick “Hiển thị”, bấm “Lưu”;
+|Hệ thống|
+:Kiểm tra tên (≤ 100 ký tự) và mô tả (≤ 500 ký tự);
+if (Dữ liệu hợp lệ?) then (Không)
+  :Trả lại biểu mẫu kèm lỗi tại đúng ô;
+  stop
+endif
+if (Tên chưa tồn tại?) then (Không)
+  :Trả lại biểu mẫu kèm lỗi tại ô tên,\ngiữ nguyên giá trị đã nhập;
+  stop
+endif
+:Sinh đường dẫn thân thiện duy nhất từ tên,\nlưu ảnh đại diện nếu có;
+if (Ảnh hợp lệ?) then (Không)
+  :Không lưu, trả lại biểu mẫu kèm lỗi;
+  stop
+endif
+:Tạo danh mục mới;
+:Hiển thị lại danh sách danh mục kèm\nthông báo tạo thành công;
+|Quản trị viên|
+stop
+@enduml

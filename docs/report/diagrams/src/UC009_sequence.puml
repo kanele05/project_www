@@ -1,0 +1,77 @@
+@startuml UC009_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC009_Xem lịch sử đơn đặt]
+actor "Khách hàng" as kh
+boundary "GiaoDien_LichSuDon" as ui
+control "Ctrl_TaiKhoan" as ctrl
+control "Svc_DonDat" as svc
+entity "DonDat" as don
+kh -> ui : 1: Chọn “Đơn của tôi”
+ui -> ctrl : 1.1: danhSachDon(taiKhoan, trang)
+ctrl -> svc : 1.1.1: timTheoTaiKhoan(taiKhoan, trang)
+svc -> don : 1.1.2: findTheoTaiKhoan(taiKhoan, mớiNhấtTrước)
+don --> svc : 1.1.3: trangDon
+svc --> ctrl : 1.1.4: trangDon
+ctrl --> ui : 1.2: render(trangDon)
+ui --> kh : 1.3: Hiển thị mã đơn, ngày đặt, tổng tiền, trạng thái
+kh -> ui : 2: Bấm vào một đơn
+ui -> ctrl : 2.1: chiTietDon(maDon)
+ctrl -> svc : 2.1.1: layDonCuaChinhMinh(maDon, taiKhoan)
+svc -> don : 2.1.2: findChiTietTheoMa(maDon)
+alt Mã đơn không tồn tại
+  don --> svc : 2.1.3: không tìm thấy
+  svc --> ctrl : 2.1.4: lỗi không tìm thấy
+  ctrl --> ui : 2.2: trang không tìm thấy đơn
+  ui --> kh : 2.3: Hiển thị trang không tìm thấy đơn
+else Đơn không thuộc tài khoản đang đăng nhập
+  don --> svc : 2.1.5: donDat
+  svc --> ctrl : 2.1.6: từ chối truy cập
+  ctrl --> ui : 2.4: từ chối truy cập
+  ui --> kh : 2.5: Không tiết lộ thông tin đơn
+else Đơn của chính khách
+  don --> svc : 2.1.7: donDat
+  svc --> ctrl : 2.1.8: donDat
+  ctrl -> ctrl : 2.1.9: nạp hành khách, lịch sử trạng thái, thanh toán,\nchính sách tự huỷ (nếu còn huỷ được)
+  ctrl --> ui : 2.6: render(chiTietDon)
+  ui --> kh : 2.7: Hiển thị chi tiết đơn; khối “Huỷ đơn” nếu còn huỷ được (UC008)
+end
+@enduml

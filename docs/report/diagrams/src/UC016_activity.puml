@@ -1,0 +1,82 @@
+@startuml UC016_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC016_Quản lý đơn đặt tour]
+|Quản trị viên|
+start
+:Mở khu quản trị, chọn “Đơn đặt tour”;
+|Hệ thống|
+:Hiển thị danh sách đơn phân trang, lọc theo
+trạng thái, tìm theo từ khoá, mới nhất trước;
+|Quản trị viên|
+:Bấm vào một đơn để xem chi tiết;
+|Hệ thống|
+:Hiển thị thông tin đơn, hành khách, lịch sử
+trạng thái, các lần thanh toán;
+|Quản trị viên|
+:Chọn thao tác: đổi trạng thái (kèm lý do), sửa số
+khách của một dòng [«extend» Sửa], hoặc
+đánh dấu đã thu tiền (kèm mã giao dịch);
+|Hệ thống|
+if (Thao tác là đổi trạng thái?) then (Có)
+  if (Chuyển hợp lệ? “Hoàn thành” cần đã tới ngày
+khởi hành và đã có khoản thu) then (Không)
+    :Từ chối kèm thông báo lý do;
+  else (Có)
+    if (Chuyển sang “Đã huỷ”?) then (Có)
+      :Hoàn chỗ, trả lượt dùng mã, đóng khoản thu chờ,
+hoàn 100% khoản đã thu (nếu có);
+    endif
+    :Ghi trạng thái mới và mốc lịch sử (người đổi, lý do);
+  endif
+endif
+if (Thao tác là sửa số khách?) then (Có)
+  if (Đơn chưa ở trạng thái cuối, chưa có khoản
+đã thu, số khách hợp lệ và đủ chỗ?) then (Không)
+    :Từ chối, giữ nguyên số liệu, báo lỗi;
+  elseif (Đã nhập đủ tên hành khách mới?) then (Không)
+    :Chưa áp dụng, hiển thị thêm các ô tên còn thiếu;
+  else (Có)
+    :Tính lại thành tiền, tổng tiền, giảm giá, giữ/trả chỗ,
+đồng bộ danh sách hành khách;
+  endif
+endif
+if (Thao tác là ghi nhận thanh toán?) then (Có)
+  if (Đơn chưa huỷ, khoản thu đang chờ,
+mã giao dịch chưa dùng?) then (Không)
+    :Từ chối, giữ nguyên khoản thanh toán, báo lỗi;
+  else (Có)
+    :Chuyển sang “Đã thanh toán”, ghi thời điểm
+và mã giao dịch;
+  endif
+endif
+:Hiển thị lại chi tiết đơn kèm
+thông báo kết quả;
+|Quản trị viên|
+stop
+@enduml

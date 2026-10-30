@@ -1,0 +1,51 @@
+@startuml UC012_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC012_Đổi mật khẩu]
+|Khách hàng|
+start
+:Mở menu tài khoản, chọn “Đổi mật khẩu”;
+|Hệ thống|
+:Hiển thị biểu mẫu ba ô: mật khẩu hiện tại,\nmật khẩu mới, nhập lại mật khẩu mới;
+|Khách hàng|
+:Nhập đủ ba ô, bấm “Đổi mật khẩu”;
+|Hệ thống|
+:Kiểm tra ba ô bắt buộc, mật khẩu mới 6-50 ký tự\nvà khớp với ô nhập lại;
+if (Dữ liệu hợp lệ?) then (Không)
+  :Trả lại biểu mẫu kèm lỗi tại đúng ô,\nkhông đổi mật khẩu;
+  stop
+endif
+if (Mật khẩu hiện tại đúng?) then (Không)
+  :Trả lại biểu mẫu kèm “Mật khẩu hiện tại không đúng.”\ntại ô mật khẩu hiện tại;
+  stop
+endif
+:Mã hoá mật khẩu mới, cập nhật tài khoản;
+:Hiển thị lại trang đổi mật khẩu\nkèm thông báo thành công;
+|Khách hàng|
+stop
+@enduml

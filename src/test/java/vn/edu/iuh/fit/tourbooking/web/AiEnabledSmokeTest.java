@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"dev", "h2"})
 class AiEnabledSmokeTest {
 
-    static final FakeOpenAiServer FAKE = new FakeOpenAiServer();
+    static final FakeGeminiServer FAKE = new FakeGeminiServer();
     static Path storeDir;
 
     // Dùng system property để biến có mặt từ sớm (EnvironmentPostProcessor đọc môi trường trước khi nạp ngữ cảnh).
@@ -76,6 +76,9 @@ class AiEnabledSmokeTest {
     @Test
     void whole_ai_and_tracking_flow_works_end_to_end() throws Exception {
         waitForIndex();
+        int issuedBefore = FAKE.signaturesIssued.get();
+        int acceptedBefore = FAKE.signedFollowUpsAccepted.get();
+        int rejectedBefore = FAKE.signatureRejections.get();
         assertThat(FAKE.lastAuthorization).isEqualTo("Bearer AIza-fake-key");
         assertThat(storeDir.resolve("vector-store.json")).exists();
 
@@ -155,6 +158,13 @@ class AiEnabledSmokeTest {
         String cart = mvc.perform(get("/api/cart").session(chat)).andReturn().getResponse().getContentAsString();
         assertThat(cart).contains("\"numAdults\":2");
         assertThat(FAKE.lastChatBody).contains("searchTours").contains("addToCart").contains("getDepartures");
+        // Chat đi qua API gốc của Gemini (Google GenAI SDK), khoá nằm ở header x-goog-api-key; máy chủ giả ÉP luật chữ ký:
+        // mỗi vòng gọi công cụ (2 lần: searchTours, addToCart) phát một chữ ký và lần gửi tiếp theo phải trả lại đúng chữ ký đó.
+        assertThat(FAKE.lastChatPath).startsWith("/v1beta/models/").endsWith(":generateContent");
+        assertThat(FAKE.lastApiKeyHeader).isEqualTo("AIza-fake-key");
+        assertThat(FAKE.signaturesIssued.get() - issuedBefore).isEqualTo(2);
+        assertThat(FAKE.signedFollowUpsAccepted.get() - acceptedBefore).isEqualTo(2);
+        assertThat(FAKE.signatureRejections.get() - rejectedBefore).isZero();
 
         // Quản trị: thống kê hành vi + trang AI + lập chỉ mục lại (PRG).
         User admin = users.findByEmail("admin@tourbooking.vn").orElseThrow();
@@ -189,5 +199,60 @@ class AiEnabledSmokeTest {
             FAKE.chatFailureStatus = 0;
         }
         mvc.perform(get("/tours")).andExpect(status().isOk());
+    }
+
+    private MvcResult chat(String message) throws Exception {
+        return mvc.perform(post("/api/chat").session(new MockHttpSession()).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"message\":\"" + message + "\"}")).andReturn();
+    }
+
+    @Test
+    void a_tool_round_rejected_with_4xx_falls_back_to_a_rag_only_answer() throws Exception {
+        waitForIndex();
+        FAKE.rejectToolRequests = true;
+        int signatureRejectionsBefore = FAKE.signatureRejections.get();
+        int before = FAKE.chatRequests.get();
+        try {
+            MvcResult result = chat("Có tour biển nào dưới 6 triệu?");
+            // Người dùng nhận câu trả lời hữu ích (200), không phải lỗi.
+            assertThat(result.getResponse().getStatus()).isEqualTo(200);
+            assertThat(result.getResponse().getContentAsString()).contains(FakeGeminiServer.NO_TOOLS_ANSWER);
+            // Đúng hai yêu cầu: lần có công cụ bị 400, lần thử lại KHÔNG có công cụ.
+            assertThat(FAKE.chatRequests.get() - before).isEqualTo(2);
+            assertThat(FAKE.signatureRejections.get() - signatureRejectionsBefore).isEqualTo(1);
+            String first = FAKE.chatBodies.get(FAKE.chatBodies.size() - 2);
+            String retry = FAKE.chatBodies.get(FAKE.chatBodies.size() - 1);
+            assertThat(first).contains("functionDeclarations");
+            assertThat(retry).doesNotContain("functionDeclarations");
+            // Bản dự phòng dùng system prompt riêng (mời khách dùng trang tìm kiếm) và lịch sử không bị ghi trùng tin nhắn của khách.
+            assertThat(retry).contains("/tours");
+            assertThat(retry.split("Có tour biển nào", -1).length - 1).isEqualTo(1);
+        } finally {
+            FAKE.rejectToolRequests = false;
+        }
+    }
+
+    @Test
+    void errors_that_dropping_tools_cannot_fix_are_not_retried() throws Exception {
+        waitForIndex();
+        try {
+            // 401/403/429 và 5xx: bỏ công cụ không cứu được -> đúng 1 yêu cầu rồi 503 thân thiện.
+            for (int status : new int[]{401, 403, 500}) {
+                FAKE.chatFailureStatus = status;
+                int before = FAKE.chatRequests.get();
+                assertThat(chat("xin chào").getResponse().getStatus()).as("status %d", status).isEqualTo(503);
+                assertThat(FAKE.chatRequests.get() - before).as("requests for %d", status).isEqualTo(1);
+            }
+            // Nhà cung cấp luôn từ chối 400 (cả lần thử lại): vẫn là 503 thân thiện, không lộ chi tiết, đúng 2 yêu cầu.
+            FAKE.chatFailureStatus = 400;
+            int before = FAKE.chatRequests.get();
+            MvcResult result = chat("xin chào");
+            assertThat(result.getResponse().getStatus()).isEqualTo(503);
+            assertThat(result.getResponse().getContentAsString()).contains("tạm thời chưa phản hồi")
+                    .doesNotContain("AIza").doesNotContain("thought_signature");
+            assertThat(FAKE.chatRequests.get() - before).isEqualTo(2);
+        } finally {
+            FAKE.chatFailureStatus = 0;
+        }
     }
 }

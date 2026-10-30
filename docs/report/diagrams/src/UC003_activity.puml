@@ -1,0 +1,50 @@
+@startuml UC003_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC003_Đăng ký tài khoản]
+|Khách vãng lai|
+start
+:Bấm “Đăng ký” từ thanh điều hướng;
+|Hệ thống|
+:Hiển thị biểu mẫu đăng ký;
+|Khách vãng lai|
+:Nhập họ tên, email, mật khẩu, nhập lại mật khẩu,\nsố điện thoại, địa chỉ (tuỳ chọn), bấm “Đăng ký”;
+|Hệ thống|
+:Kiểm tra cùng lúc: trường bắt buộc, định dạng email\nvà email chưa đăng ký, mật khẩu 6-50 ký tự,\nmật khẩu khớp, số điện thoại đúng định dạng;
+if (Mọi ràng buộc đạt?) then (Có)
+  :Mã hoá mật khẩu, lưu tài khoản mới\nvới vai trò khách hàng;
+  :Gửi email chào mừng\n(lỗi gửi thư chỉ ghi nhận nội bộ);
+  :Chuyển tới trang đăng nhập kèm\n“Đăng ký thành công. Mời bạn đăng nhập.”;
+  |Khách vãng lai|
+  :Xem thông báo, tiếp tục đăng nhập (UC005);
+else (Không)
+  |Hệ thống|
+  :Trả lại biểu mẫu, báo lỗi cùng lúc tại các ô sai\n(email trùng, mật khẩu không khớp, số điện thoại...),\ngiữ lại thông tin đã nhập;
+endif
+stop
+@enduml

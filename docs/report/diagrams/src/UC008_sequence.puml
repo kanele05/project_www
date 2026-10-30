@@ -1,0 +1,96 @@
+@startuml UC008_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC008_Huỷ đơn đặt tour]
+actor "Khách hàng" as kh
+boundary "GiaoDien_ChiTietDon" as ui
+control "Ctrl_TaiKhoan" as ctrl
+control "Svc_DonDat" as svc
+control "Svc_ThanhToan" as pay
+entity "DonDat" as don
+entity "DotKhoiHanh" as dot
+kh -> ui : 1: Mở trang chi tiết đơn
+ui -> ctrl : 1.1: chiTietDon(maDon)
+ctrl -> svc : 1.1.1: layDonCuaChinhMinh(maDon, taiKhoan)
+svc -> don : 1.1.2: findTheoMa(maDon)
+don --> svc : 1.1.3: donDat
+alt Đơn không thuộc tài khoản đang đăng nhập
+  svc --> ctrl : 1.1.4: từ chối truy cập
+  ctrl --> ui : 1.2: từ chối truy cập
+  ui --> kh : 1.3: Không hiển thị thông tin đơn
+else Đơn của chính khách
+  svc --> ctrl : 1.1.5: donDat
+  opt Đơn “Chờ xác nhận” hoặc “Đã xác nhận”
+    ctrl -> svc : 1.1.6: tinhChinhSachTuHuy(donDat)
+    svc -> pay : 1.1.7: tongDaThu(donDat)
+    pay --> svc : 1.1.8: soTienDaThu
+    svc --> ctrl : 1.1.9: soNgayCon, tiLeHoan, soTienHoan
+  end
+  ctrl --> ui : 1.4: render(donDat, chinhSach)
+  ui --> kh : 1.5: Hiển thị chi tiết; khối “Huỷ đơn” kèm số tiền hoàn\n(hoặc hướng dẫn liên hệ tổng đài nếu dưới 3 ngày)
+end
+kh -> ui : 2: Bấm “Huỷ đơn này”
+ui --> kh : 2.1: Hộp xác nhận nêu số tiền sẽ hoàn
+kh -> ui : 3: Đồng ý huỷ
+ui -> ctrl : 3.1: tuHuy(maDon)
+ctrl -> svc : 3.1.1: tuHuy(maDon, taiKhoan)
+svc -> don : 3.1.2: khoaDon(maDon)
+don --> svc : 3.1.3: donDat
+svc -> svc : 3.1.4: kiemTra(): đúng chủ đơn, còn huỷ được, còn kịp hạn
+alt Không hợp lệ
+  svc --> ctrl : 3.1.5: lỗi (không huỷ gì)
+  ctrl --> ui : 3.2: chuyển lại chi tiết đơn kèm lỗi
+  ui --> kh : 3.3: Hiển thị thông báo lỗi
+else Hợp lệ
+  svc -> dot : 3.1.6: traCho(soKhach)
+  dot --> svc : 3.1.7: xong
+  svc -> svc : 3.1.8: traLuotDungMa()
+  svc -> pay : 3.1.9: dongKhoanDangCho(donDat)
+  pay --> svc : 3.1.10: xong
+  svc -> pay : 3.1.11: hoanTienNeuDaThu(donDat, tiLeHoan)
+  pay --> svc : 3.1.12: khoanHoanTien (nếu có)
+  svc -> don : 3.1.13: datTrangThai(Đã huỷ) + ghiLichSu(“Khách tự huỷ”)
+  don --> svc : 3.1.14: xong
+  svc --> ctrl : 3.1.15: xong
+  ctrl --> ui : 3.4: chuyển lại chi tiết đơn kèm thông báo
+  ui --> kh : 3.5: Hiển thị đơn “Đã huỷ” kèm “Đã huỷ đơn thành công.”
+end
+@enduml

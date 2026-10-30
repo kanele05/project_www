@@ -484,3 +484,34 @@ Giảng viên không chấp nhận tên "Quản lý đợt khởi hành" (nội 
 - **Không thay máy móc**: viết lại từng câu cho xuôi; chữ "đợt" đứng một mình ("đợt này", "mỗi đợt", "các đợt") phải xét ngữ cảnh.
 - **Tránh nhầm với "lịch trình"** — báo cáo đã dùng "lịch trình" cho nội dung từng ngày của tour.
 - Tên trong mã nguồn (`TourDeparture`, bảng `tour_departures`) **không đổi**.
+
+---
+
+## 15. SẮP XẾP LẠI USE CASE THEO BIỂU ĐỒ TỔNG QUÁT (báo cáo Word) — ĐÈ lên mục 14
+
+Báo cáo Word đánh số lại 21 use case theo thứ tự biểu đồ tổng quát (mã nội bộ trong tệp này không đổi). Bảng ánh xạ:
+
+| Mã nội bộ (PLAN.md, SPEC_CHUNG.md, chú thích trong mã) | Mã trong báo cáo Word mới | Tên |
+|---|---|---|
+| UC002 | UC001 | Tìm kiếm và lọc tour |
+| UC021 | UC002 | Gửi liên hệ |
+| UC005 | UC003 | Đăng ký tài khoản |
+| UC004 | UC004 | Quản lý giỏ hàng |
+| UC006 | UC005 | Đăng nhập (Đăng xuất là «extend») |
+| UC007 | UC006 | Đặt tour (trước đây “Đặt tour trực tuyến”) |
+| UC017 | UC007 | Áp dụng mã giảm giá |
+| UC023 | UC008 | Huỷ đơn đặt tour |
+| UC008 | UC009 | Xem lịch sử đơn đặt |
+| UC018 | UC010 | Đánh giá tour đã đi |
+| UC009 | UC011 | Cập nhật hồ sơ cá nhân |
+| UC010 | UC012 | Đổi mật khẩu |
+| UC011, UC024, UC025, UC026 | UC013 | Quản lý danh mục tour (Thêm, Sửa, Xoá) |
+| UC012 | UC014 | Quản lý tour và ảnh |
+| UC013 | UC015 | Quản lý lịch khởi hành (đợt khởi hành) |
+| UC014 | UC016 | Quản lý đơn đặt tour |
+| UC015 | UC017 | Quản lý tài khoản |
+| UC019 | UC018 | Quản lý mã khuyến mãi |
+| UC016 | UC019 | Xem thống kê doanh thu |
+| UC020 | UC020 | Kiểm duyệt đánh giá |
+| UC022 | UC021 | Duyệt liên hệ (menu giao diện vẫn là “Quản lý liên hệ”) |
+| UC001, UC003 | (bỏ) | Xem trang chủ và giới thiệu; Xem chi tiết tour: không còn là use case trong báo cáo, trang vẫn tồn tại |

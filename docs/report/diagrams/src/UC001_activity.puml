@@ -1,0 +1,60 @@
+@startuml UC001_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC001_Tìm kiếm và lọc tour]
+|Khách vãng lai|
+start
+:Mở trang “Tất cả tour” hoặc chọn\nmột danh mục;
+|Hệ thống|
+:Hiển thị biểu mẫu tìm kiếm/lọc và trang đầu tiên\ncủa danh sách tour đang mở bán;
+|Khách vãng lai|
+:Nhập từ khoá và/hoặc chọn bộ lọc,\ncách sắp xếp, bấm “Áp dụng”;
+if (Bật “Tìm bằng AI”\nvà AI sẵn sàng?) then (Có)
+  |Hệ thống|
+  :Xếp kết quả theo độ phù hợp\nvới mô tả bằng lời;
+  if (Có kết quả\nphù hợp?) then (Không)
+    :Quay về tìm theo từ khoá,\nbáo rõ trên trang kết quả;
+  endif
+else (Không)
+  |Hệ thống|
+  :Chuẩn hoá từ khoá không dấu, chữ thường;\nso khớp dữ liệu, áp bộ lọc và sắp xếp;
+endif
+|Hệ thống|
+if (Có tour khớp?) then (Có)
+  :Hiển thị danh sách tour, số kết quả\n(“Tìm thấy N tour”) và phân trang;
+else (Không)
+  :Hiển thị thông báo “Không có tour nào khớp\nvới điều kiện tìm kiếm...”;
+endif
+|Khách vãng lai|
+if (Chuyển trang hoặc\nđổi ngôn ngữ?) then (Có)
+  |Hệ thống|
+  :Giữ nguyên từ khoá và bộ lọc,\nhiển thị trang mới;
+endif
+|Khách vãng lai|
+stop
+@enduml

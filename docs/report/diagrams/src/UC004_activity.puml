@@ -1,0 +1,62 @@
+@startuml UC004_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC004_Quản lý giỏ hàng]
+|Khách vãng lai|
+start
+:Bấm “Thêm vào giỏ” (chọn lịch khởi hành,\nsố người lớn/trẻ em);
+|Hệ thống|
+:Kiểm tra số khách (≥ 1 người lớn, ≤ 30),\nlịch còn mở bán và đủ chỗ;
+if (Hợp lệ và đủ chỗ?) then (Có)
+  if (Lịch khởi hành\nđã có trong giỏ?) then (Có)
+    :Cộng dồn số khách vào dòng cũ;
+  else (Không)
+    :Thêm một dòng mới vào giỏ;
+  endif
+  :Cập nhật biểu tượng giỏ hàng, hiện thông báo\nthành công ngay trên trang, không tải lại;
+else (Không)
+  :Từ chối, giữ nguyên giỏ, hiện thông báo lỗi\nngay trên trang đang xem;
+endif
+|Khách vãng lai|
+:Mở trang giỏ hàng, xem các dòng và tổng tiền;
+if (Thay đổi giỏ hàng?) then (Có)
+  :Sửa số người lớn/trẻ em rồi “Cập nhật”,\nhoặc “Xoá” một dòng, hoặc “Xoá toàn bộ giỏ”;
+  |Hệ thống|
+  if (Số khách mới hợp lệ\nvà đủ chỗ?) then (Có)
+    :Ghi lại thay đổi trong phiên làm việc;
+    if (Tổng khách của dòng = 0?) then (Có)
+      :Tự xoá dòng khỏi giỏ;
+    endif
+  else (Không)
+    :Giữ nguyên dòng cũ, báo lỗi;
+  endif
+  :Tải lại trang giỏ hàng với số liệu\nđã cập nhật kèm thông báo kết quả;
+endif
+|Khách vãng lai|
+stop
+@enduml

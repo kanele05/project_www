@@ -1,0 +1,78 @@
+@startuml UC011_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC011_Cập nhật hồ sơ cá nhân]
+actor "Khách hàng" as kh
+boundary "GiaoDien_HoSo" as ui
+control "Ctrl_HoSo" as ctrl
+control "Svc_TaiKhoan" as svc
+entity "TaiKhoan" as tk
+kh -> ui : 1: Chọn “Thông tin cá nhân”
+ui -> ctrl : 1.1: trangHoSo()
+ctrl -> svc : 1.1.1: layHoSo(taiKhoan)
+svc -> tk : 1.1.2: findById(taiKhoan)
+tk --> svc : 1.1.3: taiKhoan
+svc --> ctrl : 1.1.4: bieuMauHoSo
+ctrl --> ui : 1.2: render(bieuMauHoSo)
+ui --> kh : 1.3: Hiển thị biểu mẫu với dữ liệu hiện có
+kh -> ui : 2: Sửa họ tên, email, số điện thoại, địa chỉ, bấm “Lưu”
+ui -> ctrl : 2.1: capNhatHoSo(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): bắt buộc, định dạng email, số điện thoại
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi tại đúng ô nhập
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: capNhatHoSo(taiKhoan, bieuMau)
+  svc -> tk : 2.1.3: emailThuocTaiKhoanKhac(email, taiKhoan)
+  tk --> svc : 2.1.4: ketQua
+  alt Email đã thuộc về tài khoản khác
+    svc --> ctrl : 2.1.5: lỗi “Email ... đã được sử dụng.”
+    ctrl --> ui : 2.4: trả lại biểu mẫu kèm lỗi tại ô email
+    ui --> kh : 2.5: Hiển thị lỗi tại ô email
+  else Email hợp lệ
+    svc -> tk : 2.1.6: capNhat(hoTen, email, soDienThoai, diaChi)
+    tk --> svc : 2.1.7: xong
+    svc --> ctrl : 2.1.8: xong
+    ctrl --> ui : 2.6: chuyển lại trang hồ sơ kèm thông báo
+    ui --> kh : 2.7: Hiển thị cập nhật thành công
+  end
+end
+@enduml

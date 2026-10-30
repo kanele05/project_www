@@ -2,7 +2,7 @@
 
 Đồ án môn **Lập trình WWW (Java)** — IUH. Spring Boot 3.5.16 + Thymeleaf + SQL Server.
 **Đọc [PLAN.md](PLAN.md) trước khi làm bất cứ việc gì** — nó có tiến độ từng phase, domain model,
-và **79 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
+và **81 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
 
 ## Chạy
 
@@ -17,8 +17,9 @@ Tính năng AI (tuỳ chọn, mặc định **tắt** khi không có khoá — a
 
 ```bash
 export GEMINI_API_KEY="..."        # khoá miễn phí ở https://aistudio.google.com/apikey ; thiếu/rỗng = AI tắt
-# đổi nhà cung cấp: AI_BASE_URL, AI_CHAT_PATH, AI_EMBEDDINGS_PATH, AI_CHAT_MODEL, AI_EMBEDDING_MODEL (xem PLAN.md Phase 15)
-bash ./mvnw test                   # 73 kiểm thử, không cần SQL Server (H2 + máy chủ OpenAI giả)
+# AI_CHAT_MODEL đổi mô hình chat (vd. gemini-3.5-flash-lite). Chat đi qua SDK Gemini gốc (giữ thought_signature, gotcha #80);
+# chat bằng OpenAI/Ollama: AI_CHAT_PROVIDER=openai + AI_BASE_URL, AI_CHAT_PATH, AI_EMBEDDINGS_PATH, ... (xem PLAN.md Phase 15)
+bash ./mvnw test                   # 86 kiểm thử, không cần SQL Server (H2 + máy chủ Gemini giả có ép luật thought_signature)
 ```
 
 CSDL đã có sẵn muốn có bảng theo dõi hành vi: chạy `database/05_user_events.sql` (idempotent). `data/` (chỉ mục vector) bị `.gitignore`.

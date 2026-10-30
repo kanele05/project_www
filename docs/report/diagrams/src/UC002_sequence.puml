@@ -1,0 +1,74 @@
+@startuml UC002_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC002_Gửi liên hệ]
+
+actor "Khách vãng lai" as kh
+boundary "GiaoDien_LienHe" as ui
+control "Ctrl_LienHe" as ctrl
+control "Svc_LienHe" as svc
+entity "Tour" as tour
+entity "LienHe" as lh
+kh -> ui : 1: Mở trang “Liên hệ” (hoặc “Liên hệ về tour này”)
+ui -> ctrl : 1.1: bieuMau(maTour)
+ctrl -> svc : 1.1.1: timTourDienSan(maTour)
+svc -> tour : 1.1.2: findById(maTour)
+tour --> svc : 1.1.3: tour (hoặc rỗng nếu không tồn tại)
+svc --> ctrl : 1.1.4: tour
+ctrl --> ui : 1.2: render(bieuMau, tour)
+ui --> kh : 1.3: Hiển thị biểu mẫu (kèm “Đang hỏi về tour …”)
+kh -> ui : 2: Nhập thông tin, bấm “Gửi liên hệ”
+ui -> ctrl : 2.1: gui(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): bắt buộc, email, độ dài
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi, giữ nguyên nội dung và tour
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: ghiNhan(bieuMau)
+  svc -> tour : 2.1.3: findById(maTour)
+  tour --> svc : 2.1.4: tour (nếu có)
+  svc -> lh : 2.1.5: «create» LienHe(trangThai = Mới, tour)
+  lh --> svc : 2.1.6: lienHeDaLuu
+  svc --> ctrl : 2.1.7: ketQua
+  ctrl --> ui : 2.4: chuyển lại trang liên hệ kèm thông báo
+  ui --> kh : 2.5: Hiển thị “Cảm ơn bạn đã liên hệ! ...”
+end
+@enduml
