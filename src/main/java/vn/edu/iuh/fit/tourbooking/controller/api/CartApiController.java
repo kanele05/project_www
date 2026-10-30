@@ -3,6 +3,7 @@ package vn.edu.iuh.fit.tourbooking.controller.api;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +17,9 @@ import vn.edu.iuh.fit.tourbooking.dto.form.CartQuantityRequest;
 import vn.edu.iuh.fit.tourbooking.dto.view.CartDto;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
 import vn.edu.iuh.fit.tourbooking.mapper.CartMapper;
+import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
 import vn.edu.iuh.fit.tourbooking.service.CartService;
+import vn.edu.iuh.fit.tourbooking.service.TrackingService;
 import vn.edu.iuh.fit.tourbooking.session.CartItem;
 import vn.edu.iuh.fit.tourbooking.util.MessageHelper;
 
@@ -29,6 +32,7 @@ public class CartApiController {
     private final CartService cartService;
     private final CartMapper cartMapper;
     private final MessageHelper messages;
+    private final TrackingService trackingService;
 
     @GetMapping
     public CartDto view(HttpSession session) {
@@ -36,12 +40,16 @@ public class CartApiController {
     }
 
     @PostMapping("/items")
-    public CartDto add(@Valid @RequestBody CartItemRequest request, HttpSession session) {
+    public CartDto add(@Valid @RequestBody CartItemRequest request, HttpSession session,
+                       @AuthenticationPrincipal CustomUserDetails principal) {
         CartItem item = request.getDepartureId() != null
                 ? cartService.addByDeparture(session, request.getDepartureId(),
                         request.getNumAdults(), request.getNumChildren())
                 : cartService.addByTour(session, requireTourId(request),
                         request.getNumAdults(), request.getNumChildren());
+
+        trackingService.recordAddToCart(session.getId(), principal == null ? null : principal.getId(),
+                item.getTourId(), item.getDepartureId());
 
         return cartMapper.toDto(cartService.getCart(session))
                 .withMessage(messages.get("cart.added", item.getTourName()));

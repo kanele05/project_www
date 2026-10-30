@@ -38,7 +38,7 @@
 - **Push thẳng lên `main`**, không tạo nhánh/PR. Remote: `https://github.com/kanele05/project_www.git` (repo **công khai**).
   Commit kết thúc bằng: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - `.gitignore` loại: `.claude/`, `.tmp_ref/`, `docs/`, `uploads/`, `CLAUDE.md`, `PLAN.md` (user chỉ định).
-- **Mật khẩu CSDL `Tour@2026#IUH` để nguyên trong `application.yml`** — user đã quyết, đừng đổi.
+- **Mật khẩu CSDL `Tour@2026#IUH` để nguyên trong `application.properties`** — user đã quyết, đừng đổi.
 - **Không README** — user đã từ chối hai lần.
 - **Không comment dài trong mã**: đã xoá toàn bộ, chỉ còn **1 dòng tiếng Việt cho mỗi lớp/hàm**. Mã mới viết thêm
   cũng theo kiểu này.
@@ -87,7 +87,7 @@
   `3d6ed2b` (nhập hành khách + trang chi tiết admin) → `33efd1d` (khoá bi quan chống ghi đè đồng thời, sửa seed) →
   `cb536de` (bỏ comment, giữ 1 dòng mô tả).
 - **THAY ĐỔI CỤC BỘ CHƯA COMMIT/PUSH** (4 file): email người gửi đổi sang `${MAIL_FROM:khanglehoang2602@gmail.com}`
-  trong `application.yml`, và email liên hệ trên `about.html`, `contact.html`, `fragments/layout.html`.
+  trong `application.properties`, và email liên hệ trên `about.html`, `contact.html`, `fragments/layout.html`.
   **ĐÃ PUSH 30/09 (`d69fa09`), user đồng ý.**
 - Kiểm nhanh sau mọi thay đổi mã: `./mvnw -o clean compile`; đối chiếu 3 file messages (hiện **756 khoá**, lệnh ở cuối
   PLAN.md); `grep -c "</html>"`; bất biến hành khách = 0; số chỗ các đợt khớp.
@@ -98,7 +98,7 @@
   `LAPTOP-AH4SP2FB` (máy nay là `KHANG-LE`) — chưa sửa, cần restart service nếu sửa.
 
 ## 5. EMAIL SMTP — user đang làm dở
-- App mặc định `app.mail.mode: console` (thư chỉ in ra log). Gửi thật: biến môi trường
+- App mặc định `app.mail.mode=console` (thư chỉ in ra log). Gửi thật: biến môi trường
   `APP_MAIL_MODE=smtp;MAIL_USERNAME=khanglehoang2602@gmail.com;MAIL_PASSWORD=<App Password 16 ký tự, bỏ khoảng trắng>`
   trong IntelliJ (*Modify options → Environment variables*).
 - User **đã dán App Password vào chat** → đã khuyên thu hồi và tạo mã mới. **Không bao giờ chép lại mã đó.**

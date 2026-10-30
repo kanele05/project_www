@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import vn.edu.iuh.fit.tourbooking.entity.TourCategory;
+import vn.edu.iuh.fit.tourbooking.ai.AiChatService;
 import vn.edu.iuh.fit.tourbooking.service.CartService;
 import vn.edu.iuh.fit.tourbooking.service.CategoryService;
 import vn.edu.iuh.fit.tourbooking.session.Cart;
@@ -18,6 +19,7 @@ public class GlobalModelAdvice {
 
     private final CartService cartService;
     private final CategoryService categoryService;
+    private final AiChatService aiChatService;
 
     @ModelAttribute("cart")
     public Cart cart(HttpSession session) {
@@ -27,5 +29,10 @@ public class GlobalModelAdvice {
     @ModelAttribute("navCategories")
     public List<TourCategory> navCategories() {
         return categoryService.findActiveCategories();
+    }
+
+    @ModelAttribute("aiEnabled")
+    public boolean aiEnabled() {
+        return aiChatService.isAvailable();
     }
 }

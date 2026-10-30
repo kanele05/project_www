@@ -5,7 +5,7 @@
 > đặt trong chính thư mục project để không mất lần nữa. Nội dung lấy từ lịch sử phiên làm việc và
 > **đã đối chiếu với mã nguồn / CSDL hiện tại**. Chỗ nào không chắc đều ghi rõ.
 >
-> Cập nhật lần cuối: 2026-09-23 (Phase 10 - sửa 16 lỗi do agent rà lần hai).
+> Cập nhật lần cuối: 2026-10-29 (Phase 15 - AI + theo dõi hành vi). Các phase trước giữ nguyên.
 
 ## Bối cảnh
 
@@ -54,6 +54,7 @@ toàn vì Initializr nay chỉ sinh được Boot 4.x với các artifact không
 | **11** — Nghiệp vụ đợt B: máy trạng thái, hoàn tiền, UC023 tự huỷ, tự huỷ quá hạn, hạn chót đặt, khoá sửa đợt, thống kê (SPEC_CHUNG.md mục 12.1-12.6, 12.9) | ✅ xong 7/7, verify bằng lệnh thật + `curl` thao tác thật + dựng lại CSDL từ đầu (chi tiết bên dưới) |
 | **12** — Nghiệp vụ đợt C: nhập hành khách khi thanh toán, giữ bất biến khi admin sửa số khách, ba trang chi tiết CHỈ XEM cho admin (SPEC_CHUNG.md mục 12.7, 12.8) | ✅ xong 2/2, verify bằng lệnh thật + `curl` + **trình duyệt thật** (đặt tour thật qua UI) + dựng lại từ CSDL thật (chi tiết bên dưới) |
 | **13** — Sửa 7 lỗi do agent rà lần ba (1 nghiêm trọng khoá bi quan, 2 vừa, 4 nhẹ) | ✅ 7/7, verify bằng khoá SQL Server thật nới khe đua + hai request `curl` song song thật + dựng lại DB tạm bằng login sysadmin Windows Auth (chi tiết bên dưới) |
+| **15** — AI (Spring AI 1.1.8 + Gemini, tìm kiếm ngữ nghĩa, tour tương tự, chatbot RAG + tool) và theo dõi hành vi người dùng (bảng `user_events`, trang thống kê, gợi ý) | ✅ code + 73 kiểm thử tự động xanh, **chạy trọn vẹn trên H2 + máy chủ OpenAI giả**; 🔶 **chưa thử với SQL Server thật và chưa gọi Gemini thật** (chi tiết ở Phase 15 bên dưới) |
 
 ### 🎨 Bảng màu & hệ thống thiết kế *(user đã chọn, đừng tự đổi)*
 
@@ -81,7 +82,7 @@ tiếng Việt nên dấu thanh không chồng lên dấu mũ.
 - **`ddl-auto: validate`** — sửa entity thì **phải** sửa cả `database/02_schema.sql` rồi chạy lại,
   không thì app không khởi động.
 - **Câu chữ mới vào cả 3 file** `messages.properties`, `messages_vi.properties`,
-  `messages_en.properties` (hiện **712 khoá**, đã đối chiếu khớp). Lệnh đối chiếu ở cuối file.
+  `messages_en.properties` (hiện **850 khoá**, đã đối chiếu khớp). Lệnh đối chiếu ở cuối file.
 - **Đổi màu → sửa token ở mục 1 của `app.css`**, đừng rải mã màu vào template.
 - Cấm `columnDefinition` kiểu chuỗi trên entity (#14) · enum dùng `AttributeConverter`, cấm
   `@Enumerated` (#6) · tìm không dấu chạy trên `tours.search_text` (#7) · `th:each` phải ở ngoài
@@ -136,7 +137,7 @@ BookingDetail 1─N BookingPassenger · Booking 1─N Payment · Booking 1─N B
 Promotion 1─N CouponUsage · Booking N─1 Promotion · Tour/User 1─N Review · ContactMessage
 ```
 
-**CSDL hiện có 16 bảng** (7 lõi + 9 bổ sung). `Cart` / `CartItem` là **POJO `Serializable` trong
+**CSDL hiện có 17 bảng** (7 lõi + 9 bổ sung + `user_events` của Phase 15). `Cart` / `CartItem` là **POJO `Serializable` trong
 `session/`, KHÔNG phải entity** — đề bài bắt buộc giỏ hàng nằm trong Session.
 
 **Tại sao giữ `TourDeparture`** (thay vì nhét ngày/giá/chỗ thẳng vào `Tour`): nó khiến 3 yêu cầu khó
@@ -273,7 +274,7 @@ thật bằng `hello2026`: 5.990.000 → giảm 500.000 (10% bị chặn trần)
 22. **Đừng dùng chung một DTO cho POST-thêm và PUT-sửa.** `CartItemRequest` có `@AssertTrue` bắt
     "phải có tourId hoặc departureId"; dùng lại cho PUT thì mọi lời gọi sửa đều bị chặn 400.
 23. ⚠️ **`spring-boot-devtools` tự đặt `server.error.include-stacktrace=ALWAYS`** → phản hồi lỗi kèm
-    nguyên vết lỗi. Phải khai tường minh `server.error.include-stacktrace: never`.
+    nguyên vết lỗi. Phải khai tường minh `server.error.include-stacktrace=never`.
 24. **Jackson tuần tự hoá `record` theo đúng thành phần khai báo trong hàm dựng.** Phương thức thêm
     vào như `MonthlyRevenue.label()` sẽ **không** xuất hiện trong JSON.
 25. **`#{khoa}` không truyền tham số thì Spring trả nguyên văn chuỗi mẫu** — mẹo để đưa chuỗi mẫu
@@ -450,7 +451,7 @@ thật bằng `hello2026`: 5.990.000 → giảm 500.000 (10% bị chặn trần)
     *Bài học chung: xin khoá bi quan cho một entity đã có khả năng được nạp từ trước trong CÙNG giao
     dịch (qua một service method khác) thì `@Lock` không đủ - phải `refresh()` tường minh.*
 61. **Log console nuốt dấu tiếng Việt dù file `messages*.properties` đọc đúng UTF-8** - xem chi tiết ở
-    Phase 9 (Logback ghi console theo bảng mã hệ điều hành; sửa bằng `logging.charset.console: UTF-8`).
+    Phase 9 (Logback ghi console theo bảng mã hệ điều hành; sửa bằng `logging.charset.console=UTF-8`).
 62. ⚠️ **`echo "$BODY" > file` rồi `curl --data-binary @file` để kiểm CSRF/POST thật: `echo` luôn thêm
     một dòng mới ở cuối file** (cùng họ với bẫy heredoc đã ghi ở Phase 9 mục 8, nhưng lần này rơi vào
     chính token CSRF thay vì mật khẩu). Trường cuối cùng của payload URL-encoded thường là
@@ -803,8 +804,8 @@ tour đã gửi từ trước (`BookingEmailListener`); **đăng ký tài khoả
    Logback mặc định ghi console theo bảng mã hệ điều hành (Windows: Cp1252/Cp1258), không phải UTF-8 -
    "Đã đăng ký" thành "?? ??ng k?" **thật sự mất byte** (không phải lỗi hiển thị terminal): đọc file log
    bằng `open(path,'rb').decode('utf-8')` ném `UnicodeDecodeError`, đọc bằng `cp1252` mới ra chữ đúng
-   nhưng dấu đã bị thay bằng `?`. Sửa bằng khai báo tường minh `logging.charset.console: UTF-8` (và
-   `logging.charset.file: UTF-8`) trong `application.yml` - không đụng `logback.xml` vì dự án không có
+   nhưng dấu đã bị thay bằng `?`. Sửa bằng khai báo tường minh `logging.charset.console=UTF-8` (và
+   `logging.charset.file=UTF-8`) trong `application.properties` - không đụng `logback.xml` vì dự án không có
    file này, dùng property Spring Boot tự nối vào cấu hình Logback mặc định. Ảnh hưởng **toàn bộ** log
    tiếng Việt của ứng dụng, không riêng gì thư chào mừng (thư xác nhận đặt tour trước đó cũng bị, chỉ
    là chưa ai để ý vì không có test nào đọc lại byte thật của file log). Verify: đăng ký tài khoản thật
@@ -823,7 +824,7 @@ tour đã gửi từ trước (`BookingEmailListener`); **đăng ký tài khoả
    ./mvnw -o spring-boot:run --spring.mail.username="$MAIL_USERNAME" \
        --spring.mail.password="$MAIL_PASSWORD" --app.mail.mode=smtp
    ```
-   Không bao giờ đặt `MAIL_USERNAME`/`MAIL_PASSWORD` trong `application.yml` hay commit vào mã nguồn -
+   Không bao giờ đặt `MAIL_USERNAME`/`MAIL_PASSWORD` trong `application.properties` hay commit vào mã nguồn -
    chỉ qua biến môi trường, đúng vì mã nguồn đã công khai trên GitHub.
 7. *Dữ liệu để lại / dọn:* ba tài khoản kiểm thử không có đơn hàng
    (`email.agent.test*.<timestamp>@gmail.com`) đã xoá thẳng bằng SQL (không qua ứng dụng vì không có
@@ -962,7 +963,7 @@ Phân nhánh theo tiền tố khoá thông điệp: `error.upload.*` gắn vào 
 **sau** hiện đúng dưới ô **Ảnh đại diện**, ô Mã tour sạch (không còn lớp `is-invalid`).
 
 **1.17 (nhẹ) — Chế độ `smtp` không có timeout.**
-Thêm `mail.smtp.connectiontimeout/timeout/writetimeout: 5000` vào `application.yml`. Không thử được
+Thêm `mail.smtp.connectiontimeout/timeout/writetimeout=5000` vào `application.properties`. Không thử được
 bằng thao tác thật (không có máy chủ SMTP giả lập trong phạm vi đợt sửa) - xác nhận bằng đọc cấu hình
 sau khi `process-resources`.
 
@@ -1018,7 +1019,7 @@ lại đúng `PENDING` ban đầu. Không có tài khoản, tour, hay đợt kh�
 ### Phase 14 — Xoá comment, chỉ giữ một dòng tiếng Việt cho mỗi lớp/hàm (subagent XOÁ COMMENT, 2026-09-24)
 
 User muốn tự đọc hiểu mã nên yêu cầu xoá toàn bộ comment trong 211 file được git theo dõi (mọi
-`*.java`, `*.html`, `*.css`, `*.js`, `application.yml`, ba file `messages*.properties`,
+`*.java`, `*.html`, `*.css`, `*.js`, `application.yml` (nay là `application.properties`), ba file `messages*.properties`,
 `database/*.sql`, `database/00_enable_sqlserver_tcp.ps1`, `pom.xml`), chỉ để lại đúng một dòng tiếng
 Việt cho mỗi lớp và mỗi hàm không hiển nhiên (bỏ qua getter/setter, hàm một dòng, `equals`/`hashCode`/
 `toString`). Bản đầy đủ comment vẫn còn nguyên trong lịch sử git (trước commit này).
@@ -1042,7 +1043,7 @@ nguyên là dữ liệu), SQL (`--`/`/* */` ngoài chuỗi `N'...'`/`'...'` và 
   dòng chú thích một dòng.
 - `./mvnw -o clean compile` sạch qua nhiều lần chạy giữa các bước sửa.
 - App khởi động thật (`spring-boot:run`, cổng 8081): kết nối CSDL bằng đúng mật khẩu trong
-  `application.yml` (chứng minh YAML không bị cắt nhầm), `ddl-auto: validate` qua.
+  `application.yml` (lúc đó; nay là `application.properties`) (chứng minh `#` trong mật khẩu không bị cắt nhầm), `ddl-auto: validate` qua.
 - `grep -c "</html>"` = 1 trên 13 trang đã kiểm bằng `curl` (`/`, `/tours`, `/tours/1`, `/login`,
   `/about`, `/contact`, `/admin`, `/admin/tours`, `/admin/bookings`, `/admin/promotions`,
   `/admin/reviews`, `/admin/contacts`, `/admin/users`, `/admin/categories`) - cả trước lẫn sau khi
@@ -1096,6 +1097,68 @@ private nhỏ trong 41 file HTML (bản thân template không có khái niệm "
 được - phần kiểm bằng trình duyệt thật giới hạn ở bốn trang đại diện (trang chủ, chi tiết tour, đăng
 nhập, bảng điều khiển quản trị) nêu ở trên, không phải toàn bộ mọi trang trong hệ thống.
 
+
+---
+
+## Phase 15 — AI (Spring AI + vector search) và theo dõi hành vi người dùng
+
+Thiết kế bám `docs/presentation/SpringAI_VectorDB_UserTracking.pptx` (Phần 2) nhưng **đã chỉnh theo thực tế**; hướng dẫn trình diễn ở `docs/presentation/HUONG_DAN_DEMO.md`.
+
+### Quyết định (khác slide gốc)
+
+| Hạng mục | Slide gốc | Thực tế đã làm | Vì sao |
+|---|---|---|---|
+| Phiên bản | Spring AI 2.0.2 | **Spring AI 1.1.8** qua `spring-ai-bom`, `spring-ai-starter-model-openai` + `spring-ai-vector-store` + `spring-ai-advisors-vector-store` | 2.0.x dùng Jackson 3 (`tools.jackson`) nên nhắm tới Boot 4; 1.1.8 là bản 1.x mới nhất (Maven Central), chạy với Boot 3.5.16 (đã biên dịch + chạy thật) |
+| Nhà cung cấp | Ollama dev / OpenAI prod | **Google Gemini (gói miễn phí) qua endpoint tương thích OpenAI**, đổi sang OpenAI/Ollama chỉ bằng biến môi trường | Chốt theo yêu cầu người dùng; một starter, một đường mã |
+| Vector store | PgVector (prod) / Simple (dev) | **`SimpleVectorStore` lưu tệp `data/vector-store.json`** (lớp `TourVectorStore` kế thừa để có `ids()`/`clearAll()`) | Không có Postgres; SQL Server vẫn là nguồn gốc dữ liệu |
+| ADD_TO_CART | `tracker.js` bắt submit form | **Ghi ở server** (`CartApiController`, `CartController`, tool `addToCart`) sau khi thêm giỏ **thành công** | Số liệu chính xác, không đếm cả lúc hết chỗ/lỗi |
+| Bảng `user_events` | có `page_url`? không | thêm cột `page_url` (chỉ phần đường dẫn, bỏ query) | slide có nhắc cắt `pageUrl` |
+| Công tắc AI | — | `app.ai.enabled` (`AI_ENABLED`) để trống = **tự bật khi có `GEMINI_API_KEY`** | app phải chạy đủ chức năng khi không có khoá |
+
+### Cấu hình (`application.properties`, mọi thứ ghi đè được bằng biến môi trường)
+
+`GEMINI_API_KEY` · `AI_ENABLED` · `AI_BASE_URL` (mặc định `https://generativelanguage.googleapis.com`) · `AI_CHAT_PATH` (`/v1beta/openai/chat/completions`) · `AI_EMBEDDINGS_PATH` (`/v1beta/openai/embeddings`) · `AI_CHAT_MODEL` (`gemini-2.5-flash`; dự phòng hạn mức cao hơn: `gemini-2.5-flash-lite`) · `AI_EMBEDDING_MODEL` (`gemini-embedding-001`, 3072 chiều) · `AI_EMBEDDING_DIMENSIONS` (trống = mặc định của mô hình) · `AI_SIMILARITY_THRESHOLD` (0.5) · `AI_EMBEDDING_MIN_INTERVAL_MS` (700) · `AI_VECTOR_STORE_PATH`. Đổi sang OpenAI: `AI_BASE_URL=https://api.openai.com`, hai đường dẫn `/v1/...`, hai tên mô hình. Đổi sang Ollama: `AI_BASE_URL=http://localhost:11434`, khoá giả `ollama`.
+
+### Lớp chính
+
+- `config/`: `AiProperties`, `AiEnabledCondition`, `AiEnvironmentPostProcessor` (đăng ký ở `META-INF/spring.factories`), `AiConfig` (bean `TourVectorStore`, `ChatMemory`, `ChatClient tourAssistant`), `TrackingProperties`.
+- `ai/`: `TourVectorService` (nạp/lập lại/upsert/search/similar), `TourDocumentFactory`, `ThrottledEmbeddingModel`, `SemanticSearchService`, `PriceHintParser`, `TourTools` (`searchTours`, `getDepartures`, `addToCart`), `AiChatService`, `TourIndexInitializer` (lúc `ApplicationReadyEvent`), `TourIndexListener` + `TourChangedEvent` (đồng bộ sau commit khi admin sửa tour).
+- `service/`: `TrackingService`, `BehaviorStatsService`, `RecommendationService`.
+- `controller/`: `api/TrackingApiController` (`POST /api/tracking`), `api/ChatApiController` (`POST /api/chat`), `api/TourApiController#semantic` (`GET /api/tours/semantic`), `admin/AdminAnalyticsController` (`/admin/analytics`), `admin/AdminAiController` (`/admin/ai`, `POST /admin/ai/reindex` → redirect + flash).
+- `entity/`: `UserEvent`, `EventType` + `EventTypeConverter`; `repository/UserEventRepository` (JPQL thuần, không native).
+- Giao diện: `static/js/tracker.js`, `static/js/chat.js`, `fragments/chat-widget.html` (nằm trong fragment `scripts` nên mọi trang công khai đều có), khối "Có thể bạn thích" (`index.html`), "Tour tương tự" (`tour/detail.html`), công tắc "Tìm bằng AI" (`tour/list.html`), mục 15 của `app.css`.
+- CSDL: `02_schema.sql` (+`user_events`, 17 bảng), `99_drop_all.sql`, **`05_user_events.sql`** (idempotent, cho CSDL đã có sẵn). `user_events` **không có khoá ngoại** (ghi nhanh, không cản xoá tour/tài khoản; cũng tránh lỗ hổng gotcha #42) nên xoá tour để lại dòng mồ côi vô hại — mọi truy vấn thống kê đều JOIN `tours`.
+
+### Quy tắc phía server của tracking
+
+`userId` lấy từ `SecurityContext`, `sessionId` từ `HttpSession` và **băm SHA-256** trước khi lưu (không lưu mã phiên đang sống); loại sự kiện chặt (enum), thiếu trường → 400; bot (User-Agent) → 202 nhưng không ghi; 60 sự kiện/phút/phiên (429); `TIME_ON_PAGE` < 0,5 s bị bỏ, > 30 phút bị cắt; từ khoá cắt 200 ký tự; `page_url` chỉ giữ đường dẫn; tour không tồn tại → bỏ; lỗi ghi CSDL → nuốt + log (tracking không được làm hỏng nghiệp vụ); `@Scheduled` 03:15 xoá sự kiện quá `retention-days` (180). `tracker.js` tôn trọng `Do Not Track`.
+
+### Cách AI "tắt" hoạt động
+
+`AiEnvironmentPostProcessor` đặt `spring.ai.model.chat/embedding=none` khi AI tắt → autoconfig OpenAI của Spring AI không chạy; `AiConfig` (`@Conditional(AiEnabledCondition)`) không tạo `TourVectorStore`/`ChatClient`. Mọi service dùng `ObjectProvider` nên trả "không khả dụng" thay vì lỗi: tìm ngữ nghĩa → lùi về LIKE (bỏ cụm "dưới 5 triệu" khỏi câu và đổi thành bộ lọc giá), chatbot → 503 + câu thân thiện, widget hiện "AI chưa được cấu hình", "Tour tương tự"/"Có thể bạn thích" lùi về cùng danh mục / phổ biến.
+
+### Đã kiểm bằng gì (đọc kỹ — đây là chỗ dễ nói quá)
+
+- `./mvnw -q -DskipTests compile` sạch; `./mvnw test` = **73 kiểm thử xanh** (không cần SQL Server): parser giá, rate limiter, `TrackingService`, validate `TrackingRequest`, thống kê, gợi ý, `TourVectorService` với mô hình nhúng giả (lưu/nạp tệp, upsert, lọc giá, tour tương tự), `ThrottledEmbeddingModel`, `AiChatService` với `ChatModel` giả, `TourTools`, `AiProperties`, và `AiWiringTest` (dựng thật cấu hình Spring AI từ `application.properties`).
+- `AiEnabledSmokeTest` / `AiDisabledSmokeTest`: **chạy cả ứng dụng thật** (Thymeleaf, Security + CSRF, `DataSeeder` 20 tour, JPA validate/create) trên **H2 (chế độ SQL Server)** với **máy chủ giả giao thức OpenAI** (`FakeOpenAiServer`, đúng đường dẫn `/v1beta/openai/...`): lập chỉ mục 20 tour, tìm ngữ nghĩa + lọc giá, tour tương tự, tracking đủ 5 loại + ca sai, vòng tool-calling thật (`searchTours` rồi `addToCart` vào giỏ), thống kê admin, reindex PRG, phân quyền, và toàn bộ nhánh AI tắt/khoá rỗng/nhà cung cấp lỗi 500.
+- **CHƯA kiểm**: SQL Server thật (H2 không bắt được lỗi riêng của SQL Server, xem #58 — nên chạy `05_user_events.sql` và mở `/admin/analytics` trên máy có SQL Server); **Gemini thật** (đường dẫn, tên tham số, độ giống cosine thực tế của `gemini-embedding-001`, ngưỡng 0.5 là ước đoán cần chỉnh); giao diện bằng mắt/trình duyệt (không có trình duyệt trong môi trường này — widget chat, bố cục trang thống kê chưa được nhìn thấy).
+
+### Hạn chế đã biết
+
+Bộ nhớ hội thoại giữ trong RAM theo phiên (không giới hạn số phiên); mã phiên đổi khi đăng nhập nên phễu của khách ẩn danh bị tách làm hai; không có banner xin đồng ý theo dõi (chỉ tôn trọng DNT); `SimpleVectorStore` nạp cả tệp vào RAM, đủ cho vài trăm tour; tìm LIKE dự phòng vẫn khớp nguyên cụm; thứ tự sắp xếp của người dùng bị bỏ qua ở chế độ ngữ nghĩa (xếp theo độ giống); gói miễn phí của Gemini có thể dùng prompt để cải thiện sản phẩm Google — không đưa dữ liệu khách thật vào lúc demo.
+
+### Gotcha mới
+
+71. ⚠️ **Autoconfig OpenAI của Spring AI ném `OpenAI API key must be set` lúc khởi động** nếu khoá rỗng — và `${GEMINI_API_KEY:mặc-định}` **không cứu được** khi biến môi trường tồn tại nhưng để trống (placeholder chỉ dùng mặc định khi biến vắng mặt). Dòng "biến môi trường rỗng" trong cấu hình chạy IntelliJ là kịch bản thật. Cách xử lý: `AiEnvironmentPostProcessor` tắt `spring.ai.model.chat/embedding` khi AI tắt. Có kiểm thử (`AiWiringTest`).
+72. ⚠️ **`SimpleVectorStore.add` gọi API nhúng TỪNG tài liệu một** (`embed(Document)`), không gộp lô — 20 tour = 20 request liên tiếp, dễ chạm 429 ở gói miễn phí. `ThrottledEmbeddingModel` giãn cách tối thiểu 700 ms; `spring.ai.retry.on-http-codes=429` (mặc định Spring AI **không** thử lại 4xx). Và không bao giờ nhúng lại lúc khởi động: tệp `data/vector-store.json` + `.meta.json` (khoá = nhà cung cấp|mô hình|số chiều; đổi một trong ba thì lập lại).
+73. ⚠️ **Toán tử ba ngôi `cond ? Long.longValue() : Long` tự mở hộp (unbox) cả nhánh sau** → `NullPointerException` khi nhánh sau là `null`. Vấp thật ở `SemanticSearchService` (mọi tìm ngữ nghĩa không có giá tối thiểu đều lùi về từ khoá một cách im lặng); chỉ lộ ra nhờ kiểm thử. Dùng `Long.valueOf(...)` cho nhánh đầu.
+74. ⚠️ **Lập chỉ mục khi khởi động phải chờ `DataSeeder`**: `ApplicationRunner @Order(100)` chạy trước `CommandLineRunner` không `@Order` nên lập chỉ mục **0 tour** rồi lưu tệp rỗng — lần khởi động sau nạp tệp rỗng và không bao giờ lập lại. Giờ dùng `ApplicationReadyEvent`, và tệp nạp lên mà rỗng thì lập lại.
+75. **`@DynamicPropertySource` đến muộn hơn `EnvironmentPostProcessor`** (và khoá ngữ cảnh của Spring Test **không** gồm system property): kiểm thử cần biến sớm thì đặt bằng `System.setProperty` trong khối `static`, và đổi `@SpringBootTest(properties=...)` để hai lớp kiểm thử không dùng chung một ngữ cảnh đã cache.
+76. **JSON có enum lạ (`"type":"HACK"`) ném `HttpMessageNotReadableException`** — `ApiExceptionHandler` cũ chỉ có handler `Exception` chung nên trả **500**. Đã thêm handler → 400.
+77. **`app.js` khoá nút submit của MỌI form** sau khi gửi (trừ `[data-ajax-cart]`); form chat gửi bằng AJAX nên phải có `data-no-lock`, nếu không nút Gửi bị vô hiệu vĩnh viễn sau lần gửi đầu.
+78. `SimpleVectorStoreContent` là lớp package-private nhưng trường `store` của `SimpleVectorStore` là `protected`: lớp con vẫn gọi được `store.keySet()/clear()` (không nêu tên kiểu), nhờ đó có `ids()`/`clearAll()` mà không phải sao chép thư viện.
+79. ⚠️ **Cấu hình là `application.properties` (và `src/test/resources/application-h2.properties` cho kiểm thử) theo yêu cầu môn học — đừng quay lại YAML.** Đã chuyển nguyên trạng từ `application.yml`/`application-h2.yml` (93 + 9 khoá, so bằng `YamlPropertySourceLoader` và `PropertiesPropertySourceLoader`: 0 khác biệt, không có tài liệu `---` nào). **Bảng mã:** Spring Boot 3.5.16 đọc `.properties` bằng `OriginTrackedPropertiesLoader` theo **ISO-8859-1** (xem `javap -c` lớp `CharacterReader`: `StandardCharsets.ISO_8859_1`; thử thật: `a=Việt Nam` ra `Viá»t Nam`, còn `b=Vi\u1EC7t Nam` ra đúng) — khác YAML (luôn UTF-8) và khác `messages*.properties` (đã khai `spring.messages.encoding=UTF-8`). Hệ quả: **comment** tiếng Việt trong file thì vô hại, nhưng **giá trị** có dấu phải viết `\uXXXX` (hiện mọi giá trị đều ASCII). Khác biệt cú pháp cần nhớ: `#`/`!` chỉ là comment ở đầu dòng nên mật khẩu `Tour@2026#IUH` nguyên vẹn; `key=` (rỗng) cho chuỗi rỗng giống `key:` trong YAML; mọi giá trị là chuỗi (`true`, `5s`, `30m` do Spring Boot tự ép kiểu khi bind); không có `---`, hồ sơ riêng thì tách tệp `application-<profile>.properties`. Bẫy build: Maven **không xoá** `target/classes/application.yml` cũ sau khi đổi tên — nó vẫn bị nạp chung; xoá tay hoặc `./mvnw clean`.
+
 ---
 
 ## Cấu trúc thư mục
@@ -1132,7 +1195,7 @@ project_www/
     │   ├── validation/     @UniqueEmail · @PasswordsMatch · @ValidPaymentMethod
     │   └── util/           SlugUtil · CodeGenerator · MessageHelper · SafeRedirect
     └── resources/
-        ├── application.yml
+        ├── application.properties
         ├── messages{,_vi,_en}.properties   ← 712 khoá, khớp nhau
         ├── static/  css/app.css · js/{app.js,admin.js} · images/
         └── templates/  fragments/ · tour/ · cart/ · auth/ · checkout/ · account/ ·
@@ -1221,7 +1284,7 @@ Subagent NGHIỆP VỤ — ĐỢT B. Làm 12.1 (máy trạng thái), 12.2 (hoàn
 12.7 (nhập hành khách) và 12.8 (trang chi tiết riêng) — để đợt sau như phân công.
 
 **File đã sửa (26 file + 1 file mới):**
-- `application.yml` — thêm khối `app.booking.*` (cutoff-days=2, pending-expiry-hours=24,
+- `application.yml` (nay là `application.properties`) — thêm khối `app.booking.*` (cutoff-days=2, pending-expiry-hours=24,
   self-cancel-min-days=3, full-refund-min-days=7, partial-refund-percent=50).
 - `config/AppProperties.java` — thêm record lồng `Booking`.
 - `TourBookingApplication.java` — thêm `@EnableScheduling`.
@@ -1735,7 +1798,7 @@ Trigger = 0 · cổng 8081 đã đóng sau khi kiểm xong.
     Authentication của chính người dùng** (`sqlcmd -E`) thường có sẵn `sysadmin` (kiểm bằng
     `SELECT IS_SRVROLEMEMBER('sysadmin')`) - dùng login đó để `CREATE DATABASE ... COLLATE
     Vietnamese_CI_AI`, rồi `CREATE USER tourapp FOR LOGIN tourapp; ALTER ROLE db_owner ADD MEMBER
-    tourapp;` để ứng dụng (vẫn nối bằng `tourapp` trong `application.yml`) đọc/ghi được CSDL tạm đó
+    tourapp;` để ứng dụng (vẫn nối bằng `tourapp` trong `application.properties`) đọc/ghi được CSDL tạm đó
     qua `--spring.datasource.url=...databaseName=<tên_tạm>...`. Đây KHÔNG phải bỏ qua "thao tác cần
     quyền admin" của `CLAUDE.md` (vốn nói về bật TCP/restart service) - tạo một CSDL tạm trên chính
     máy dev, tự dọn ngay sau khi xong, là thao tác an toàn và trong tầm với qua chính hệ thống

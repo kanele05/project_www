@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.ai.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('ai')}"></div>
+        </aside>
+
+        <main class="admin-main">
+            <h1 class="h4 mb-3" th:text="#{admin.ai.title}">Trợ lý AI</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h6 mb-0" th:text="#{admin.ai.status}">Trạng thái</h2>
+                        <span class="badge" th:classappend="${indexStatus.enabled()} ? 'bg-success' : 'bg-secondary'"
+                              th:text="${indexStatus.enabled()} ? #{admin.ai.enabled} : #{admin.ai.disabled}">Trạng thái</span>
+                    </div>
+
+                    <p class="text-muted small" th:unless="${indexStatus.enabled()}" th:text="#{admin.ai.offHint}">AI đang tắt.</p>
+
+                    <dl class="row small mb-0">
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.provider}">Endpoint</dt>
+                        <dd class="col-sm-8" th:text="${baseUrl}">https://...</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.keyConfigured}">Khoá API</dt>
+                        <dd class="col-sm-8" th:text="${keyConfigured} ? #{admin.ai.yes} : #{admin.ai.no}">Có</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.chatModel}">Mô hình chat</dt>
+                        <dd class="col-sm-8" th:text="${chatModel}">gemini</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.embeddingModel}">Mô hình nhúng</dt>
+                        <dd class="col-sm-8" th:text="${embeddingModel}">embedding</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.threshold}">Ngưỡng giống nhau</dt>
+                        <dd class="col-sm-8" th:text="${threshold}">0.5</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.indexed}">Số tour đã lập chỉ mục</dt>
+                        <dd class="col-sm-8" th:text="${indexStatus.indexedCount()}">0</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:text="#{admin.ai.indexedAt}">Lần lập chỉ mục cuối</dt>
+                        <dd class="col-sm-8"
+                            th:text="${indexStatus.indexedAt() != null} ? ${#temporals.format(indexStatus.indexedAt(), 'dd/MM/yyyy HH:mm')} : #{admin.ai.never}">chưa</dd>
+
+                        <dt class="col-sm-4 text-muted fw-normal" th:if="${indexStatus.lastError() != null}" th:text="#{admin.ai.lastError}">Lỗi gần nhất</dt>
+                        <dd class="col-sm-8 text-danger" th:if="${indexStatus.lastError() != null}" th:text="${indexStatus.lastError()}">lỗi</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h6 mb-2" th:text="#{admin.ai.reindex}">Lập chỉ mục lại</h2>
+                    <p class="text-muted small" th:text="#{admin.ai.reindex.hint}">Nạp lại toàn bộ tour đang bán vào kho vector.</p>
+                    <form th:action="@{/admin/ai/reindex}" method="post" th:data-confirm="#{admin.ai.reindex.confirm}">
+                        <button class="btn btn-primary btn-sm" type="submit" th:disabled="${!indexStatus.available()}">
+                            <i class="bi bi-arrow-repeat me-1"></i><span th:text="#{admin.ai.reindex}">Lập chỉ mục lại</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>

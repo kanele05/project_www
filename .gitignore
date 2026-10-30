@@ -38,3 +38,6 @@ docs/
 uploads/
 CLAUDE.md
 PLAN.md
+
+# Chỉ mục vector AI sinh ra lúc chạy
+data/

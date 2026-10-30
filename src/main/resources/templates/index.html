@@ -192,6 +192,21 @@
         </div>
     </section>
 
+    <section class="section" th:if="${not #lists.isEmpty(recommendedTours)}" id="goi-y">
+        <div class="container">
+            <div class="mb-4 mb-lg-5 reveal">
+                <h2 class="section-title mb-2" th:text="#{home.recommend.title}">Có thể bạn thích</h2>
+                <p class="section-lead mb-0"
+                   th:text="${recommendSource == 'POPULAR'} ? #{home.recommend.lead.popular} : #{home.recommend.lead.personal}">Câu dẫn</p>
+            </div>
+            <div class="row g-4">
+                <th:block th:each="t : ${recommendedTours}">
+                    <div th:replace="~{fragments/components :: tourCard(${t})}"></div>
+                </th:block>
+            </div>
+        </div>
+    </section>
+
     <section class="section">
         <div class="container">
             <div th:replace="~{fragments/components :: sectionHead(

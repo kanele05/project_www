@@ -76,7 +76,7 @@ $(function () {
         $('.alert-dismissible').fadeOut(400);
     }, 5000);
 
-    $('form').not('[data-ajax-cart]').on('submit', function (e) {
+    $('form').not('[data-ajax-cart], [data-no-lock]').on('submit', function (e) {
         const confirmMessage = $(this).data('confirm');
         if (confirmMessage && !window.confirm(confirmMessage)) {
             e.preventDefault();

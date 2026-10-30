@@ -355,7 +355,7 @@ tên đó; chỉ nội dung bên trong được vẽ lại. Bốn biểu đồ c
 ## 12. VÒNG ĐỜI ĐƠN HÀNG & NGHIỆP VỤ THỰC TẾ — chốt ngày 23/09 (user chọn làm cả 8 việc)
 
 > Chốt bởi agent điều phối TRƯỚC khi giao. Các agent bám đúng mục này. Mọi con số là **mặc định**,
-> đặt trong `application.yml` nhóm `app.booking.*` để đổi được, không viết cứng trong mã.
+> đặt trong `application.properties` nhóm `app.booking.*` để đổi được, không viết cứng trong mã.
 
 ### 12.1 Máy trạng thái đơn hàng
 ```

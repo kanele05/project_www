@@ -24,6 +24,8 @@ public class TourSearchForm {
 
     private String sort = "newest";
 
+    private Boolean ai;
+
     public String normalizedKeyword() {
         if (q == null || q.isBlank()) {
             return null;
@@ -60,6 +62,9 @@ public class TourSearchForm {
         addParam(parts, "minPrice", minPrice);
         addParam(parts, "maxPrice", maxPrice);
         addParam(parts, "sort", sort);
+        if (Boolean.TRUE.equals(ai)) {
+            parts.add("ai=true");
+        }
 
         StringBuilder sb = new StringBuilder(path).append('?');
         if (!parts.isEmpty()) {

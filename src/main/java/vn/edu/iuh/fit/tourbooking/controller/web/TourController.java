@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import vn.edu.iuh.fit.tourbooking.ai.SemanticSearchService;
 import vn.edu.iuh.fit.tourbooking.dto.form.ReviewForm;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourSearchForm;
 import vn.edu.iuh.fit.tourbooking.entity.Tour;
 import vn.edu.iuh.fit.tourbooking.exception.ResourceNotFoundException;
 import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
+import vn.edu.iuh.fit.tourbooking.service.RecommendationService;
 import vn.edu.iuh.fit.tourbooking.service.ReviewService;
 import vn.edu.iuh.fit.tourbooking.service.TourService;
 
@@ -23,12 +25,19 @@ public class TourController {
 
     private final TourService tourService;
     private final ReviewService reviewService;
+    private final SemanticSearchService semanticSearchService;
+    private final RecommendationService recommendationService;
+
+    private static final int SIMILAR_LIMIT = 3;
 
     @GetMapping("/tours")
     public String list(@ModelAttribute("searchForm") TourSearchForm form,
                        @RequestParam(defaultValue = "0") int page,
                        Model model) {
-        model.addAttribute("toursPage", tourService.search(form, page));
+        SemanticSearchService.Outcome outcome = semanticSearchService.search(form, page);
+        model.addAttribute("toursPage", outcome.page());
+        model.addAttribute("searchMode", outcome.mode().name());
+        model.addAttribute("aiAvailable", semanticSearchService.isAiAvailable());
         model.addAttribute("destinations", tourService.findAllDestinations());
 
         model.addAttribute("pageUrlPrefix", form.toQueryPrefix("/tours"));
@@ -48,6 +57,10 @@ public class TourController {
         }
         model.addAttribute("tour", tour);
         model.addAttribute("departures", tourService.findBookableDepartures(id));
+
+        RecommendationService.Recommendation similar = recommendationService.similarTo(id, SIMILAR_LIMIT);
+        model.addAttribute("similarTours", similar.tours());
+        model.addAttribute("similarSource", similar.source().name());
 
         model.addAttribute("reviewsPage", reviewService.findApprovedByTour(id, page));
         model.addAttribute("avgRating", reviewService.averageRating(id));

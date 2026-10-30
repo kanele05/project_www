@@ -110,6 +110,14 @@
               th:text="${newContactCount}">0</span>
     </a>
     <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'analytics'} ? 'active'" th:href="@{/admin/analytics}">
+        <i class="bi bi-activity"></i> <span th:text="#{admin.nav.analytics}">Hành vi người dùng</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
+       th:classappend="${active == 'ai'} ? 'active'" th:href="@{/admin/ai}">
+        <i class="bi bi-stars"></i> <span th:text="#{admin.nav.ai}">Trợ lý AI</span>
+    </a>
+    <a class="list-group-item list-group-item-action"
        th:classappend="${active == 'users'} ? 'active'" th:href="@{/admin/users}">
         <i class="bi bi-people"></i> <span th:text="#{admin.nav.users}">Quản lý tài khoản</span>
     </a>

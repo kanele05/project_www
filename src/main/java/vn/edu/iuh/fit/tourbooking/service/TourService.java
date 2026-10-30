@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import vn.edu.iuh.fit.tourbooking.ai.TourChangedEvent;
 import vn.edu.iuh.fit.tourbooking.config.AppProperties;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourForm;
 import vn.edu.iuh.fit.tourbooking.dto.form.TourSearchForm;
@@ -54,6 +56,7 @@ public class TourService {
     private final ContactMessageRepository contactMessageRepository;
     private final FileStorageService fileStorageService;
     private final AppProperties appProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
     public static final int MAX_API_PAGE_SIZE = 50;
 
@@ -202,6 +205,7 @@ public class TourService {
         }
 
         Tour saved = tourRepository.save(tour);
+        eventPublisher.publishEvent(new TourChangedEvent(saved.getId()));
         log.info("{} tour {} ({})", creating ? "Đã thêm" : "Đã cập nhật",
                 saved.getCode(), saved.getName());
         return saved;
@@ -236,6 +240,7 @@ public class TourService {
         departureRepository.deleteAll(tour.getDepartures());
 
         tourRepository.delete(tour);
+        eventPublisher.publishEvent(new TourChangedEvent(id));
 
         imagePaths.forEach(fileStorageService::deleteAfterCommit);
         log.info("Đã xoá tour {} cùng {} file ảnh", tour.getCode(), imagePaths.size());
@@ -246,6 +251,7 @@ public class TourService {
         Tour tour = tourRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("tour", id));
         tour.setActive(!tour.isActive());
+        eventPublisher.publishEvent(new TourChangedEvent(id));
         return tour.isActive();
     }
 

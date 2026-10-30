@@ -4,13 +4,16 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.iuh.fit.tourbooking.exception.BusinessRuleException;
+import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
 import vn.edu.iuh.fit.tourbooking.service.CartService;
+import vn.edu.iuh.fit.tourbooking.service.TrackingService;
 import vn.edu.iuh.fit.tourbooking.session.CartItem;
 
 @Controller
@@ -21,6 +24,8 @@ public class CartController {
     private final CartService cartService;
 
     private final MessageSource messageSource;
+
+    private final TrackingService trackingService;
 
     @GetMapping("/cart")
     public String view() {
@@ -34,11 +39,14 @@ public class CartController {
                       @RequestParam(defaultValue = "1") int numAdults,
                       @RequestParam(defaultValue = "0") int numChildren,
                       HttpSession session,
+                      @AuthenticationPrincipal CustomUserDetails principal,
                       RedirectAttributes ra) {
         try {
             CartItem item = departureId != null
                     ? cartService.addByDeparture(session, departureId, numAdults, numChildren)
                     : cartService.addByTour(session, tourId, numAdults, numChildren);
+            trackingService.recordAddToCart(session.getId(), principal == null ? null : principal.getId(),
+                    item.getTourId(), item.getDepartureId());
             ra.addFlashAttribute("successMessage",
                     getMessage("cart.added", item.getTourName()));
         } catch (BusinessRuleException e) {

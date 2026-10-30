@@ -1,10 +1,14 @@
 package vn.edu.iuh.fit.tourbooking.controller.web;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import vn.edu.iuh.fit.tourbooking.security.CustomUserDetails;
 import vn.edu.iuh.fit.tourbooking.service.CategoryService;
+import vn.edu.iuh.fit.tourbooking.service.RecommendationService;
 import vn.edu.iuh.fit.tourbooking.service.TourService;
 
 import java.util.List;
@@ -20,14 +24,23 @@ public class HomeController {
 
     private final TourService tourService;
     private final CategoryService categoryService;
+    private final RecommendationService recommendationService;
+
+    private static final int RECOMMEND_LIMIT = 3;
 
     @GetMapping("/")
-    public String home(Model model) {
+    public String home(Model model, HttpSession session,
+                       @AuthenticationPrincipal CustomUserDetails principal) {
         model.addAttribute("featuredTours", tourService.findFeatured(FEATURED_LIMIT));
 
         model.addAttribute("categoryCards", categoryService.findActiveWithTourCount());
 
         model.addAttribute("stats", tourService.siteStats());
+
+        RecommendationService.Recommendation picks = recommendationService.recommend(
+                principal == null ? null : principal.getId(), session.getId(), RECOMMEND_LIMIT);
+        model.addAttribute("recommendedTours", picks.tours());
+        model.addAttribute("recommendSource", picks.source().name());
 
         List<String> destinations = tourService.findAllDestinations();
         model.addAttribute("destinations",

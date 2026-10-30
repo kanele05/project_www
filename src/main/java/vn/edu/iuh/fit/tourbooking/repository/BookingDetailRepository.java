@@ -50,4 +50,18 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
             ORDER BY d.booking.bookingDate DESC
             """)
     List<Booking> findCompletedBookingsForTour(@Param("tourId") Long tourId, @Param("userId") Long userId);
+
+    // Tour được đặt nhiều nhất trong khoảng thời gian: (tourId, tên, số đơn, số khách), bỏ đơn đã huỷ.
+    @Query("""
+            SELECT t.id, t.name, COUNT(DISTINCT d.booking.id), SUM(d.numAdults + d.numChildren)
+            FROM BookingDetail d
+            JOIN d.departure dep
+            JOIN dep.tour t
+            WHERE d.booking.status <> vn.edu.iuh.fit.tourbooking.entity.BookingStatus.CANCELLED
+              AND d.booking.bookingDate >= :from AND d.booking.bookingDate < :to
+            GROUP BY t.id, t.name
+            ORDER BY COUNT(DISTINCT d.booking.id) DESC
+            """)
+    List<Object[]> bookingCountByTour(@Param("from") java.time.LocalDateTime from,
+                                      @Param("to") java.time.LocalDateTime to);
 }

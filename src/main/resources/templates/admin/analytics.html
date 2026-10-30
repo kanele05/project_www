@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="vi" th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments/admin-layout :: head(#{admin.analytics.title})}"></head>
+<body>
+
+<nav th:replace="~{admin/fragments/admin-layout :: topbar}"></nav>
+
+<div class="admin-shell">
+    <div class="admin-grid">
+        <aside class="admin-aside">
+            <div th:replace="~{admin/fragments/admin-layout :: sidebar('analytics')}"></div>
+        </aside>
+
+        <main class="admin-main">
+            <h1 class="h4 mb-3" th:text="#{admin.analytics.title}">Hành vi người dùng</h1>
+
+            <div th:replace="~{fragments/components :: alerts}"></div>
+
+            <form class="card mb-4" method="get" th:action="@{/admin/analytics}">
+                <div class="card-body d-flex flex-wrap align-items-end gap-3">
+                    <div>
+                        <label class="form-label small mb-1" for="from" th:text="#{admin.analytics.range.from}">Từ ngày</label>
+                        <input class="form-control form-control-sm" type="date" id="from" name="from"
+                               th:value="${report.range().from()}" th:max="${today}">
+                    </div>
+                    <div>
+                        <label class="form-label small mb-1" for="to" th:text="#{admin.analytics.range.to}">Đến ngày</label>
+                        <input class="form-control form-control-sm" type="date" id="to" name="to"
+                               th:value="${report.range().to()}" th:max="${today}">
+                    </div>
+                    <button class="btn btn-primary btn-sm" type="submit" th:text="#{admin.analytics.range.apply}">Áp dụng</button>
+                    <div class="ms-auto d-flex gap-2">
+                        <a class="btn btn-outline-secondary btn-sm"
+                           th:href="@{/admin/analytics(from=${today.minusDays(6)}, to=${today})}"
+                           th:text="#{admin.analytics.range.last7}">7 ngày</a>
+                        <a class="btn btn-outline-secondary btn-sm"
+                           th:href="@{/admin/analytics(from=${today.minusDays(29)}, to=${today})}"
+                           th:text="#{admin.analytics.range.last30}">30 ngày</a>
+                        <a class="btn btn-outline-secondary btn-sm"
+                           th:href="@{/admin/analytics(from=${today.minusDays(89)}, to=${today})}"
+                           th:text="#{admin.analytics.range.last90}">90 ngày</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="admin-stat__label" th:text="#{admin.analytics.kpi.events}">Sự kiện</div>
+                        <div class="admin-stat__value" th:text="${report.totalEvents()}">0</div>
+                    </div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="admin-stat__label" th:text="#{admin.analytics.kpi.sessions}">Phiên truy cập</div>
+                        <div class="admin-stat__value" th:text="${report.sessions()}">0</div>
+                    </div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="admin-stat__label" th:text="#{admin.analytics.kpi.avgTime}">Thời gian xem trung bình</div>
+                        <div class="admin-stat__value"
+                             th:text="${report.avgSecondsOnPage() != null} ? |${#numbers.formatDecimal(report.avgSecondsOnPage(), 1, 1)} #{admin.analytics.seconds}| : '-'">0</div>
+                    </div></div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card h-100"><div class="card-body">
+                        <div class="admin-stat__label" th:text="#{admin.analytics.kpi.bookings}">Đơn đặt</div>
+                        <div class="admin-stat__value" th:text="${report.funnel()[2].value()}">0</div>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h6 mb-1" th:text="#{admin.analytics.funnel.title}">Phễu chuyển đổi</h2>
+                    <p class="text-muted small" th:text="#{admin.analytics.funnel.lead}">Xem tour, thêm giỏ, đặt đơn</p>
+                    <div class="mb-3" th:each="step : ${report.funnel()}">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span th:text="#{${'admin.analytics.funnel.' + step.key()}}">Bước</span>
+                            <span class="fw-semibold" th:text="${step.value()}">0</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" th:style="'width:' + ${step.percentOfTop()} + '%'"></div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0" th:with="v=${report.funnel()[0].value()}, c=${report.funnel()[1].value()}, b=${report.funnel()[2].value()}">
+                        <span th:text="#{admin.analytics.funnel.rate.viewToCart}">Xem → giỏ</span>:
+                        <strong th:text="${v > 0} ? |${#numbers.formatDecimal(c * 100.0 / v, 1, 1)}%| : '-'">0%</strong>
+                        &middot;
+                        <span th:text="#{admin.analytics.funnel.rate.cartToBooking}">Giỏ → đơn</span>:
+                        <strong th:text="${c > 0} ? |${#numbers.formatDecimal(b * 100.0 / c, 1, 1)}%| : '-'">0%</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="card h-100"><div class="card-body">
+                        <h2 class="h6 mb-3" th:text="#{admin.analytics.topViewed}">Tour được xem nhiều</h2>
+                        <p th:if="${#lists.isEmpty(report.topViewed())}" class="text-muted small mb-0" th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                        <ol class="mb-0 ps-3">
+                            <li class="small mb-1" th:each="t : ${report.topViewed()}">
+                                <span th:text="${t.tourName()}">Tên tour</span>
+                                <span class="text-muted">- <span th:text="${t.count()}">0</span></span>
+                            </li>
+                        </ol>
+                    </div></div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100"><div class="card-body">
+                        <h2 class="h6 mb-3" th:text="#{admin.analytics.topClicked}">Tour được bấm nhiều</h2>
+                        <p th:if="${#lists.isEmpty(report.topClicked())}" class="text-muted small mb-0" th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                        <ol class="mb-0 ps-3">
+                            <li class="small mb-1" th:each="t : ${report.topClicked()}">
+                                <span th:text="${t.tourName()}">Tên tour</span>
+                                <span class="text-muted">- <span th:text="${t.count()}">0</span></span>
+                            </li>
+                        </ol>
+                    </div></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body pb-0">
+                    <h2 class="h6 mb-3" th:text="#{admin.analytics.tourFunnel}">Phễu theo từng tour</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th th:text="#{admin.analytics.col.tour}">Tour</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.views}">Xem</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.clicks}">Bấm</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.carts}">Thêm giỏ</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.bookings}">Đơn</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.ctr}">Bấm/Xem</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.cartRate}">Giỏ/Xem</th>
+                            <th class="text-end" th:text="#{admin.analytics.col.bookingRate}">Đơn/Giỏ</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(report.tourFunnel())}">
+                            <td colspan="8" class="text-center text-muted py-3" th:text="#{admin.empty}">Chưa có dữ liệu.</td>
+                        </tr>
+                        <tr th:each="r : ${report.tourFunnel()}">
+                            <td class="small" th:text="${r.tourName()}">Tên tour</td>
+                            <td class="text-end" th:text="${r.views()}">0</td>
+                            <td class="text-end" th:text="${r.clicks()}">0</td>
+                            <td class="text-end" th:text="${r.carts()}">0</td>
+                            <td class="text-end" th:text="${r.bookings()}">0</td>
+                            <td class="text-end small" th:text="|${#numbers.formatDecimal(r.clickRate() * 100, 1, 1)}%|">0%</td>
+                            <td class="text-end small" th:text="|${#numbers.formatDecimal(r.cartRate() * 100, 1, 1)}%|">0%</td>
+                            <td class="text-end small" th:text="|${#numbers.formatDecimal(r.bookingRate() * 100, 1, 1)}%|">0%</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h2 class="h6 mb-3" th:text="#{admin.analytics.mostBooked}">Tour được đặt nhiều</h2>
+                        <p th:if="${#lists.isEmpty(report.mostBooked())}" class="text-muted small mb-0" th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                        <ol class="mb-0 ps-3">
+                            <li class="small mb-1" th:each="t : ${report.mostBooked()}">
+                                <span th:text="${t.tourName()}">Tên tour</span>
+                                <span class="text-muted">- <span th:text="${t.count()}">0</span> <span th:text="#{admin.analytics.bookingsUnit}">đơn</span></span>
+                            </li>
+                        </ol>
+                    </div></div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h2 class="h6 mb-3" th:text="#{admin.analytics.keywords}">Từ khoá tìm kiếm</h2>
+                        <p th:if="${#lists.isEmpty(report.keywords())}" class="text-muted small mb-0" th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                        <ol class="mb-0 ps-3">
+                            <li class="small mb-1" th:each="k : ${report.keywords()}">
+                                <span th:text="${k.keyword()}">từ khoá</span>
+                                <span class="text-muted">- <span th:text="${k.count()}">0</span></span>
+                            </li>
+                        </ol>
+                    </div></div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100"><div class="card-body">
+                        <h2 class="h6 mb-3" th:text="#{admin.analytics.longestReads}">Thời gian xem lâu nhất</h2>
+                        <p th:if="${#lists.isEmpty(report.longestReads())}" class="text-muted small mb-0" th:text="#{admin.empty}">Chưa có dữ liệu.</p>
+                        <ol class="mb-0 ps-3">
+                            <li class="small mb-1" th:each="t : ${report.longestReads()}">
+                                <span th:text="${t.tourName()}">Tên tour</span>
+                                <span class="text-muted">- <span th:text="${#numbers.formatDecimal(t.avgSeconds(), 1, 1)}">0</span>
+                                    <span th:text="#{admin.analytics.seconds}">giây</span></span>
+                            </li>
+                        </ol>
+                    </div></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<th:block th:replace="~{admin/fragments/admin-layout :: scripts}"></th:block>
+</body>
+</html>
