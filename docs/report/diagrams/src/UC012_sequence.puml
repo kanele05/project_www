@@ -6,11 +6,11 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam style strictuml
 hide footbox
-skinparam maxMessageSize 420
+skinparam maxMessageSize 160
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow false
 skinparam ArrowColor black
-skinparam ParticipantPadding 90
+skinparam ParticipantPadding 12
 skinparam BoxPadding 6
 skinparam sequence {
   ArrowColor black
@@ -39,55 +39,38 @@ skinparam EntityBackgroundColor #00E5EE
 skinparam EntityBorderColor black
 skinparam ActorBackgroundColor #00E5EE
 skinparam ActorBorderColor black
-mainframe sd [UC012_Xem thống kê doanh thu]
-actor "Quản trị viên" as ad
-boundary "GiaoDien_TongQuan" as ui
-control "Ctrl_TongQuan" as ctrl
-control "Ctrl_ThongKeApi" as api
-control "Svc_ThongKe" as svc
-entity "DonDat" as don
-
-ad -> ui : 1: Mở trang tổng quan khu quản trị\n(sau khi đăng nhập với vai trò quản trị viên)
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 1.1: dashboard()
-activate ctrl #00E5EE
-ctrl -> svc : 1.1.1: laySoLieuKhaiQuat()
-activate svc #00E5EE
-svc -> don : 1.1.1.1: countByStatus(moiTrangThai), count()
-activate don #00E5EE
-return 1.1.1.2: soDonTheoTrangThai, tongSoDon
-svc -> don : 1.1.1.3: sumTotalAmountForStatuses(daXacNhan, hoanTat)
-activate don #00E5EE
-return 1.1.1.4: tongDoanhThu
-return 1.1.2: soLieuKhaiQuat
-ctrl --> ui : 1.2: render(soLieuKhaiQuat)
-deactivate ctrl
-ui -> ad : 1.3: Hiển thị các số liệu khái quát dưới dạng thẻ số liệu
-deactivate ui
-deactivate ad
-
-ui -> api : 2: [trang tải xong] GET /api/admin/stats/revenue
-activate ui #00E5EE
-activate api #00E5EE
-api -> svc : 2.1: doanhThuTheoThang()
-activate svc #00E5EE
-svc -> don : 2.1.1: revenueByMonth(tuNgay, daXacNhan, hoanTat)\n[12 tháng gần nhất]
-activate don #00E5EE
-return 2.1.2: dsDongDoanhThu
-alt Chưa có đơn nào đã xác nhận hoặc hoàn tất
-  hnote over ad, don : .
-  svc --> api : 2.2: danhSachRong
-  api --> ui : 2.3: []
-  ui -> ad : 2.4: Hiển thị “chưa có dữ liệu”
-else Có dữ liệu doanh thu
-  hnote over ad, don : .
-  svc -> svc : 2.1.3: tinhPhanTramSoVoiThangCaoNhat()
-  svc --> api : 2.2: dsDoanhThuTheoThang
-  api --> ui : 2.3: dsDiemDoanhThu (JSON)
-  ui -> ad : 2.4: Vẽ biểu đồ cột doanh thu theo tháng,\ncó nhãn số tiền và đường kẻ mốc
+mainframe sd [UC012_Đổi mật khẩu]
+actor "Khách hàng" as kh
+boundary "GiaoDien_DoiMatKhau" as ui
+control "Ctrl_DoiMatKhau" as ctrl
+control "Svc_TaiKhoan" as svc
+entity "TaiKhoan" as tk
+kh -> ui : 1: Chọn “Đổi mật khẩu”
+ui -> ctrl : 1.1: trangDoiMatKhau()
+ctrl --> ui : 1.2: bieuMau (3 ô)
+ui --> kh : 1.3: Hiển thị biểu mẫu ba ô
+kh -> ui : 2: Nhập đủ ba ô, bấm “Đổi mật khẩu”
+ui -> ctrl : 2.1: doiMatKhau(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): ba ô bắt buộc,\nmật khẩu mới 6-50 ký tự, khớp ô nhập lại
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi tại đúng ô
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: doiMatKhau(taiKhoan, bieuMau)
+  svc -> tk : 2.1.3: findById(taiKhoan)
+  tk --> svc : 2.1.4: taiKhoan
+  svc -> svc : 2.1.5: soKhopMatKhauHienTai(matKhauHienTai, matKhauDaLuu)
+  alt Mật khẩu hiện tại sai
+    svc --> ctrl : 2.1.6: lỗi “Mật khẩu hiện tại không đúng.”
+    ctrl --> ui : 2.4: trả lại biểu mẫu kèm lỗi tại ô mật khẩu hiện tại
+    ui --> kh : 2.5: Hiển thị lỗi tại ô mật khẩu hiện tại
+  else Mật khẩu hiện tại đúng
+    svc -> svc : 2.1.7: maHoaMatKhau(matKhauMoi)
+    svc -> tk : 2.1.8: datMatKhau(matKhauDaBam)
+    tk --> svc : 2.1.9: xong
+    svc --> ctrl : 2.1.10: xong
+    ctrl --> ui : 2.6: hiển thị lại trang đổi mật khẩu kèm thông báo
+    ui --> kh : 2.7: Hiển thị đổi mật khẩu thành công
+  end
 end
-deactivate svc
-deactivate api
-deactivate ui
 @enduml

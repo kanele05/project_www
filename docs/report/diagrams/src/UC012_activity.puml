@@ -26,22 +26,26 @@ skinparam swimlane {
   TitleFontSize 16
 }
 skinparam wrapWidth 600
-mainframe act [UC012_Xem thống kê doanh thu]
-|Quản trị viên|
+mainframe act [UC012_Đổi mật khẩu]
+|Khách hàng|
 start
-:Đăng nhập với vai trò quản trị viên\n(hoặc mở khu quản trị);
+:Mở menu tài khoản, chọn “Đổi mật khẩu”;
 |Hệ thống|
-:Đưa tới trang tổng quan khu quản trị;
-:Tính các số liệu khái quát: số đơn theo từng trạng thái,\nsố tour, số tài khoản khách hàng, doanh thu;
-:Hiển thị các số liệu khái quát\ndưới dạng thẻ số liệu;
-:Truy xuất số liệu doanh thu theo tháng\n(gọi AJAX sau khi trang tải xong);
-:Tổng hợp doanh thu theo từng tháng gần nhất, chỉ tính các đơn\n“Đã xác nhận” hoặc “Hoàn tất” (không tính “Chờ xác nhận”, “Đã huỷ”);
-if (Có dữ liệu\ndoanh thu?) then (Có)
-  :Hiển thị biểu đồ cột doanh thu theo tháng,\ncó nhãn số tiền và đường kẻ mốc tham chiếu;
-else (Không)
-  :Biểu đồ hiển thị trạng thái\n“chưa có dữ liệu”;
+:Hiển thị biểu mẫu ba ô: mật khẩu hiện tại,\nmật khẩu mới, nhập lại mật khẩu mới;
+|Khách hàng|
+:Nhập đủ ba ô, bấm “Đổi mật khẩu”;
+|Hệ thống|
+:Kiểm tra ba ô bắt buộc, mật khẩu mới 6-50 ký tự\nvà khớp với ô nhập lại;
+if (Dữ liệu hợp lệ?) then (Không)
+  :Trả lại biểu mẫu kèm lỗi tại đúng ô,\nkhông đổi mật khẩu;
+  stop
 endif
-|Quản trị viên|
-:Xem các số liệu khái quát\nvà biểu đồ doanh thu;
+if (Mật khẩu hiện tại đúng?) then (Không)
+  :Trả lại biểu mẫu kèm “Mật khẩu hiện tại không đúng.”\ntại ô mật khẩu hiện tại;
+  stop
+endif
+:Mã hoá mật khẩu mới, cập nhật tài khoản;
+:Hiển thị lại trang đổi mật khẩu\nkèm thông báo thành công;
+|Khách hàng|
 stop
 @enduml

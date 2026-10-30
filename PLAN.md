@@ -1812,3 +1812,33 @@ Trigger = 0 · cổng 8081 đã đóng sau khi kiểm xong.
     's/USE TourBookingDB;/USE TourBookingDB_tmp;/' file.sql > ban_sao.sql` rồi chạy bản sao đó,
     tuyệt đối đừng tin cờ `-d`/`-S` khi file có sẵn `USE`. Kèm gotcha #66 cũ: bản sao phải nằm trong
     cây thư mục Windows thật (ví dụ `.tmp_ref/`), không phải `/tmp` của Git Bash.
+
+## Phụ lục: ánh xạ mã use case sang báo cáo Word (sắp xếp lại theo biểu đồ tổng quát)
+
+Báo cáo Word đã đánh số lại 21 use case theo thứ tự trên biểu đồ use case tổng quát. Các mã UC trong tệp này, trong SPEC_CHUNG.md và trong chú thích mã nguồn là mã nội bộ cũ, **không đổi**; dùng bảng sau để đối chiếu:
+
+| Mã nội bộ (PLAN.md, SPEC_CHUNG.md, chú thích trong mã) | Mã trong báo cáo Word mới | Tên |
+|---|---|---|
+| UC002 | UC001 | Tìm kiếm và lọc tour |
+| UC021 | UC002 | Gửi liên hệ |
+| UC005 | UC003 | Đăng ký tài khoản |
+| UC004 | UC004 | Quản lý giỏ hàng |
+| UC006 | UC005 | Đăng nhập (Đăng xuất là «extend») |
+| UC007 | UC006 | Đặt tour (trước đây “Đặt tour trực tuyến”) |
+| UC017 | UC007 | Áp dụng mã giảm giá |
+| UC023 | UC008 | Huỷ đơn đặt tour |
+| UC008 | UC009 | Xem lịch sử đơn đặt |
+| UC018 | UC010 | Đánh giá tour đã đi |
+| UC009 | UC011 | Cập nhật hồ sơ cá nhân |
+| UC010 | UC012 | Đổi mật khẩu |
+| UC011, UC024, UC025, UC026 | UC013 | Quản lý danh mục tour (Thêm, Sửa, Xoá) |
+| UC012 | UC014 | Quản lý tour và ảnh |
+| UC013 | UC015 | Quản lý lịch khởi hành (đợt khởi hành) |
+| UC014 | UC016 | Quản lý đơn đặt tour |
+| UC015 | UC017 | Quản lý tài khoản |
+| UC019 | UC018 | Quản lý mã khuyến mãi |
+| UC016 | UC019 | Xem thống kê doanh thu |
+| UC020 | UC020 | Kiểm duyệt đánh giá |
+| UC022 | UC021 | Duyệt liên hệ (menu giao diện vẫn là “Quản lý liên hệ”) |
+| UC001, UC003 | (bỏ) | Xem trang chủ và giới thiệu; Xem chi tiết tour: không còn là use case trong báo cáo, trang vẫn tồn tại |
+

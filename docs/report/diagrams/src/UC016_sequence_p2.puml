@@ -1,0 +1,88 @@
+@startuml UC016_sequence_p2
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC016_Quản lý đơn đặt tour (phần 2/2)]
+
+actor "Quản trị viên" as kh
+boundary "GiaoDien_QuanLyDon" as ui
+control "Ctrl_QuanLyDon" as ctrl
+control "Svc_DonDat" as svc
+control "Svc_ThanhToan" as pay
+opt «extend» Sửa: sửa số khách của một dòng
+  kh -> ui : 4: Nhập số người lớn/trẻ em mới\n(và tên hành khách mới nếu tăng)
+  ui -> ctrl : 4.1: suaSoKhach(maDon, dong, ...)
+  ctrl -> svc : 4.1.1: suaSoKhach(maDon, dong, ...)
+  svc -> svc : 4.1.2: kiemTra(): trạng thái, khoản thu,\nsố khách, số chỗ
+  alt Đơn ở trạng thái cuối, đã có khoản đã thu,\nsố khách không hợp lệ hoặc vượt số chỗ
+    svc --> ctrl : 4.1.4: lỗi nêu lý do
+    ctrl --> ui : 4.2: chuyển lại chi tiết đơn kèm lỗi
+    ui --> kh : 4.3: Hiển thị lỗi, giữ nguyên số liệu
+  else Tăng số khách nhưng thiếu tên hành khách mới
+    svc --> ctrl : 4.1.5: soOTenConThieu
+    ctrl --> ui : 4.4: yêu cầu nhập thêm tên
+    ui --> kh : 4.5: Hiển thị thêm đúng số ô tên còn thiếu
+  else Hợp lệ
+    svc -> svc : 4.1.6: giuHoacTraCho(), tinhLaiTien(),\ndongBoHanhKhach()
+    svc -> pay : 4.1.7: dongBoSoTienKhoanCho(donDat)
+    pay --> svc : 4.1.8: xong
+    svc --> ctrl : 4.1.9: ketQua, tênNgườiBịLoại
+    ctrl --> ui : 4.6: chuyển lại chi tiết đơn kèm thông báo
+    ui --> kh : 4.7: Hiển thị số liệu mới
+  end
+end
+opt «extend» Sửa: ghi nhận thanh toán
+  kh -> ui : 5: Bấm “Đánh dấu đã thu tiền”, nhập mã giao dịch
+  ui -> ctrl : 5.1: danhDauDaThu(maDon, khoan, maGD)
+  ctrl -> pay : 5.1.1: danhDauDaThu(khoan, maDon, maGD)
+  pay -> pay : 5.1.2: kiemTra(): đơn, khoản chờ, mã GD
+  alt Đơn đã huỷ, khoản không còn chờ\nhoặc mã giao dịch đã được dùng
+    pay --> ctrl : 5.1.4: lỗi nêu lý do
+    ctrl --> ui : 5.2: chuyển lại chi tiết đơn kèm lỗi
+    ui --> kh : 5.3: Hiển thị lỗi, giữ nguyên khoản thanh toán
+  else Hợp lệ
+    pay -> pay : 5.1.5: datDaThanhToan(maGD), ghiThoiDiem()
+    pay --> ctrl : 5.1.7: xong
+    ctrl --> ui : 5.4: chuyển lại chi tiết đơn kèm thông báo
+    ui --> kh : 5.5: Hiển thị khoản “Đã thanh toán”
+  end
+end
+
+@enduml

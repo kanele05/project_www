@@ -1,0 +1,78 @@
+@startuml UC021_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC021_Duyệt liên hệ]
+
+actor "Quản trị viên" as kh
+boundary "GiaoDien_LienHe" as ui
+control "Ctrl_QuanLyLienHe" as ctrl
+control "Svc_LienHe" as svc
+entity "LienHe" as lh
+kh -> ui : 1: Chọn “Quản lý liên hệ”
+ui -> ctrl : 1.1: danhSach(trangThai = Mới, trang)
+ctrl -> svc : 1.1.1: danhSachQuanTri(trangThai, trang), demLienHeMoi()
+svc -> lh : 1.1.2: findTheoTrangThai(trangThai, mớiNhấtTrước)
+lh --> svc : 1.1.3: trangLienHe
+svc --> ctrl : 1.1.4: trangLienHe, soLienHeMoi
+ctrl --> ui : 1.2: render(trangLienHe)
+ui --> kh : 1.3: Hiển thị danh sách liên hệ “Mới” và số liên hệ mới
+kh -> ui : 2: (Tuỳ chọn) chuyển bộ lọc “Đang xử lý” / “Đã xử lý” /\n“Thư rác” / “Tất cả”
+ui -> ctrl : 2.1: danhSach(trangThai, trang)
+ctrl --> ui : 2.2: trangLienHe
+ui --> kh : 2.3: Hiển thị các liên hệ theo bộ lọc
+kh -> ui : 3: Mở liên hệ, nhập ghi chú trả lời, chọn trạng thái mới, cập nhật
+ui -> ctrl : 3.1: capNhatTrangThai(maLienHe, trangThaiMoi, ghiChu)
+ctrl -> svc : 3.1.1: capNhatTrangThai(maLienHe, trangThaiMoi,\nquanTriVien, ghiChu)
+svc -> lh : 3.1.2: findById(maLienHe)
+lh --> svc : 3.1.3: lienHe
+svc -> lh : 3.1.4: datTrangThai(trangThaiMoi), datGhiChu(ghiChu)
+lh --> svc : 3.1.5: xong
+alt Trạng thái mới là “Đã xử lý” hoặc “Thư rác”
+  svc -> lh : 3.1.6: datNguoiXuLy(quanTriVien), datThoiDiemXuLy(bayGio)
+  lh --> svc : 3.1.7: xong
+else Trạng thái khác (ví dụ “Đang xử lý”)
+  svc -> svc : 3.1.8: giữ nguyên người xử lý và thời điểm đã ghi (nếu có)
+end
+svc --> ctrl : 3.1.9: xong
+ctrl --> ui : 3.2: chuyển về danh sách kèm “Đã cập nhật liên hệ.”
+ui --> kh : 3.3: Hiển thị danh sách, số liên hệ mới trên menu cập nhật lại
+
+@enduml

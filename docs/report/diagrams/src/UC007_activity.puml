@@ -1,0 +1,50 @@
+@startuml UC007_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC007_Áp dụng mã giảm giá]
+|Khách hàng|
+start
+:Tại trang thanh toán, nhập mã giảm giá,\nbấm “Áp dụng”;
+|Hệ thống|
+if (Ô mã để trống?) then (Có)
+  :Không kiểm tra, ẩn dòng giảm giá,\ngiữ nguyên tổng tiền;
+  stop
+endif
+:Đọc tổng tiền giỏ hàng hiện tại;
+:Kiểm tra: mã tồn tại; đang bật, trong hiệu lực,\ncòn lượt chung; tài khoản còn lượt riêng;\ngiỏ đạt giá trị tối thiểu;
+if (Mã đạt mọi điều kiện?) then (Có)
+  :Tính số tiền được giảm (theo phần trăm\ncó áp trần hoặc số tiền cố định);
+  :Trả về tên chương trình, số tiền giảm,\ntổng tiền trước và sau giảm;
+  |Khách hàng|
+  :Xem số tiền giảm và tổng tiền mới\nngay trên trang, không tải lại;
+else (Không)
+  |Hệ thống|
+  :Từ chối kèm thông báo lý do (không tồn tại, hết hạn\nhoặc chưa tới ngày, hết lượt, đã dùng đủ lượt,\nchưa đạt giá trị tối thiểu), giữ nguyên tổng tiền;
+endif
+stop
+@enduml

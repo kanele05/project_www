@@ -6,11 +6,11 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam style strictuml
 hide footbox
-skinparam maxMessageSize 420
+skinparam maxMessageSize 160
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow false
 skinparam ArrowColor black
-skinparam ParticipantPadding 90
+skinparam ParticipantPadding 12
 skinparam BoxPadding 6
 skinparam sequence {
   ArrowColor black
@@ -39,87 +39,36 @@ skinparam EntityBackgroundColor #00E5EE
 skinparam EntityBorderColor black
 skinparam ActorBackgroundColor #00E5EE
 skinparam ActorBorderColor black
-mainframe sd [UC002_Tìm kiếm và lọc tour]
+mainframe sd [UC002_Gửi liên hệ]
+
 actor "Khách vãng lai" as kh
-boundary "GiaoDien_TimKiemTour" as ui
-control "Ctrl_Tour" as ctrl
-control "Svc_TimKiem" as svck
-control "Svc_Tour" as svct
+boundary "GiaoDien_LienHe" as ui
+control "Ctrl_LienHe" as ctrl
+control "Svc_LienHe" as svc
 entity "Tour" as tour
-
-kh -> ui : 1: Mở trang “Tìm kiếm tour”\ntừ thanh điều hướng
-activate kh #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 1.1: list(searchForm, page = 0)
-activate ctrl #00E5EE
-ctrl -> svck : 1.1.1: timKiem(form, trang)
-activate svck #00E5EE
-svck -> svct : 1.1.1.1: timTour(form, trang)\n[chế độ từ khoá]
-activate svct #00E5EE
-svct -> tour : 1.1.1.1.1: findAll(dieuKienLoc, phanTrang)
-activate tour #00E5EE
-return 1.1.1.1.2: trangTour
-return 1.1.1.2: trangTour
-return 1.1.2: trangTour
-ctrl -> svct : 1.1.3: layDanhSachDiemDen()
-activate svct #00E5EE
-svct -> tour : 1.1.3.1: findAllDestinations()
-activate tour #00E5EE
-return 1.1.3.2: dsDiemDen
-return 1.1.4: dsDiemDen
-ctrl --> ui : 1.2: render(trangTour, dsDiemDen)
-deactivate ctrl
-ui -> kh : 1.3: Hiển thị biểu mẫu tìm kiếm/lọc\nvà trang đầu của danh sách
-deactivate ui
-deactivate kh
-
-kh -> ui : 2: Nhập từ khoá và/hoặc chọn danh mục,\nđiểm đến, khoảng giá, bấm “Tìm”
-activate kh #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 2.1: list(searchForm, page = 0)
-activate ctrl #00E5EE
-ctrl -> svck : 2.1.1: timKiem(form, trang)
-activate svck #00E5EE
-svck -> svct : 2.1.1.1: timTour(form, trang)
-activate svct #00E5EE
-svct -> svct : 2.1.1.2: chuanHoaTuKhoa(tuKhoa):\nbỏ dấu, chữ thường
-svct -> tour : 2.1.1.3: findAll(dieuKienLoc, phanTrang)\nkhớp trên search_text + danh mục, điểm đến, giá
-activate tour #00E5EE
-return 2.1.1.4: trangTour
-return 2.1.2: trangTour
-return 2.1.3: trangTour
-ctrl --> ui : 2.2: render(trangTour)
-deactivate ctrl
-alt Không có tour nào khớp điều kiện
-  hnote over kh, tour : .
-  ui -> kh : 2.3: Hiển thị “Không tìm thấy tour phù hợp”\nkèm gợi ý xoá bớt bộ lọc
-else Có tour khớp điều kiện
-  hnote over kh, tour : .
-  ui -> kh : 2.4: Hiển thị danh sách tour kèm số lượng\nkết quả và điều khiển phân trang
-end
-deactivate ui
-deactivate kh
-
-opt Người dùng chuyển trang hoặc đổi ngôn ngữ
-  hnote over kh, tour : .
-  kh -> ui : 3: Chuyển sang trang kế tiếp\nhoặc đổi ngôn ngữ hiển thị
-  activate kh #00E5EE
-  activate ui #00E5EE
-  ui -> ctrl : 3.1: list(searchForm, page)
-  activate ctrl #00E5EE
-  ctrl -> svck : 3.1.1: timKiem(form, trang)
-  activate svck #00E5EE
-  svck -> svct : 3.1.1.1: timTour(form, trang)
-  activate svct #00E5EE
-  svct -> tour : 3.1.1.2: findAll(dieuKienLoc, phanTrang)
-  activate tour #00E5EE
-  return 3.1.1.3: trangTour
-  return 3.1.2: trangTour
-  return 3.1.3: trangTour
-  ctrl --> ui : 3.2: render(trangTour, pageUrlPrefix)\n[giữ nguyên từ khoá và bộ lọc]
-  deactivate ctrl
-  ui -> kh : 3.3: Hiển thị trang mới, giữ nguyên\ntừ khoá và bộ lọc đang áp dụng
-  deactivate ui
-  deactivate kh
+entity "LienHe" as lh
+kh -> ui : 1: Mở trang “Liên hệ” (hoặc “Liên hệ về tour này”)
+ui -> ctrl : 1.1: bieuMau(maTour)
+ctrl -> svc : 1.1.1: timTourDienSan(maTour)
+svc -> tour : 1.1.2: findById(maTour)
+tour --> svc : 1.1.3: tour (hoặc rỗng nếu không tồn tại)
+svc --> ctrl : 1.1.4: tour
+ctrl --> ui : 1.2: render(bieuMau, tour)
+ui --> kh : 1.3: Hiển thị biểu mẫu (kèm “Đang hỏi về tour …”)
+kh -> ui : 2: Nhập thông tin, bấm “Gửi liên hệ”
+ui -> ctrl : 2.1: gui(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): bắt buộc, email, độ dài
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi, giữ nguyên nội dung và tour
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: ghiNhan(bieuMau)
+  svc -> tour : 2.1.3: findById(maTour)
+  tour --> svc : 2.1.4: tour (nếu có)
+  svc -> lh : 2.1.5: «create» LienHe(trangThai = Mới, tour)
+  lh --> svc : 2.1.6: lienHeDaLuu
+  svc --> ctrl : 2.1.7: ketQua
+  ctrl --> ui : 2.4: chuyển lại trang liên hệ kèm thông báo
+  ui --> kh : 2.5: Hiển thị “Cảm ơn bạn đã liên hệ! ...”
 end
 @enduml

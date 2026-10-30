@@ -29,28 +29,34 @@ skinparam wrapWidth 600
 mainframe act [UC004_Quản lý giỏ hàng]
 |Khách vãng lai|
 start
-:Bấm “Thêm vào giỏ” ở trang chi tiết tour\nhoặc trang danh sách;
+:Bấm “Thêm vào giỏ” (chọn lịch khởi hành,\nsố người lớn/trẻ em);
 |Hệ thống|
-:Kiểm tra số khách (có ít nhất 1 người lớn, tối đa 30 khách),\nlịch khởi hành còn mở bán và số chỗ còn trống;
-if (Hợp lệ\nvà đủ chỗ?) then (Có)
+:Kiểm tra số khách (≥ 1 người lớn, ≤ 30),\nlịch còn mở bán và đủ chỗ;
+if (Hợp lệ và đủ chỗ?) then (Có)
   if (Lịch khởi hành\nđã có trong giỏ?) then (Có)
-    :Cộng dồn số khách\nvào dòng cũ;
+    :Cộng dồn số khách vào dòng cũ;
   else (Không)
-    :Thêm một dòng mới\nvào giỏ;
+    :Thêm một dòng mới vào giỏ;
   endif
-  :Hiển thị lại trang giỏ hàng\nkèm thông báo thành công;
+  :Cập nhật biểu tượng giỏ hàng, hiện thông báo\nthành công ngay trên trang, không tải lại;
 else (Không)
-  :Từ chối thêm vào giỏ, giữ nguyên giỏ,\nhiển thị thông báo lỗi nghiệp vụ;
+  :Từ chối, giữ nguyên giỏ, hiện thông báo lỗi\nngay trên trang đang xem;
 endif
 |Khách vãng lai|
-:Mở trang giỏ hàng, xem các dòng kèm ảnh, tên tour,\nngày đi, số khách, thành tiền và tổng tiền;
+:Mở trang giỏ hàng, xem các dòng và tổng tiền;
 if (Thay đổi giỏ hàng?) then (Có)
-  :Sửa số người lớn/trẻ em của một dòng,\nhoặc bấm “Xoá” một dòng,\nhoặc bấm “Làm rỗng giỏ hàng”;
+  :Sửa số người lớn/trẻ em rồi “Cập nhật”,\nhoặc “Xoá” một dòng, hoặc “Xoá toàn bộ giỏ”;
   |Hệ thống|
-  :Ghi lại thay đổi trong phiên làm việc\n(kiểm tra đủ chỗ khi sửa số khách),\ntổng khách của dòng về 0 thì tự xoá dòng;
-  :Hiển thị lại trang giỏ hàng\nvới số liệu đã cập nhật;
-  |Khách vãng lai|
-else (Không)
+  if (Số khách mới hợp lệ\nvà đủ chỗ?) then (Có)
+    :Ghi lại thay đổi trong phiên làm việc;
+    if (Tổng khách của dòng = 0?) then (Có)
+      :Tự xoá dòng khỏi giỏ;
+    endif
+  else (Không)
+    :Giữ nguyên dòng cũ, báo lỗi;
+  endif
+  :Tải lại trang giỏ hàng với số liệu\nđã cập nhật kèm thông báo kết quả;
 endif
+|Khách vãng lai|
 stop
 @enduml

@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1380" viewBox="0 0 2000 1380"><rect width="2000" height="1380" fill="white"/>
+<defs><marker id="open" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><path d="M1,1 L11,5 L1,9" fill="none" stroke="#222" stroke-width="1.2"/></marker>
+<marker id="tri" markerWidth="16" markerHeight="14" refX="15" refY="7" orient="auto"><path d="M1,1 L15,7 L1,13 Z" fill="white" stroke="#222" stroke-width="1.2"/></marker></defs>
+<rect x="182" y="38" width="1590" height="1222" fill="none" stroke="#222" stroke-width="1.3"/>
+<text font-weight="bold" x="977.0" y="62.0" font-size="20" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Website đặt tour du lịch trực tuyến</text>
+<ellipse cx="548" cy="82" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="89" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Tìm kiếm và lọc tour</text>
+<ellipse cx="548" cy="164" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="171" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Gửi liên hệ</text>
+<ellipse cx="548" cy="246" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="253" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đăng ký tài khoản</text>
+<ellipse cx="548" cy="340" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="347" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý giỏ hàng</text>
+<ellipse cx="548" cy="657" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="664" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đặt tour</text>
+<ellipse cx="548" cy="767" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="774" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xem lịch sử đơn đặt</text>
+<ellipse cx="548" cy="877" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="884" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Cập nhật hồ sơ cá nhân</text>
+<ellipse cx="548" cy="987" rx="124" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="548" y="994" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đổi mật khẩu</text>
+<ellipse cx="822" cy="285" rx="43" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="822" y="292" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="822" cy="340" rx="43" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="822" y="347" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="822" cy="394" rx="43" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="822" y="401" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<ellipse cx="986" cy="416" rx="98" ry="25" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="986" y="423" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đăng xuất</text>
+<ellipse cx="986" cy="548" rx="112" ry="25" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="986" y="555" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đăng nhập</text>
+<ellipse cx="274" cy="631" rx="98" ry="21" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="274" y="628" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Áp dụng mã</text>
+<text x="274" y="648" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">giảm giá</text>
+<ellipse cx="274" cy="712" rx="98" ry="21" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="274" y="709" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Huỷ đơn</text>
+<text x="274" y="729" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">đặt tour</text>
+<ellipse cx="274" cy="794" rx="98" ry="21" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="274" y="791" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Đánh giá</text>
+<text x="274" y="811" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">tour đã đi</text>
+<ellipse cx="1590" cy="186" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="193" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý danh mục tour</text>
+<ellipse cx="1590" cy="326" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="333" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý tour</text>
+<ellipse cx="1590" cy="465" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="472" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý lịch khởi hành</text>
+<ellipse cx="1590" cy="605" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="612" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý đơn đặt tour</text>
+<ellipse cx="1590" cy="745" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="752" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý tài khoản</text>
+<ellipse cx="1590" cy="885" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="892" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản lý mã khuyến mãi</text>
+<ellipse cx="1590" cy="1003" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="1010" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xem thống kê doanh thu</text>
+<ellipse cx="1590" cy="1074" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="1081" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Kiểm duyệt đánh giá</text>
+<ellipse cx="1590" cy="1145" rx="132" ry="24" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1590" y="1152" font-size="19" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Duyệt liên hệ</text>
+<ellipse cx="1496" cy="109" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1496" y="116" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="1589" cy="109" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="116" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1682" cy="109" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1682" y="116" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<ellipse cx="1496" cy="249" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1496" y="256" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="1589" cy="249" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="256" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1682" cy="249" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1682" y="256" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<ellipse cx="1496" cy="388" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1496" y="395" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="1589" cy="388" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="395" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1682" cy="388" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1682" y="395" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<ellipse cx="1589" cy="529" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="536" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1496" cy="668" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1496" y="675" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="1589" cy="668" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="675" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1682" cy="668" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1682" y="675" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<ellipse cx="1496" cy="808" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1496" y="815" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Thêm</text>
+<ellipse cx="1589" cy="808" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1589" y="815" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Sửa</text>
+<ellipse cx="1682" cy="808" rx="39" ry="17" fill="#7FC8F5" stroke="#222" stroke-width="1.2"/>
+<text x="1682" y="815" font-size="16" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Xóa</text>
+<circle cx="70" cy="235" r="11" fill="#7FC8F5" stroke="#222" stroke-width="1.3"/>
+<line x1="70.0" y1="246.0" x2="70.0" y2="277.0" stroke="#222" stroke-width="1.2"/>
+<line x1="50.0" y1="256.0" x2="90.0" y2="256.0" stroke="#222" stroke-width="1.2"/>
+<line x1="70.0" y1="277.0" x2="55.0" y2="303.0" stroke="#222" stroke-width="1.2"/>
+<line x1="70.0" y1="277.0" x2="85.0" y2="303.0" stroke="#222" stroke-width="1.2"/>
+<text x="70.0" y="325.0" font-size="18" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Khách vãng lai</text>
+<circle cx="70" cy="1010" r="11" fill="#7FC8F5" stroke="#222" stroke-width="1.3"/>
+<line x1="70.0" y1="1021.0" x2="70.0" y2="1052.0" stroke="#222" stroke-width="1.2"/>
+<line x1="50.0" y1="1031.0" x2="90.0" y2="1031.0" stroke="#222" stroke-width="1.2"/>
+<line x1="70.0" y1="1052.0" x2="55.0" y2="1078.0" stroke="#222" stroke-width="1.2"/>
+<line x1="70.0" y1="1052.0" x2="85.0" y2="1078.0" stroke="#222" stroke-width="1.2"/>
+<text x="70.0" y="1100.0" font-size="18" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Khách hàng</text>
+<circle cx="1862" cy="620" r="11" fill="#7FC8F5" stroke="#222" stroke-width="1.3"/>
+<line x1="1862.0" y1="631.0" x2="1862.0" y2="662.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1842.0" y1="641.0" x2="1882.0" y2="641.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1862.0" y1="662.0" x2="1847.0" y2="688.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1862.0" y1="662.0" x2="1877.0" y2="688.0" stroke="#222" stroke-width="1.2"/>
+<text x="1862.0" y="710.0" font-size="18" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">Quản trị viên</text>
+<line x1="92.0" y1="263.0" x2="493.7" y2="103.6" stroke="#222" stroke-width="1.2"/>
+<line x1="92.0" y1="263.0" x2="465.3" y2="181.9" stroke="#222" stroke-width="1.2"/>
+<line x1="92.0" y1="263.0" x2="426.0" y2="250.3" stroke="#222" stroke-width="1.2"/>
+<line x1="92.0" y1="263.0" x2="455.4" y2="324.0" stroke="#222" stroke-width="1.2"/>
+<line x1="92.0" y1="263.0" x2="922.1" y2="527.5" stroke="#222" stroke-width="1.2"/>
+<polyline points="92,1031 109,1031 109,657 424,657" fill="none" stroke="#222" stroke-width="1.2"/>
+<polyline points="92,1031 131,1031 131,767 424,767" fill="none" stroke="#222" stroke-width="1.2"/>
+<polyline points="92,1031 153,1031 153,877 424,877" fill="none" stroke="#222" stroke-width="1.2"/>
+<polyline points="92,1031 176,1031 176,987 424,987" fill="none" stroke="#222" stroke-width="1.2"/>
+<line x1="70.0" y1="1000.0" x2="70.0" y2="336.0" stroke="#222" stroke-width="1.2" marker-end="url(#tri)"/>
+<polyline points="1862,745 1862,1315 28,1315 28,1031 46,1031" fill="none" stroke="#222" stroke-width="1.2" marker-end="url(#tri)"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="186.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="326.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="465.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="605.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="745.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="885.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="1003.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="1074.0" stroke="#222" stroke-width="1.2"/>
+<line x1="1845.0" y1="645.0" x2="1722.0" y2="1145.0" stroke="#222" stroke-width="1.2"/>
+<line x1="624.1" y1="638.1" x2="911.2" y2="566.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="767.7" y="598.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="592.8" y1="744.6" x2="940.3" y2="570.8" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="766.6" y="653.7" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="578.9" y1="853.8" x2="954.1" y2="572.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="766.5" y="708.9" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="571.5" y1="963.4" x2="961.7" y2="572.4" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="766.6" y="763.9" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1551.7" y1="209.0" x2="1025.1" y2="524.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1288.4" y="362.8" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1531.5" y1="347.5" x2="1044.1" y2="526.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1287.8" y="433.1" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1484.7" y1="479.5" x2="1081.4" y2="534.9" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1283.0" y="503.2" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1472.8" y1="593.9" x2="1089.2" y2="557.7" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1281.0" y="571.8" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1525.7" y1="724.0" x2="1049.3" y2="568.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1287.5" y="642.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1549.1" y1="862.2" x2="1027.6" y2="571.2" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1288.4" y="712.7" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1559.0" y1="979.7" x2="1017.8" y2="572.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1288.4" y="771.8" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1563.0" y1="1050.5" x2="1013.8" y2="572.2" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1288.4" y="807.4" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="1566.1" y1="1121.4" x2="1010.7" y2="572.4" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1288.4" y="842.9" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«include»</text>
+<line x1="783.7" y1="292.7" x2="634.1" y2="322.7" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="708.9" y="303.7" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="779.0" y1="340.0" x2="672.0" y2="340.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="725.5" y="336.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="783.5" y1="386.4" x2="634.9" y2="357.1" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="709.2" y="367.8" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="986.0" y1="441.0" x2="986.0" y2="523.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="986.0" y="478.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="363.6" y1="639.5" x2="436.7" y2="646.4" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="400.1" y="639.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="345.5" y1="697.6" x2="461.9" y2="674.3" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="403.7" y="682.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="363.0" y1="785.2" x2="437.5" y2="777.9" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="400.3" y="777.6" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1514.3" y1="124.0" x2="1561.4" y2="162.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1507.9" y="145.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="126.0" x2="1589.7" y2="162.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="142.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1664.0" y1="124.1" x2="1618.0" y2="162.5" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1671.0" y="145.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1514.3" y1="264.0" x2="1561.4" y2="302.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1507.9" y="285.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="266.0" x2="1589.7" y2="302.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="282.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1664.0" y1="264.1" x2="1618.0" y2="302.5" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1671.0" y="285.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1514.3" y1="403.0" x2="1561.4" y2="441.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1507.9" y="424.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="405.0" x2="1589.7" y2="441.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="421.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1664.0" y1="403.1" x2="1618.0" y2="441.5" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1671.0" y="424.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="546.0" x2="1589.7" y2="581.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="559.5" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1514.3" y1="683.0" x2="1561.4" y2="721.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1507.9" y="704.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="685.0" x2="1589.7" y2="721.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="701.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1664.0" y1="683.1" x2="1618.0" y2="721.5" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1671.0" y="704.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1514.3" y1="823.0" x2="1561.4" y2="861.6" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1507.9" y="844.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1589.2" y1="825.0" x2="1589.7" y2="861.0" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1589.5" y="841.0" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text>
+<line x1="1664.0" y1="823.1" x2="1618.0" y2="861.5" stroke="#222" stroke-width="1.2" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="1671.0" y="844.3" font-size="17" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif">«extend»</text></svg>

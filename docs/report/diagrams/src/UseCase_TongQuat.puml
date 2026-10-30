@@ -1,0 +1,139 @@
+@startuml UseCase_TongQuat_auto
+' Nguồn ngữ nghĩa (PlantUML tự bố trí nên không đẹp). Ảnh Hình 2.2 (png/UseCase_TongQuat.png) do UseCase_TongQuat.py vẽ theo bố cục của biểu đồ gốc.
+left to right direction
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 12
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ArrowColor black
+skinparam ActorBackgroundColor #80CBF5
+skinparam ActorBorderColor black
+skinparam usecase {
+  BackgroundColor #80CBF5
+  BorderColor black
+  BorderThickness 1
+  ArrowColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontStyle bold
+}
+skinparam packageStyle rectangle
+
+actor "Khách vãng lai" as KVL
+actor "Khách hàng" as KH
+actor "Quản trị viên" as QT
+
+rectangle "Website đặt tour du lịch trực tuyến" {
+  usecase "Tìm kiếm và lọc tour" as tk
+  usecase "Gửi liên hệ" as lh
+  usecase "Đăng ký tài khoản" as dk
+  usecase "Quản lý giỏ hàng" as gh
+  usecase "Thêm" as gh1
+  usecase "Sửa" as gh2
+  usecase "Xóa" as gh3
+  usecase "Đăng nhập" as dn
+  usecase "Đăng xuất" as dx
+  usecase "Đặt tour" as dt
+  usecase "Áp dụng mã\ngiảm giá" as mgg
+  usecase "Huỷ đơn\nđặt tour" as hd
+  usecase "Xem lịch sử đơn đặt" as ls
+  usecase "Đánh giá\ntour đã đi" as dg
+  usecase "Cập nhật hồ sơ cá nhân" as hs
+  usecase "Đổi mật khẩu" as mk
+
+  usecase "Quản lý danh mục tour" as q1
+  usecase "Quản lý tour" as q2
+  usecase "Quản lý lịch khởi hành" as q3
+  usecase "Quản lý đơn đặt tour" as q4
+  usecase "Quản lý tài khoản" as q5
+  usecase "Quản lý mã khuyến mãi" as q6
+  usecase "Xem thống kê doanh thu" as tkdt
+  usecase "Kiểm duyệt đánh giá" as kd
+  usecase "Duyệt liên hệ" as dlh
+
+  usecase "Thêm" as a1
+  usecase "Sửa" as b1
+  usecase "Xóa" as c1
+  usecase "Thêm" as a2
+  usecase "Sửa" as b2
+  usecase "Xóa" as c2
+  usecase "Thêm" as a3
+  usecase "Sửa" as b3
+  usecase "Xóa" as c3
+  usecase "Thêm" as a5
+  usecase "Sửa" as b5
+  usecase "Xóa" as c5
+  usecase "Thêm" as a6
+  usecase "Sửa" as b6
+  usecase "Xóa" as c6
+  usecase "Cập nhật\ntrạng thái đơn" as o1
+  usecase "Sửa số khách" as o2
+  usecase "Ghi nhận\nthanh toán" as o3
+}
+
+KVL -- tk
+KVL -- lh
+KVL -- dk
+KVL -- gh
+KVL -- dn
+KH --|> KVL
+QT --|> KH
+KH -- dt
+KH -- ls
+KH -- hs
+KH -- mk
+
+gh1 .> gh : <<extend>>
+gh2 .> gh : <<extend>>
+gh3 .> gh : <<extend>>
+dx .> dn : <<extend>>
+mgg .> dt : <<extend>>
+hd .> dt : <<extend>>
+dg .> ls : <<extend>>
+
+dt ..> dn : <<include>>
+ls ..> dn : <<include>>
+hs ..> dn : <<include>>
+mk ..> dn : <<include>>
+
+QT -- q1
+QT -- q2
+QT -- q3
+QT -- q4
+QT -- q5
+QT -- q6
+QT -- tkdt
+QT -- kd
+QT -- dlh
+q1 ..> dn : <<include>>
+q2 ..> dn : <<include>>
+q3 ..> dn : <<include>>
+q4 ..> dn : <<include>>
+q5 ..> dn : <<include>>
+q6 ..> dn : <<include>>
+tkdt ..> dn : <<include>>
+kd ..> dn : <<include>>
+dlh ..> dn : <<include>>
+
+a1 .> q1 : <<extend>>
+b1 .> q1 : <<extend>>
+c1 .> q1 : <<extend>>
+a2 .> q2 : <<extend>>
+b2 .> q2 : <<extend>>
+c2 .> q2 : <<extend>>
+a3 .> q3 : <<extend>>
+b3 .> q3 : <<extend>>
+c3 .> q3 : <<extend>>
+o1 .> q4 : <<extend>>
+o2 .> q4 : <<extend>>
+o3 .> q4 : <<extend>>
+a5 .> q5 : <<extend>>
+b5 .> q5 : <<extend>>
+c5 .> q5 : <<extend>>
+a6 .> q6 : <<extend>>
+b6 .> q6 : <<extend>>
+c6 .> q6 : <<extend>>
+@enduml

@@ -26,23 +26,25 @@ skinparam swimlane {
   TitleFontSize 16
 }
 skinparam wrapWidth 600
-mainframe act [UC003_Xem chi tiết tour]
+mainframe act [UC003_Đăng ký tài khoản]
 |Khách vãng lai|
 start
-:Bấm vào một tour từ trang chủ,\ntrang tìm kiếm hoặc trang danh mục;
+:Bấm “Đăng ký” từ thanh điều hướng;
 |Hệ thống|
-:Tăng lượt xem của tour, tra cứu tour kèm\nảnh, lịch trình và các lịch khởi hành;
-if (Tour tồn tại và đang hoạt động?) then (Có)
-  :Hiển thị trang chi tiết: mô tả, thư viện ảnh, lịch trình\ntừng ngày, bảng lịch khởi hành (ngày đi/về, giá người\nlớn/trẻ em, số chỗ trống); lịch hết chỗ hoặc quá\nngày không cho thêm vào giỏ;
+:Hiển thị biểu mẫu đăng ký;
+|Khách vãng lai|
+:Nhập họ tên, email, mật khẩu, nhập lại mật khẩu,\nsố điện thoại, địa chỉ (tuỳ chọn), bấm “Đăng ký”;
+|Hệ thống|
+:Kiểm tra cùng lúc: trường bắt buộc, định dạng email\nvà email chưa đăng ký, mật khẩu 6-50 ký tự,\nmật khẩu khớp, số điện thoại đúng định dạng;
+if (Mọi ràng buộc đạt?) then (Có)
+  :Mã hoá mật khẩu, lưu tài khoản mới\nvới vai trò khách hàng;
+  :Gửi email chào mừng\n(lỗi gửi thư chỉ ghi nhận nội bộ);
+  :Chuyển tới trang đăng nhập kèm\n“Đăng ký thành công. Mời bạn đăng nhập.”;
   |Khách vãng lai|
-  :Chọn một lịch khởi hành, nhập số người lớn/trẻ em,\nbấm “Thêm vào giỏ”;
-  |Hệ thống|
-  :Chuyển sang chức năng Quản lý giỏ hàng (UC004);
-  |Khách vãng lai|
+  :Xem thông báo, tiếp tục đăng nhập (UC005);
 else (Không)
   |Hệ thống|
-  :Hiển thị trang thông báo\nkhông tìm thấy tour;
-  |Khách vãng lai|
+  :Trả lại biểu mẫu, báo lỗi cùng lúc tại các ô sai\n(email trùng, mật khẩu không khớp, số điện thoại...),\ngiữ lại thông tin đã nhập;
 endif
 stop
 @enduml

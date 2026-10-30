@@ -6,11 +6,11 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam style strictuml
 hide footbox
-skinparam maxMessageSize 420
+skinparam maxMessageSize 160
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow false
 skinparam ArrowColor black
-skinparam ParticipantPadding 90
+skinparam ParticipantPadding 12
 skinparam BoxPadding 6
 skinparam sequence {
   ArrowColor black
@@ -40,106 +40,64 @@ skinparam EntityBorderColor black
 skinparam ActorBackgroundColor #00E5EE
 skinparam ActorBorderColor black
 mainframe sd [UC004_Quản lý giỏ hàng]
+
 actor "Khách vãng lai" as kh
 boundary "GiaoDien_GioHang" as ui
 control "Ctrl_GioHang" as ctrl
 control "Svc_GioHang" as svc
-entity "GioHang" as gh
 entity "DotKhoiHanh" as dot
-
+entity "GioHang" as gh
 kh -> ui : 1: Bấm “Thêm vào giỏ”
-activate kh #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 1.1: add(departureId, tourId,\nnumAdults, numChildren)
-activate ctrl #00E5EE
-ctrl -> svc : 1.1.1: themVaoGio(session, dotKhoiHanhId,\nsoNguoiLon, soTreEm)
-activate svc #00E5EE
-svc -> svc : 1.1.1.1: kiemTraSoKhach(): ≥ 1 người lớn, tổng ≤ 30
-svc -> dot : 1.1.1.2: findWithTourById(dotKhoiHanhId)
-activate dot #00E5EE
-return 1.1.1.3: dotKhoiHanh
-svc -> gh : 1.1.1.4: getItem(dotKhoiHanhId) → dongHienCo
-activate gh #00E5EE
-deactivate gh
-svc -> svc : 1.1.1.6: kiemTraConMoBanVaDuCho(dotKhoiHanh, soKhachDaCo + soKhachMoi)
-alt Số khách không hợp lệ, lịch đã đóng hoặc không đủ chỗ
-  hnote over kh, dot : .
-  svc --> ctrl : 1.1.2: BusinessRuleException(loi)
-  ctrl --> ui : 1.2: redirect:/cart kèm thông báo lỗi
-  ui -> kh : 1.3: Hiển thị giỏ hàng nguyên vẹn kèm thông báo lỗi
+ui -> ctrl : 1.1: them(dotKhoiHanh, soNguoiLon, soTreEm)
+ctrl -> svc : 1.1.1: themVaoGio(phien, dotKhoiHanh, ...)
+svc -> svc : 1.1.2: kiemTraSoKhach(): ≥ 1 người lớn, ≤ 30
+svc -> dot : 1.1.3: findById(dotKhoiHanh)
+dot --> svc : 1.1.4: dotKhoiHanh
+svc -> gh : 1.1.5: layDong(dotKhoiHanh)
+gh --> svc : 1.1.6: dongHienCo
+alt Không hợp lệ, lịch đã đóng/quá hạn hoặc không đủ chỗ
+  svc --> ctrl : 1.1.7: lỗi nghiệp vụ
+  ctrl --> ui : 1.2: thông báo lỗi
+  ui --> kh : 1.3: Hiện lỗi ngay trên trang, giỏ nguyên vẹn
 else Hợp lệ và đủ chỗ
-  hnote over kh, dot : .
-  svc -> gh : 1.1.1.7: addOrMerge(dongMoi)\n[cộng dồn nếu đã có dòng cùng lịch khởi hành]
-  activate gh #00E5EE
-  return 1.1.1.8: dongGioHang
-  svc --> ctrl : 1.1.3: dongGioHang
-  ctrl --> ui : 1.2: redirect:/cart kèm thông báo thành công
-  ui -> kh : 1.3: Hiển thị lại giỏ hàng kèm thông báo thành công
+  svc -> gh : 1.1.8: themHoacCongDon(dong)
+  gh --> svc : 1.1.9: dongGioHang
+  svc --> ctrl : 1.1.10: dongGioHang
+  ctrl --> ui : 1.2: tổng số dòng, thông báo thành công
+  ui --> kh : 1.3: Cập nhật biểu tượng giỏ + thông báo, không tải lại
 end
-deactivate svc
-deactivate ctrl
-deactivate ui
-deactivate kh
-
 kh -> ui : 2: Mở trang giỏ hàng
-activate kh #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 2.1: view()
-activate ctrl #00E5EE
-ctrl -> gh : 2.1.1: getCart(session)
-activate gh #00E5EE
-return 2.1.2: dsDongGioHang
+ui -> ctrl : 2.1: xem()
+ctrl -> gh : 2.1.1: layGioHang(phien)
+gh --> ctrl : 2.1.2: dsDongGioHang
 ctrl --> ui : 2.2: render(gioHang)
-deactivate ctrl
-ui -> kh : 2.3: Hiển thị các dòng (ảnh, tên tour, ngày đi, số khách,\nthành tiền) và tổng tiền
-deactivate ui
-deactivate kh
-
-kh -> ui : 3: Sửa số khách, xoá một dòng\nhoặc làm rỗng giỏ hàng
-activate kh #00E5EE
-activate ui #00E5EE
-alt Sửa số người lớn/trẻ em của một dòng
-  hnote over kh, dot : .
-  ui -> ctrl : 3.1: update(departureId, numAdults, numChildren)
-  activate ctrl #00E5EE
-  ctrl -> svc : 3.1.1: capNhatSoLuong(session, dotKhoiHanhId,\nsoNguoiLon, soTreEm)
-  activate svc #00E5EE
-  alt Tổng số khách của dòng = 0
-    hnote over kh, dot : .
-    svc -> gh : 3.1.1.1: remove(dotKhoiHanhId)
-    activate gh #00E5EE
-    deactivate gh
+ui --> kh : 2.3: Hiển thị các dòng và tổng tiền
+kh -> ui : 3: Sửa số khách / Xoá dòng / Xoá toàn bộ giỏ
+alt Sửa số khách của một dòng
+  ui -> ctrl : 3.1: capNhat(dotKhoiHanh, soNguoiLon, soTreEm)
+  ctrl -> svc : 3.1.1: capNhatSoLuong(phien, ...)
+  alt Tổng số khách = 0
+    svc -> gh : 3.1.2: xoaDong(dotKhoiHanh)
+    gh --> svc : 3.1.3: xong
   else Tổng số khách > 0
-    hnote over kh, dot : .
-    svc -> dot : 3.1.1.2: findById(dotKhoiHanhId)
-    activate dot #00E5EE
-    return 3.1.1.3: dotKhoiHanh
-    svc -> svc : 3.1.1.4: kiemTraSoKhach(), kiemTraDuCho(dotKhoiHanh)
-    alt Không đủ chỗ hoặc số khách không hợp lệ
-      hnote over kh, dot : .
-      svc --> ctrl : 3.1.2: BusinessRuleException(loi)
-    else Đủ chỗ
-      hnote over kh, dot : .
-      svc -> gh : 3.1.1.5: setSoNguoiLon(), setSoTreEm()
-      activate gh #00E5EE
-      deactivate gh
+    svc -> dot : 3.1.4: findById(dotKhoiHanh)
+    dot --> svc : 3.1.5: dotKhoiHanh
+    svc -> svc : 3.1.6: kiemTraSoKhach(), kiemTraDuCho()
+    opt Không hợp lệ hoặc không đủ chỗ
+      svc --> ctrl : 3.1.7: lỗi nghiệp vụ (giữ nguyên dòng cũ)
     end
+    svc -> gh : 3.1.8: datSoKhach(dong)
+    gh --> svc : 3.1.9: xong
   end
-  svc --> ctrl : 3.1.3: ketQua
-  deactivate svc
-else Xoá một dòng hoặc làm rỗng giỏ hàng
-  hnote over kh, dot : .
-  ui -> ctrl : 3.2: remove(departureId) hoặc clear()
-  ctrl -> svc : 3.2.1: xoaDong(session, dotKhoiHanhId)\nhoặc lamRongGioHang(session)
-  activate svc #00E5EE
-  svc -> gh : 3.2.1.1: remove(dotKhoiHanhId)\nhoặc session.removeAttribute("cart")
-  activate gh #00E5EE
-  deactivate gh
-  deactivate svc
+  svc --> ctrl : 3.1.10: ketQua
+  ctrl --> ui : 3.2: thông báo kết quả
+else Xoá một dòng hoặc xoá toàn bộ giỏ
+  ui -> ctrl : 3.3: xoaDong(dotKhoiHanh) / xoaTatCa()
+  ctrl -> svc : 3.3.1: xoaDong(...) / lamRong(phien)
+  svc -> gh : 3.3.2: xoa(...)
+  gh --> svc : 3.3.3: xong
+  svc --> ctrl : 3.3.4: xong
+  ctrl --> ui : 3.4: thông báo kết quả
 end
-ctrl --> ui : 3.4: redirect:/cart kèm thông báo kết quả
-ui -> kh : 3.5: Hiển thị lại trang giỏ hàng với số liệu đã cập nhật
-deactivate ctrl
-deactivate ui
-deactivate kh
+ui --> kh : 3.5: Tải lại trang giỏ hàng với số liệu đã cập nhật
 @enduml

@@ -26,25 +26,22 @@ skinparam swimlane {
   TitleFontSize 16
 }
 skinparam wrapWidth 600
-mainframe act [UC002_Tìm kiếm và lọc tour]
+mainframe act [UC002_Gửi liên hệ]
 |Khách vãng lai|
 start
-:Mở trang “Tìm kiếm tour”\ntừ thanh điều hướng;
+:Mở trang “Liên hệ” hoặc bấm\n“Liên hệ về tour này”;
 |Hệ thống|
-:Hiển thị biểu mẫu tìm kiếm/lọc và trang đầu\ncủa danh sách tour đang hoạt động;
+:Hiển thị biểu mẫu liên hệ (kèm dòng\n“Đang hỏi về tour …” nếu có tour hợp lệ);
 |Khách vãng lai|
-:Nhập từ khoá (ví dụ “da lat”) và/hoặc\nchọn danh mục, điểm đến, khoảng giá;
+:Nhập họ tên, email, số điện thoại (tuỳ chọn),\ntiêu đề, nội dung, bấm “Gửi liên hệ”;
 |Hệ thống|
-:Chuẩn hoá từ khoá về dạng không dấu, chữ thường,\nso khớp với dữ liệu đã chuẩn hoá sẵn của từng tour\nvà áp các bộ lọc;
-if (Có tour khớp điều kiện?) then (Có)
-  :Hiển thị danh sách tour khớp điều kiện,\nkèm số lượng kết quả và điều khiển phân trang;
+:Kiểm tra bắt buộc, định dạng email,\nđộ dài tối đa;
+if (Dữ liệu hợp lệ?) then (Có)
+  :Ghi nhận liên hệ mới ở trạng thái “Mới”,\ngắn kèm tour đang hỏi (nếu có);
+  :Hiển thị lại trang liên hệ kèm\n“Cảm ơn bạn đã liên hệ! ...”;
 else (Không)
-  :Hiển thị thông báo “Không tìm thấy tour phù hợp”\nkèm gợi ý xoá bớt bộ lọc;
+  :Trả lại biểu mẫu kèm lỗi tại đúng ô,\ngiữ nguyên nội dung và tour đang hỏi;
 endif
-|Khách vãng lai|
-:Chuyển sang trang kết quả kế tiếp\nhoặc đổi ngôn ngữ hiển thị;
-|Hệ thống|
-:Giữ nguyên toàn bộ từ khoá và bộ lọc\nđang áp dụng khi hiển thị trang mới;
 |Khách vãng lai|
 stop
 @enduml

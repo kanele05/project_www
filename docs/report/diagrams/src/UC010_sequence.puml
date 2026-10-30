@@ -1,0 +1,86 @@
+@startuml UC010_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC010_Đánh giá tour đã đi]
+actor "Khách hàng" as kh
+boundary "GiaoDien_ChiTietTour" as ui
+control "Ctrl_Tour" as ctrlT
+control "Ctrl_DanhGia" as ctrl
+control "Svc_DanhGia" as svc
+entity "DanhGia" as dg
+entity "DonDat" as don
+kh -> ui : 1: Từ chi tiết đơn, bấm tên tour
+ui -> ctrlT : 1.1: chiTietTour(maTour)
+ctrlT -> svc : 1.1.1: layDanhGiaDaDuyet(maTour), diemTrungBinh(maTour)
+svc --> ctrlT : 1.1.2: dsDanhGia, diemTB
+ctrlT -> svc : 1.1.3: duDieuKienDanhGia(taiKhoan, maTour)
+svc -> dg : 1.1.4: daDanhGia(taiKhoan, maTour)
+dg --> svc : 1.1.5: ketQua
+svc -> don : 1.1.6: coDonHoanThanhChuaTour(taiKhoan, maTour)
+don --> svc : 1.1.7: ketQua
+svc --> ctrlT : 1.1.8: duDieuKien
+ctrlT --> ui : 1.2: render(chiTietTour)
+ui --> kh : 1.3: Hiển thị đánh giá đã duyệt; hiện biểu mẫu nếu đủ điều kiện
+kh -> ui : 2: Chọn số sao, nhập nội dung, gửi đánh giá
+ui -> ctrl : 2.1: guiDanhGia(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): sao 1-5, nội dung không trống
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: về trang tour kèm “Vui lòng nhập đầy đủ ...”
+  ui --> kh : 2.3: Hiển thị thông báo lỗi
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: guiDanhGia(taiKhoan, bieuMau)
+  svc -> dg : 2.1.3: daDanhGia(taiKhoan, maTour)
+  dg --> svc : 2.1.4: ketQua
+  svc -> don : 2.1.5: timDonHoanThanhChuaTour(taiKhoan, maTour)
+  don --> svc : 2.1.6: dsDon
+  alt Đã đánh giá rồi hoặc chưa có đơn hoàn thành
+    svc --> ctrl : 2.1.7: lỗi “Bạn đã đánh giá tour này rồi.” /\n“Bạn chỉ có thể đánh giá tour đã đặt ...”
+    ctrl --> ui : 2.4: về trang tour kèm thông báo lỗi
+    ui --> kh : 2.5: Hiển thị lỗi
+  else Đủ điều kiện
+    svc -> dg : 2.1.8: «create» DanhGia(daDuyet = false, bằng chứng = đơn)
+    dg --> svc : 2.1.9: danhGiaDaLuu
+    svc --> ctrl : 2.1.10: xong
+    ctrl --> ui : 2.6: về trang tour kèm thông báo cảm ơn
+    ui --> kh : 2.7: Hiển thị “Cảm ơn bạn! ...” và đánh giá nhãn “Chờ duyệt”
+  end
+end
+@enduml

@@ -26,25 +26,35 @@ skinparam swimlane {
   TitleFontSize 16
 }
 skinparam wrapWidth 600
-mainframe act [UC001_Xem trang chủ và giới thiệu]
+mainframe act [UC001_Tìm kiếm và lọc tour]
 |Khách vãng lai|
 start
-:Mở trang chủ hoặc\nbấm liên kết “Giới thiệu”;
+:Mở trang “Tất cả tour” hoặc chọn\nmột danh mục;
 |Hệ thống|
-:Lấy danh sách tour nổi bật, danh mục đang\nhoạt động và số liệu khái quát;
-if (Có tour nổi bật?) then (Có)
-  :Hiển thị dải tour nổi bật\nkèm giá và ảnh;
-else (Không)
-  :Ẩn khối “Tour nổi bật”,\ncác khối còn lại vẫn hiển thị;
-endif
-:Hiển thị trang gồm banner giới thiệu,\ndanh sách danh mục, số liệu khái quát;
+:Hiển thị biểu mẫu tìm kiếm/lọc và trang đầu tiên\ncủa danh sách tour đang mở bán;
 |Khách vãng lai|
-if (Xem tiếp một tour\nhoặc một danh mục?) then (Có)
-  :Bấm vào một tour nổi bật\nhoặc một danh mục;
+:Nhập từ khoá và/hoặc chọn bộ lọc,\ncách sắp xếp, bấm “Áp dụng”;
+if (Bật “Tìm bằng AI”\nvà AI sẵn sàng?) then (Có)
   |Hệ thống|
-  :Chuyển sang trang chi tiết tour (UC003)\nhoặc danh sách tour theo danh mục (UC002);
-  |Khách vãng lai|
+  :Xếp kết quả theo độ phù hợp\nvới mô tả bằng lời;
+  if (Có kết quả\nphù hợp?) then (Không)
+    :Quay về tìm theo từ khoá,\nbáo rõ trên trang kết quả;
+  endif
 else (Không)
+  |Hệ thống|
+  :Chuẩn hoá từ khoá không dấu, chữ thường;\nso khớp dữ liệu, áp bộ lọc và sắp xếp;
 endif
+|Hệ thống|
+if (Có tour khớp?) then (Có)
+  :Hiển thị danh sách tour, số kết quả\n(“Tìm thấy N tour”) và phân trang;
+else (Không)
+  :Hiển thị thông báo “Không có tour nào khớp\nvới điều kiện tìm kiếm...”;
+endif
+|Khách vãng lai|
+if (Chuyển trang hoặc\nđổi ngôn ngữ?) then (Có)
+  |Hệ thống|
+  :Giữ nguyên từ khoá và bộ lọc,\nhiển thị trang mới;
+endif
+|Khách vãng lai|
 stop
 @enduml

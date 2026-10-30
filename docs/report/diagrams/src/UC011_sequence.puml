@@ -6,11 +6,11 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam style strictuml
 hide footbox
-skinparam maxMessageSize 420
+skinparam maxMessageSize 160
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow false
 skinparam ArrowColor black
-skinparam ParticipantPadding 90
+skinparam ParticipantPadding 12
 skinparam BoxPadding 6
 skinparam sequence {
   ArrowColor black
@@ -39,187 +39,40 @@ skinparam EntityBackgroundColor #00E5EE
 skinparam EntityBorderColor black
 skinparam ActorBackgroundColor #00E5EE
 skinparam ActorBorderColor black
-mainframe sd [UC011_Quản lý đơn đặt tour]
-actor "Quản trị viên" as ad
-boundary "GiaoDien_QuanLyDon" as ui
-control "Ctrl_QuanLyDon" as ctrl
-control "Svc_DonDat" as svcd
-control "Svc_ThanhToan" as svct
-entity "DonDat" as don
-entity "DotKhoiHanh" as dot
-entity "ThanhToan" as tt
-entity "LichSuTrangThai" as ls
-
-ad -> ui : 1: Chọn “Quản lý đơn đặt tour”
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 1.1: list(keyword, status, page)
-activate ctrl #00E5EE
-ctrl -> svcd : 1.1.1: timDon(tuKhoa, trangThai, trang)
-activate svcd #00E5EE
-svcd -> don : 1.1.1.1: adminSearch(tuKhoa, trangThai, phanTrang)
-activate don #00E5EE
-return 1.1.1.2: trangDon
-return 1.1.2: trangDon
-ctrl --> ui : 1.2: render(trangDon)
-deactivate ctrl
-ui -> ad : 1.3: Hiển thị danh sách đơn có phân trang,\nlọc theo trạng thái, mới nhất trước
-deactivate ui
-deactivate ad
-
-ad -> ui : 2: Bấm vào một đơn để xem chi tiết
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 2.1: detail(code)
-activate ctrl #00E5EE
-ctrl -> svcd : 2.1.1: layChiTietDon(maDon)
-activate svcd #00E5EE
-svcd -> don : 2.1.1.1: findDetailByCode(maDon)
-activate don #00E5EE
-return 2.1.1.2: donDat
-svcd -> svcd : 2.1.1.3: layTrangThaiKeTiep(donDat)
-return 2.1.2: donDat, dsTrangThaiHopLe
-ctrl -> ls : 2.1.3: findByBookingCode(maDon)
-activate ls #00E5EE
-return 2.1.4: dsLichSuTrangThai
-ctrl -> svct : 2.1.5: layThanhToan(donDatId)
-activate svct #00E5EE
-return 2.1.6: dsThanhToan
-ctrl --> ui : 2.2: render(donDat, lichSu, dsThanhToan)
-deactivate ctrl
-ui -> ad : 2.3: Hiển thị chi tiết đơn, dòng thời gian đổi trạng thái\nvà các lần thanh toán
-deactivate ui
-deactivate ad
-
-ad -> ui : 3: Chọn trạng thái mới, nhập lý do, bấm “Cập nhật”
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 3.1: updateStatus(code, status, reason)
-activate ctrl #00E5EE
-ctrl -> svcd : 3.1.1: doiTrangThai(maDon, trangThaiMoi, quanTriVienId, lyDo)
-activate svcd #00E5EE
-svcd -> don : 3.1.1.1: findByCodeForUpdate(maDon)\n[khoá đơn]
-activate don #00E5EE
-return 3.1.1.2: donDat
-svcd -> svcd : 3.1.1.3: kiemTraChuyenTrangThai(trangThaiCu, trangThaiMoi)
-alt Chuyển trạng thái không hợp lệ
-  hnote over ad, ls : .
-  svcd --> ctrl : 3.1.2: BusinessRuleException(invalidTransition)
-else Chuyển trạng thái hợp lệ
-  hnote over ad, ls : .
-  opt Trạng thái mới = “Hoàn tất”
-    svcd -> svcd : 3.1.1.4: kiemTraNgayKhoiHanh(donDat)
-    svcd -> svct : 3.1.1.5: coKhoanDaThu(donDatId)
-    activate svct #00E5EE
-    return 3.1.1.6: coKhoanDaThu
-  end
-  alt “Hoàn tất” mà chưa tới ngày khởi hành hoặc chưa có khoản đã thu
-    hnote over ad, ls : .
-    svcd --> ctrl : 3.1.3: BusinessRuleException(complete.notYetDeparted / notPaid)
-  else Đủ điều kiện
-    hnote over ad, ls : .
-    opt Trạng thái mới = “Đã huỷ”
-      svcd -> dot : 3.1.1.7: hoanLaiSoCho(soKhach)\n[cho từng dòng của đơn]
-      activate dot #00E5EE
-      deactivate dot
-      svcd -> svcd : 3.1.1.8: traLaiLuotDungMa(donDat)
-      svcd -> svct : 3.1.1.9: huyKhoanChoThanhToan(donDat),\nhoanTienNeuDaThu(donDat, 100%)
-      activate svct #00E5EE
-      svct -> tt : 3.1.1.10: ghiKhoanHoanTien(soTienDaThu)
-      activate tt #00E5EE
-      deactivate tt
-      deactivate svct
-    end
-    svcd -> don : 3.1.1.11: setStatus(trangThaiMoi)
-    activate don #00E5EE
-    deactivate don
-    svcd -> ls : 3.1.1.12: save(mocMoi: trangThaiCu, trangThaiMoi,\nquanTriVien, lyDo)
-    activate ls #00E5EE
-    deactivate ls
+mainframe sd [UC011_Cập nhật hồ sơ cá nhân]
+actor "Khách hàng" as kh
+boundary "GiaoDien_HoSo" as ui
+control "Ctrl_HoSo" as ctrl
+control "Svc_TaiKhoan" as svc
+entity "TaiKhoan" as tk
+kh -> ui : 1: Chọn “Thông tin cá nhân”
+ui -> ctrl : 1.1: trangHoSo()
+ctrl -> svc : 1.1.1: layHoSo(taiKhoan)
+svc -> tk : 1.1.2: findById(taiKhoan)
+tk --> svc : 1.1.3: taiKhoan
+svc --> ctrl : 1.1.4: bieuMauHoSo
+ctrl --> ui : 1.2: render(bieuMauHoSo)
+ui --> kh : 1.3: Hiển thị biểu mẫu với dữ liệu hiện có
+kh -> ui : 2: Sửa họ tên, email, số điện thoại, địa chỉ, bấm “Lưu”
+ui -> ctrl : 2.1: capNhatHoSo(bieuMau)
+ctrl -> ctrl : 2.1.1: kiemTra(bieuMau): bắt buộc, định dạng email, số điện thoại
+alt Dữ liệu không hợp lệ
+  ctrl --> ui : 2.2: trả lại biểu mẫu kèm lỗi tại đúng ô
+  ui --> kh : 2.3: Hiển thị lỗi tại đúng ô nhập
+else Dữ liệu hợp lệ
+  ctrl -> svc : 2.1.2: capNhatHoSo(taiKhoan, bieuMau)
+  svc -> tk : 2.1.3: emailThuocTaiKhoanKhac(email, taiKhoan)
+  tk --> svc : 2.1.4: ketQua
+  alt Email đã thuộc về tài khoản khác
+    svc --> ctrl : 2.1.5: lỗi “Email ... đã được sử dụng.”
+    ctrl --> ui : 2.4: trả lại biểu mẫu kèm lỗi tại ô email
+    ui --> kh : 2.5: Hiển thị lỗi tại ô email
+  else Email hợp lệ
+    svc -> tk : 2.1.6: capNhat(hoTen, email, soDienThoai, diaChi)
+    tk --> svc : 2.1.7: xong
+    svc --> ctrl : 2.1.8: xong
+    ctrl --> ui : 2.6: chuyển lại trang hồ sơ kèm thông báo
+    ui --> kh : 2.7: Hiển thị cập nhật thành công
   end
 end
-svcd --> ctrl : 3.1.4: ketQua
-deactivate svcd
-ctrl --> ui : 3.2: redirect:/admin/bookings/{code}\nkèm thông báo thành công hoặc lỗi
-deactivate ctrl
-ui -> ad : 3.3: Hiển thị lại chi tiết đơn kèm thông báo
-deactivate ui
-deactivate ad
-
-ad -> ui : 4: Sửa số người lớn/trẻ em của một dòng, bấm “Lưu”
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 4.1: updateDetail(code, detailId, numAdults,\nnumChildren, tenHanhKhachMoi)
-activate ctrl #00E5EE
-ctrl -> svcd : 4.1.1: suaSoKhach(maDon, dongId, soNguoiLon, soTreEm, tenMoi)
-activate svcd #00E5EE
-svcd -> don : 4.1.1.1: findByCodeForUpdate(maDon)
-activate don #00E5EE
-return 4.1.1.2: donDat
-svcd -> svct : 4.1.1.3: coKhoanDaThu(donDatId)
-activate svct #00E5EE
-return 4.1.1.4: coKhoanDaThu
-alt Đơn ở trạng thái cuối hoặc đã có khoản thanh toán đã thu
-  hnote over ad, ls : .
-  svcd --> ctrl : 4.1.2: BusinessRuleException(finalStatus / hasPaidPayment)
-else Đơn còn sửa được
-  hnote over ad, ls : .
-  svcd -> svcd : 4.1.1.5: tinhSoTenHanhKhachConThieu()
-  alt Tăng số khách mà thiếu tên hành khách mới
-    hnote over ad, ls : .
-    svcd --> ctrl : 4.1.3: soTenConThieu\n[chưa áp dụng thay đổi nào]
-  else Đủ tên hành khách
-    hnote over ad, ls : .
-    alt Số khách mới vượt số chỗ còn trống
-      hnote over ad, ls : .
-      svcd --> ctrl : 4.1.4: BusinessRuleException(notEnoughSeats)
-    else Đủ chỗ
-      hnote over ad, ls : .
-      svcd -> dot : 4.1.1.6: giuThemHoacTraBotCho(chenhLech)
-      activate dot #00E5EE
-      deactivate dot
-      svcd -> svcd : 4.1.1.7: tinhLaiThanhTien(), tinhLaiTongTien(),\ntinhLaiGiamGia(), dongBoHanhKhach()
-      svcd -> svct : 4.1.1.8: dongBoSoTienChoThanhToan(donDat)
-      activate svct #00E5EE
-      deactivate svct
-      svcd --> ctrl : 4.1.5: suaThanhCong
-    end
-  end
-end
-deactivate svcd
-ctrl --> ui : 4.2: redirect:/admin/bookings/{code}\nkèm thông báo (hoặc thêm các ô tên còn thiếu)
-deactivate ctrl
-ui -> ad : 4.3: Hiển thị kết quả, số liệu cũ giữ nguyên nếu bị từ chối
-deactivate ui
-deactivate ad
-
-ad -> ui : 5: Bấm “Đánh dấu đã thu tiền”, nhập mã giao dịch
-activate ad #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 5.1: markPaid(code, paymentId, txnRef)
-activate ctrl #00E5EE
-ctrl -> svct : 5.1.1: danhDauDaThu(maDon, thanhToanId, maGiaoDich)
-activate svct #00E5EE
-svct -> don : 5.1.1.1: findByCodeForUpdate(maDon)
-activate don #00E5EE
-return 5.1.1.2: donDat
-svct -> tt : 5.1.1.3: findById(thanhToanId), findByTxnRef(maGiaoDich)
-activate tt #00E5EE
-return 5.1.1.4: thanhToan, thanhToanTrungMa
-alt Đơn đã huỷ, khoản không còn “Chờ thanh toán” hoặc mã giao dịch đã được dùng
-  hnote over ad, ls : .
-  svct --> ctrl : 5.1.2: BusinessRuleException(payment.*)
-else Hợp lệ
-  hnote over ad, ls : .
-  svct -> tt : 5.1.1.5: markPaid(maGiaoDich)\n[“Đã thanh toán”, thời điểm, mã giao dịch]
-  activate tt #00E5EE
-  deactivate tt
-  svct --> ctrl : 5.1.3: daDanhDau
-end
-deactivate svct
-ctrl --> ui : 5.2: redirect:/admin/bookings/{code}\nkèm thông báo thành công hoặc lỗi
-deactivate ctrl
-ui -> ad : 5.3: Hiển thị lại chi tiết đơn kèm thông báo
-deactivate ui
-deactivate ad
 @enduml

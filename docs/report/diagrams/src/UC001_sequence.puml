@@ -6,11 +6,11 @@ skinparam backgroundColor white
 skinparam shadowing false
 skinparam style strictuml
 hide footbox
-skinparam maxMessageSize 420
+skinparam maxMessageSize 160
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow false
 skinparam ArrowColor black
-skinparam ParticipantPadding 90
+skinparam ParticipantPadding 12
 skinparam BoxPadding 6
 skinparam sequence {
   ArrowColor black
@@ -39,58 +39,37 @@ skinparam EntityBackgroundColor #00E5EE
 skinparam EntityBorderColor black
 skinparam ActorBackgroundColor #00E5EE
 skinparam ActorBorderColor black
-mainframe sd [UC001_Xem trang chủ và giới thiệu]
+mainframe sd [UC001_Tìm kiếm và lọc tour]
+
 actor "Khách vãng lai" as kh
-boundary "GiaoDien_TrangChu" as ui
-control "Ctrl_TrangChu" as ctrl
-control "Svc_Tour" as svct
-control "Svc_DanhMuc" as svcd
+boundary "GiaoDien_TimKiem" as ui
+control "Ctrl_Tour" as ctrl
+control "Svc_TimKiem" as tk
+control "Svc_Tour" as svc
 entity "Tour" as tour
-entity "DanhMuc" as dm
-
-kh -> ui : 1: Mở trang chủ hoặc bấm\nliên kết “Giới thiệu”
-activate kh #00E5EE
-activate ui #00E5EE
-ui -> ctrl : 1.1: home()
-activate ctrl #00E5EE
-ctrl -> svct : 1.1.1: layTourNoiBat(gioiHan)
-activate svct #00E5EE
-svct -> tour : 1.1.1.1: findByFeaturedTrueAndActiveTrue\nOrderByCreatedAtDesc(gioiHan)
-activate tour #00E5EE
-return 1.1.1.2: dsTourNoiBat
-return 1.1.2: dsTourNoiBat
-ctrl -> svcd : 1.1.3: layDanhMucDangHoatDong()
-activate svcd #00E5EE
-svcd -> dm : 1.1.3.1: findByActiveTrueOrderByNameAsc()
-activate dm #00E5EE
-return 1.1.3.2: dsDanhMuc
-return 1.1.4: dsDanhMuc, soTourMoiDanhMuc
-ctrl -> svct : 1.1.5: laySoLieuKhaiQuat()
-activate svct #00E5EE
-svct -> tour : 1.1.5.1: count()
-activate tour #00E5EE
-return 1.1.5.2: soTour, soDiemDen
-return 1.1.6: soLieuKhaiQuat
-ctrl --> ui : 1.2: render(dsTourNoiBat, dsDanhMuc, soLieu)
-deactivate ctrl
-alt Chưa có tour nào được đánh dấu nổi bật
-  hnote over kh, dm : .
-  ui -> kh : 1.3: Ẩn khối “Tour nổi bật”,\nhiển thị các khối còn lại
-else Có tour nổi bật
-  hnote over kh, dm : .
-  ui -> kh : 1.4: Hiển thị banner, dải tour nổi bật kèm giá và ảnh,\ndanh mục, số liệu khái quát
+kh -> ui : 1: Mở trang “Tất cả tour”
+ui -> ctrl : 1.1: danhSach(boLoc, trang)
+ctrl -> tk : 1.1.1: timTour(boLoc, trang)
+alt Không bật “Tìm bằng AI”
+  tk -> svc : 1.1.2: timTheoTuKhoa(boLoc, trang)
+  svc -> tour : 1.1.3: findAll(dieuKien, phanTrang)
+  tour --> svc : 1.1.4: trangTour
+  svc --> tk : 1.1.5: trangTour
+else Bật “Tìm bằng AI” và AI sẵn sàng
+  tk -> tk : 1.1.6: xepTheoDoPhuHop(moTa)
+  opt Lỗi hoặc không có kết quả phù hợp
+    tk -> svc : 1.1.7: timTheoTuKhoa(boLoc, trang)
+    svc --> tk : 1.1.8: trangTour (chế độ dự phòng)
+  end
 end
-deactivate ui
-deactivate kh
-
-opt Người dùng xem tiếp
-  hnote over kh, dm : .
-  kh -> ui : 2: Bấm vào một tour nổi bật\nhoặc một danh mục
-  activate kh #00E5EE
-  activate ui #00E5EE
-  ui -> ui : 2.1: Chuyển sang UC003 hoặc UC002
-  ui -> kh : 2.2: Hiển thị trang tương ứng
-  deactivate ui
-  deactivate kh
+tk --> ctrl : 1.1.9: trangTour, cheDoTim
+ctrl --> ui : 1.2: render(trangTour)
+ui --> kh : 1.3: Hiển thị danh sách, số kết quả và phân trang
+opt Danh sách rỗng
+  ui -> kh : 1.4: Hiển thị “Không có tour nào khớp ...”
 end
+kh -> ui : 2: Chuyển trang hoặc đổi ngôn ngữ
+ui -> ctrl : 2.1: danhSach(boLoc giữ nguyên, trang mới)
+ctrl --> ui : 2.2: trangTour
+ui --> kh : 2.3: Hiển thị trang mới, giữ nguyên từ khoá và bộ lọc
 @enduml

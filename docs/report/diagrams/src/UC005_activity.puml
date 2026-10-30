@@ -1,0 +1,59 @@
+@startuml UC005_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC005_Đăng nhập]
+|Khách vãng lai|
+start
+:Bấm “Đăng nhập”;
+|Hệ thống|
+:Hiển thị trang đăng nhập;
+|Khách vãng lai|
+:Nhập email, mật khẩu (có thể chọn\n“Ghi nhớ đăng nhập”), bấm “Đăng nhập”;
+|Hệ thống|
+:Tìm tài khoản theo email, so khớp mật khẩu\nđã mã hoá, kiểm tra tài khoản còn hoạt động;
+if (Email đúng, mật khẩu đúng\nvà tài khoản đang hoạt động?) then (Có)
+  :Tạo phiên đăng nhập mới, giữ nguyên giỏ hàng\n(ghi nhớ 7 ngày nếu được chọn);
+  if (Quản trị viên và không\ncó trang đang chờ?) then (Có)
+    :Chuyển tới trang tổng quan khu quản trị;
+  else (Không)
+    :Chuyển về trang đã yêu cầu trước đó\nhoặc trang chủ;
+  endif
+  |Khách vãng lai|
+  :Sử dụng các chức năng theo vai trò;
+  if (Đăng xuất?) then (Có)
+    :[«extend» Đăng xuất]\nBấm “Đăng xuất” ở menu tài khoản;
+    |Hệ thống|
+    :Kết thúc phiên làm việc (giỏ hàng trong phiên\ncũng không còn), xoá thông tin đăng nhập;
+    :Chuyển về trang chủ kèm “Bạn đã đăng xuất.”;
+  endif
+else (Không)
+  |Hệ thống|
+  :Hiển thị lại trang đăng nhập kèm “Email hoặc mật khẩu\nkhông đúng.” (tài khoản bị vô hiệu hoá\ncũng báo như vậy);
+endif
+stop
+@enduml

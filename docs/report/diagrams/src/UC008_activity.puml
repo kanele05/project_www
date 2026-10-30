@@ -1,0 +1,60 @@
+@startuml UC008_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC008_Huỷ đơn đặt tour]
+|Khách hàng|
+start
+:Mở “Đơn của tôi”, chọn một đơn,\nmở trang chi tiết đơn;
+|Hệ thống|
+if (Đơn của khách này, đang “Chờ xác nhận”/\n“Đã xác nhận” và còn từ 3 ngày\ntới ngày khởi hành sớm nhất?) then (Không)
+  :Đơn của người khác: từ chối truy cập;\nđơn đã kết thúc: không hiện khối “Huỷ đơn”;\ndưới 3 ngày: chỉ hướng dẫn liên hệ tổng đài;
+  stop
+endif
+:Hiện khối “Huỷ đơn” kèm tỉ lệ hoàn (100% nếu ≥ 7 ngày,\n50% nếu 3-6 ngày) và số tiền sẽ hoàn;
+|Khách hàng|
+:Bấm “Huỷ đơn này”;
+|Hệ thống|
+:Hiển thị hộp xác nhận nêu số tiền sẽ hoàn;
+|Khách hàng|
+if (Đồng ý huỷ?) then (Không)
+  stop
+endif
+|Hệ thống|
+:Kiểm tra lại quyền sở hữu, đơn còn huỷ được, còn kịp hạn;
+if (Hợp lệ?) then (Không)
+  :Không huỷ, quay lại chi tiết đơn kèm lỗi;
+  stop
+endif
+:Trả lại số chỗ, trả lượt dùng mã, đóng khoản thanh toán đang chờ,\nchuyển đơn sang “Đã huỷ”, ghi lịch sử “Khách tự huỷ”;
+if (Đơn có khoản thanh toán\nđã xác nhận?) then (Có)
+  :Ghi thêm khoản hoàn tiền theo tỉ lệ chính sách;
+endif
+:Hiển thị lại chi tiết đơn “Đã huỷ” kèm\n“Đã huỷ đơn thành công.”;
+|Khách hàng|
+stop
+@enduml

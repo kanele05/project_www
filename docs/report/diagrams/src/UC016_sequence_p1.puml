@@ -1,0 +1,83 @@
+@startuml UC016_sequence_p1
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 160
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 12
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC016_Quản lý đơn đặt tour (phần 1/2)]
+
+actor "Quản trị viên" as kh
+boundary "GiaoDien_QuanLyDon" as ui
+control "Ctrl_QuanLyDon" as ctrl
+control "Svc_DonDat" as svc
+control "Svc_ThanhToan" as pay
+entity "DonDat" as don
+kh -> ui : 1: Chọn “Đơn đặt tour”
+ui -> ctrl : 1.1: danhSach(trangThai, tuKhoa, trang)
+ctrl -> svc : 1.1.1: timDon(trangThai, tuKhoa, trang)
+svc --> ctrl : 1.1.2: trangDon
+ctrl --> ui : 1.2: render(trangDon)
+ui --> kh : 1.3: Hiển thị danh sách đơn, lọc theo trạng thái
+kh -> ui : 2: Bấm vào một đơn
+ui -> ctrl : 2.1: chiTiet(maDon)
+ctrl -> svc : 2.1.1: layChiTiet(maDon)
+svc --> ctrl : 2.1.2: donDat, dsTrangThaiHopLe, dsKhoanThanhToan
+ctrl --> ui : 2.2: render(chiTietDon)
+ui --> kh : 2.3: Hiển thị thông tin đơn, hành khách, lịch sử, thanh toán
+kh -> ui : 3: Chọn trạng thái mới, nhập lý do, “Cập nhật”
+ui -> ctrl : 3.1: doiTrangThai(maDon, trangThaiMoi, lyDo)
+ctrl -> svc : 3.1.1: doiTrangThai(maDon, trangThaiMoi, lyDo)
+svc -> svc : 3.1.2: khoaDon(maDon), kiemTraChuyenTrangThai()
+alt Chuyển không hợp lệ, hoặc sang “Hoàn thành”\nmà chưa tới ngày khởi hành / chưa có khoản thu
+  svc --> ctrl : 3.1.4: lỗi nêu lý do
+  ctrl --> ui : 3.2: chuyển lại chi tiết đơn kèm lỗi
+  ui --> kh : 3.3: Hiển thị lỗi, giữ nguyên đơn
+else Hợp lệ
+  opt Trạng thái mới là “Đã huỷ”
+    svc -> svc : 3.1.5: traChoVaLuotDungMa(donDat)
+    svc -> pay : 3.1.6: dongKhoanChoVaHoanTien(donDat, 100%)
+    pay --> svc : 3.1.7: xong
+  end
+  svc -> don : 3.1.8: datTrangThai() + ghiLichSu(cu, moi, nguoiDoi, lyDo)
+  don --> svc : 3.1.9: donDat
+  svc --> ctrl : 3.1.10: donDat
+  ctrl --> ui : 3.4: chuyển lại chi tiết đơn kèm thông báo
+  ui --> kh : 3.5: Hiển thị chi tiết đơn với trạng thái mới
+end
+
+@enduml
