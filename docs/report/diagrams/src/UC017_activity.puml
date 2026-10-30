@@ -1,0 +1,55 @@
+@startuml UC017_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC017_Quản lý liên hệ]
+|Quản trị viên|
+start
+:Mở khu quản trị,\nchọn “Quản lý liên hệ”;
+|Hệ thống|
+:Lọc mặc định “Mới”, lấy danh sách phân trang;
+:Hiển thị danh sách kèm người gửi, tour đang hỏi (nếu có),\ntiêu đề, ngày gửi; menu hiện số liên hệ mới chưa xử lý;
+|Quản trị viên|
+if (Đổi bộ lọc trạng thái?) then (Có)
+  :Chuyển bộ lọc sang “Đang xử lý”, “Đã xử lý”,\n“Thư rác” hoặc “Tất cả”;
+  |Hệ thống|
+  :Hiển thị danh sách theo bộ lọc;
+  |Quản trị viên|
+endif
+:Mở một liên hệ, đọc nội dung, nhập nội dung trả lời,\nchọn trạng thái mới, bấm “Cập nhật”;
+|Hệ thống|
+:Ghi nhận trạng thái mới\n(và nội dung trả lời nếu có);
+if (Trạng thái mới là “Đã xử lý”\nhoặc “Thư rác”?) then (Có)
+  :Ghi thêm người xử lý (quản trị viên đang đăng nhập)\nvà thời điểm xử lý;
+else (Không)
+  :Chưa ghi thời điểm xử lý,\nliên hệ vẫn còn trong hàng đợi;
+endif
+:Hiển thị lại danh sách kèm thông báo thành công,\ncập nhật số liên hệ mới trên menu;
+|Quản trị viên|
+:Xem kết quả;
+stop
+@enduml

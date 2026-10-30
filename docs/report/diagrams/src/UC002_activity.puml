@@ -1,0 +1,50 @@
+@startuml UC002_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC002_Tìm kiếm và lọc tour]
+|Khách vãng lai|
+start
+:Mở trang “Tìm kiếm tour”\ntừ thanh điều hướng;
+|Hệ thống|
+:Hiển thị biểu mẫu tìm kiếm/lọc và trang đầu\ncủa danh sách tour đang hoạt động;
+|Khách vãng lai|
+:Nhập từ khoá (ví dụ “da lat”) và/hoặc\nchọn danh mục, điểm đến, khoảng giá;
+|Hệ thống|
+:Chuẩn hoá từ khoá về dạng không dấu, chữ thường,\nso khớp với dữ liệu đã chuẩn hoá sẵn của từng tour\nvà áp các bộ lọc;
+if (Có tour khớp điều kiện?) then (Có)
+  :Hiển thị danh sách tour khớp điều kiện,\nkèm số lượng kết quả và điều khiển phân trang;
+else (Không)
+  :Hiển thị thông báo “Không tìm thấy tour phù hợp”\nkèm gợi ý xoá bớt bộ lọc;
+endif
+|Khách vãng lai|
+:Chuyển sang trang kết quả kế tiếp\nhoặc đổi ngôn ngữ hiển thị;
+|Hệ thống|
+:Giữ nguyên toàn bộ từ khoá và bộ lọc\nđang áp dụng khi hiển thị trang mới;
+|Khách vãng lai|
+stop
+@enduml

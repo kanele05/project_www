@@ -1,0 +1,58 @@
+@startuml UC014_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC014_Đánh giá tour đã đi]
+|Khách hàng|
+start
+:Tại trang chi tiết tour đã đi,\ncuộn tới khối đánh giá;
+|Hệ thống|
+:Hiển thị các đánh giá đã duyệt kèm điểm trung bình, kiểm tra tài khoản\nđủ điều kiện (đã đăng nhập, đã hoàn tất tour này, chưa từng đánh giá);
+if (Đủ điều kiện\nđánh giá?) then (Có)
+  :Hiện biểu mẫu đánh giá;
+  |Khách hàng|
+  :Chọn số sao (1-5, mặc định 5), nhập tiêu đề (tuỳ chọn)\nvà nội dung nhận xét, bấm “Gửi đánh giá”;
+  |Hệ thống|
+  :Kiểm tra dữ liệu nhập: số sao hợp lệ,\nnội dung không được để trống;
+  if (Dữ liệu\nhợp lệ?) then (Có)
+    :Kiểm tra lại điều kiện: chưa từng đánh giá tour này\nvà đã có đơn hoàn tất chứa tour này;
+    if (Còn đủ\nđiều kiện?) then (Có)
+      :Ghi nhận đánh giá mới ở trạng thái chờ duyệt, gắn đơn\nhoàn tất làm bằng chứng;
+      :Hiển thị lại trang chi tiết tour kèm thông báo đang chờ duyệt\n(đánh giá chưa hiện công khai, điểm trung bình chưa đổi);
+    else (Không)
+      :Từ chối, thông báo đã đánh giá tour này rồi\nhoặc chưa đủ điều kiện đánh giá;
+    endif
+  else (Không)
+    :Quay lại trang chi tiết tour\nkèm thông báo lỗi nhập;
+  endif
+else (Không)
+  :Không hiện biểu mẫu,\nchỉ hiện danh sách đánh giá đã duyệt;
+endif
+|Khách hàng|
+:Xem kết quả;
+stop
+@enduml

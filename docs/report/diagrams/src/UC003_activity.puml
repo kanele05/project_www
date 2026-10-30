@@ -1,0 +1,48 @@
+@startuml UC003_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC003_Xem chi tiết tour]
+|Khách vãng lai|
+start
+:Bấm vào một tour từ trang chủ,\ntrang tìm kiếm hoặc trang danh mục;
+|Hệ thống|
+:Tăng lượt xem của tour, tra cứu tour kèm\nảnh, lịch trình và các lịch khởi hành;
+if (Tour tồn tại và đang hoạt động?) then (Có)
+  :Hiển thị trang chi tiết: mô tả, thư viện ảnh, lịch trình\ntừng ngày, bảng lịch khởi hành (ngày đi/về, giá người\nlớn/trẻ em, số chỗ trống); lịch hết chỗ hoặc quá\nngày không cho thêm vào giỏ;
+  |Khách vãng lai|
+  :Chọn một lịch khởi hành, nhập số người lớn/trẻ em,\nbấm “Thêm vào giỏ”;
+  |Hệ thống|
+  :Chuyển sang chức năng Quản lý giỏ hàng (UC004);
+  |Khách vãng lai|
+else (Không)
+  |Hệ thống|
+  :Hiển thị trang thông báo\nkhông tìm thấy tour;
+  |Khách vãng lai|
+endif
+stop
+@enduml

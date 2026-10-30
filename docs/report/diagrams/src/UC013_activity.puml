@@ -1,0 +1,55 @@
+@startuml UC013_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC013_Áp dụng mã giảm giá]
+|Khách hàng|
+start
+:Tại trang thanh toán, nhập mã giảm giá,\nbấm “Áp dụng”;
+|Hệ thống|
+:Đọc tổng tiền giỏ hàng hiện tại\n(từ phiên làm việc, không tin dữ liệu của trình duyệt);
+if (Mã tồn tại, đang hoạt động, trong thời\ngian hiệu lực và còn lượt dùng chung?) then (Có)
+  if (Tài khoản này còn\nlượt dùng riêng?) then (Có)
+    :Tính số tiền được giảm (theo phần trăm\ncó áp trần, hoặc số tiền cố định);
+    if (Giỏ hàng đạt giá trị\ntối thiểu của mã?) then (Có)
+      :Trả về mã, tên chương trình, số tiền được giảm,\ntổng tiền trước và sau giảm giá;
+      |Khách hàng|
+      :Xem tổng tiền đã trừ giảm giá\ntrên trang thanh toán;
+    else (Không)
+      |Hệ thống|
+      :Từ chối, thông báo nêu rõ\ngiá trị tối thiểu cần đạt;
+    endif
+  else (Không)
+    |Hệ thống|
+    :Từ chối, thông báo tài khoản\nđã dùng mã này rồi;
+  endif
+else (Không)
+  |Hệ thống|
+  :Từ chối, thông báo mã không hợp lệ,\nhết hạn / chưa bắt đầu hoặc hết lượt sử dụng;
+endif
+stop
+@enduml

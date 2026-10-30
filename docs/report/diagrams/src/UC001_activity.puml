@@ -1,0 +1,50 @@
+@startuml UC001_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC001_Xem trang chủ và giới thiệu]
+|Khách vãng lai|
+start
+:Mở trang chủ hoặc\nbấm liên kết “Giới thiệu”;
+|Hệ thống|
+:Lấy danh sách tour nổi bật, danh mục đang\nhoạt động và số liệu khái quát;
+if (Có tour nổi bật?) then (Có)
+  :Hiển thị dải tour nổi bật\nkèm giá và ảnh;
+else (Không)
+  :Ẩn khối “Tour nổi bật”,\ncác khối còn lại vẫn hiển thị;
+endif
+:Hiển thị trang gồm banner giới thiệu,\ndanh sách danh mục, số liệu khái quát;
+|Khách vãng lai|
+if (Xem tiếp một tour\nhoặc một danh mục?) then (Có)
+  :Bấm vào một tour nổi bật\nhoặc một danh mục;
+  |Hệ thống|
+  :Chuyển sang trang chi tiết tour (UC003)\nhoặc danh sách tour theo danh mục (UC002);
+  |Khách vãng lai|
+else (Không)
+endif
+stop
+@enduml

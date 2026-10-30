@@ -1,0 +1,146 @@
+@startuml UC015_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 420
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 90
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC015_Kiểm duyệt đánh giá]
+actor "Quản trị viên" as ad
+boundary "GiaoDien_KiemDuyetDanhGia" as ui
+control "Ctrl_KiemDuyetDanhGia" as ctrl
+control "Svc_DanhGia" as svc
+entity "DanhGia" as dg
+
+ad -> ui : 1: Chọn “Kiểm duyệt đánh giá”
+activate ad #00E5EE
+activate ui #00E5EE
+ui -> ctrl : 1.1: list(status = PENDING, page)
+activate ctrl #00E5EE
+ctrl -> svc : 1.1.1: layDanhSach(boLoc, trang)
+activate svc #00E5EE
+svc -> dg : 1.1.1.1: findByApprovedFalseOrderByCreatedAtDesc(phanTrang)
+activate dg #00E5EE
+return 1.1.1.2: trangDanhGia
+return 1.1.2: trangDanhGia
+ctrl -> svc : 1.1.3: demSoChoDuyet()
+activate svc #00E5EE
+svc -> dg : 1.1.3.1: countByApprovedFalse()
+activate dg #00E5EE
+return 1.1.3.2: soChoDuyet
+return 1.1.4: soChoDuyet
+ctrl --> ui : 1.2: render(trangDanhGia, soChoDuyet)
+deactivate ctrl
+ui -> ad : 1.3: Hiển thị danh sách “Chờ duyệt” và huy hiệu\nsố đánh giá đang chờ duyệt
+deactivate ui
+deactivate ad
+
+opt Quản trị viên đổi bộ lọc trạng thái
+  hnote over ad, dg : .
+  ad -> ui : 2: Chuyển bộ lọc sang “Đã duyệt” hoặc “Tất cả”
+  activate ad #00E5EE
+  activate ui #00E5EE
+  ui -> ctrl : 2.1: list(status, page)
+  activate ctrl #00E5EE
+  ctrl -> svc : 2.1.1: layDanhSach(boLoc, trang)
+  activate svc #00E5EE
+  svc -> dg : 2.1.1.1: findByApprovedTrue... / findAll...(phanTrang)
+  activate dg #00E5EE
+  return 2.1.1.2: trangDanhGia
+  return 2.1.2: trangDanhGia
+  ctrl --> ui : 2.2: render(trangDanhGia)
+  deactivate ctrl
+  ui -> ad : 2.3: Hiển thị danh sách theo bộ lọc
+  deactivate ui
+  deactivate ad
+end
+
+ad -> ui : 3: Duyệt, bỏ duyệt, trả lời hoặc xoá một đánh giá
+activate ad #00E5EE
+activate ui #00E5EE
+alt Bấm “Duyệt” hoặc “Bỏ duyệt”
+  hnote over ad, dg : .
+  ui -> ctrl : 3.1: approve(id) hoặc unapprove(id)
+  activate ctrl #00E5EE
+  ctrl -> svc : 3.1.1: duyet(id) hoặc boDuyet(id)
+  activate svc #00E5EE
+  svc -> dg : 3.1.1.1: findById(id)
+  activate dg #00E5EE
+  return 3.1.1.2: danhGia
+  svc -> dg : 3.1.1.3: setApproved(true) hoặc setApproved(false)
+  activate dg #00E5EE
+  deactivate dg
+  deactivate svc
+else Bấm “Trả lời”
+  hnote over ad, dg : .
+  ui -> ctrl : 3.2: reply(id, replyText)
+  activate ctrl #00E5EE
+  ctrl -> svc : 3.2.1: traLoi(id, noiDung)
+  activate svc #00E5EE
+  alt Nội dung trả lời rỗng
+    hnote over ad, dg : .
+    svc --> ctrl : 3.2.2: BusinessRuleException(review.reply.empty)
+  else Nội dung hợp lệ
+    hnote over ad, dg : .
+    svc -> dg : 3.2.1.1: findById(id)
+    activate dg #00E5EE
+    return 3.2.1.2: danhGia
+    svc -> dg : 3.2.1.3: reply(noiDung)
+    activate dg #00E5EE
+    deactivate dg
+  end
+  deactivate svc
+else Bấm “Xoá”
+  hnote over ad, dg : .
+  ui -> ctrl : 3.3: delete(id)
+  activate ctrl #00E5EE
+  ctrl -> svc : 3.3.1: xoa(id)
+  activate svc #00E5EE
+  svc -> dg : 3.3.1.1: findById(id)
+  activate dg #00E5EE
+  return 3.3.1.2: danhGia
+  svc -> dg : 3.3.1.3: delete(danhGia)
+  activate dg #00E5EE
+  deactivate dg
+  deactivate svc
+end
+ctrl --> ui : 3.4: redirect:/admin/reviews kèm thông báo kết quả
+deactivate ctrl
+ui -> ad : 3.5: Hiển thị lại danh sách kèm thông báo,\ncập nhật huy hiệu số đánh giá chờ duyệt
+deactivate ui
+deactivate ad
+@enduml

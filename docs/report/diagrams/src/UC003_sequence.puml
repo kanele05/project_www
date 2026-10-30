@@ -1,0 +1,101 @@
+@startuml UC003_sequence
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 13
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam style strictuml
+hide footbox
+skinparam maxMessageSize 420
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow false
+skinparam ArrowColor black
+skinparam ParticipantPadding 90
+skinparam BoxPadding 6
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor black
+  LifeLineBackgroundColor #00E5EE
+  ParticipantBackgroundColor #00E5EE
+  ParticipantBorderColor black
+  ActorBackgroundColor #00E5EE
+  ActorBorderColor black
+  GroupBorderColor black
+  GroupBackgroundColor white
+  GroupHeaderFontStyle bold
+  GroupFontStyle plain
+  GroupBorderThickness 1.2
+}
+skinparam note {
+  BackgroundColor transparent
+  BorderColor transparent
+  FontColor transparent
+}
+skinparam BoundaryBackgroundColor #00E5EE
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor #00E5EE
+skinparam ControlBorderColor black
+skinparam EntityBackgroundColor #00E5EE
+skinparam EntityBorderColor black
+skinparam ActorBackgroundColor #00E5EE
+skinparam ActorBorderColor black
+mainframe sd [UC003_Xem chi tiết tour]
+actor "Khách vãng lai" as kh
+boundary "GiaoDien_ChiTietTour" as ui
+control "Ctrl_Tour" as ctrl
+control "Svc_Tour" as svct
+entity "Tour" as tour
+entity "DotKhoiHanh" as dot
+
+kh -> ui : 1: Bấm vào một tour từ trang chủ,\ntrang tìm kiếm hoặc trang danh mục
+activate kh #00E5EE
+activate ui #00E5EE
+ui -> ctrl : 1.1: detail(id, page)
+activate ctrl #00E5EE
+ctrl -> svct : 1.1.1: layChiTietTour(id)
+activate svct #00E5EE
+svct -> tour : 1.1.1.1: incrementViewCount(id)
+activate tour #00E5EE
+return 1.1.1.2: luotXemDaTang
+svct -> tour : 1.1.1.3: findDetailById(id)\nkèm ảnh, lịch trình
+activate tour #00E5EE
+return 1.1.1.4: tour
+return 1.1.2: tour
+alt Không tìm thấy tour
+  hnote over kh, dot : .
+  ctrl --> ui : 1.2: ResourceNotFoundException\n→ trang lỗi 404
+  ui -> kh : 1.3: Hiển thị trang thông báo\nkhông tìm thấy tour
+else Tìm thấy tour
+  hnote over kh, dot : .
+  ctrl -> ctrl : 1.1.3: kiemTraTourDangHoatDong(tour)
+  alt Tour đã ngừng hoạt động
+    hnote over kh, dot : .
+    ctrl --> ui : 1.4: ResourceNotFoundException\n→ trang lỗi 404
+    ui -> kh : 1.5: Hiển thị trang thông báo\nkhông tìm thấy tour
+  else Tour đang hoạt động
+    hnote over kh, dot : .
+    ctrl -> svct : 1.1.4: layLichKhoiHanhConMoBan(id)
+    activate svct #00E5EE
+    svct -> dot : 1.1.4.1: findBookable(id, ngayToiThieu)
+    activate dot #00E5EE
+    return 1.1.4.2: dsLichKhoiHanh
+    return 1.1.5: dsLichKhoiHanh
+    ctrl --> ui : 1.6: render(tour, dsLichKhoiHanh)
+    ui -> kh : 1.7: Hiển thị mô tả, ảnh, lịch trình, bảng lịch khởi hành\nkèm giá và số chỗ trống
+  end
+end
+deactivate ctrl
+deactivate ui
+deactivate kh
+
+opt Người dùng đặt tour
+  hnote over kh, dot : .
+  kh -> ui : 2: Chọn một lịch khởi hành, nhập số người lớn/trẻ em,\nbấm “Thêm vào giỏ”
+  activate kh #00E5EE
+  activate ui #00E5EE
+  ui -> ui : 2.1: Chuyển sang UC004_Quản lý giỏ hàng
+  ui -> kh : 2.2: Hiển thị kết quả thêm vào giỏ
+  deactivate ui
+  deactivate kh
+end
+@enduml

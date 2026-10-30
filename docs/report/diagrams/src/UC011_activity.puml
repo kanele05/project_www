@@ -1,0 +1,79 @@
+@startuml UC011_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC011_Quản lý đơn đặt tour]
+|Quản trị viên|
+start
+:Mở khu quản trị,\nchọn “Quản lý đơn đặt tour”;
+|Hệ thống|
+:Hiển thị danh sách đơn có phân trang, lọc theo\ntrạng thái, sắp theo ngày đặt gần nhất;
+|Quản trị viên|
+:Bấm vào một đơn để xem chi tiết;
+|Hệ thống|
+:Hiển thị chi tiết đơn: khách, các dòng chi tiết, tổng tiền,\nmã giảm giá, dòng thời gian đổi trạng thái, các lần thanh toán;
+|Quản trị viên|
+if (Đổi trạng thái đơn?) then (Có)
+  :Chọn trạng thái mới, nhập lý do\n(tuỳ chọn), bấm “Cập nhật”;
+  |Hệ thống|
+  :Kiểm tra chuyển trạng thái thuộc bốn hướng hợp lệ,\nriêng “Hoàn tất” phải đã tới ngày khởi hành\nvà đã có khoản thanh toán được xác nhận;
+  if (Đủ điều kiện?) then (Có)
+    :Nếu “Đã huỷ”: trả lại chỗ đã giữ, trả lại lượt dùng mã,\nhuỷ khoản chờ thanh toán, hoàn 100% khoản đã thu (nếu có);
+    :Ghi trạng thái mới, thêm mốc vào dòng lịch sử\n(trạng thái cũ, trạng thái mới, người đổi, lý do);
+  else (Không)
+    :Từ chối, báo lý do tương ứng;
+  endif
+  |Quản trị viên|
+endif
+if (Sửa số khách của một dòng?) then (Có)
+  :Nhập số người lớn/trẻ em mới\n(kèm tên hành khách mới nếu tăng), bấm “Lưu”;
+  |Hệ thống|
+  :Kiểm tra đơn chưa ở trạng thái cuối, chưa có khoản đã thu,\nđủ tên hành khách mới khi tăng số khách, còn đủ chỗ;
+  if (Hợp lệ?) then (Có)
+    :Giữ thêm hoặc trả bớt chỗ, tính lại thành tiền, tổng tiền,\ngiảm giá, đồng bộ danh sách hành khách;
+  else (Không)
+    :Từ chối, giữ nguyên số liệu cũ, báo lỗi (hoặc hiển thị\nthêm các ô tên còn thiếu, chưa áp dụng thay đổi nào);
+  endif
+  |Quản trị viên|
+endif
+if (Đánh dấu đã thu tiền?) then (Có)
+  :Bấm “Đánh dấu đã thu tiền” ở khoản “Chờ thanh toán”,\nnhập mã giao dịch (tuỳ chọn);
+  |Hệ thống|
+  :Kiểm tra đơn chưa huỷ, khoản còn “Chờ thanh toán”,\nmã giao dịch chưa được dùng;
+  if (Hợp lệ?) then (Có)
+    :Chuyển khoản sang “Đã thanh toán”,\nghi thời điểm và mã giao dịch;
+  else (Không)
+    :Từ chối, giữ nguyên khoản cũ, báo lỗi;
+  endif
+  |Quản trị viên|
+endif
+|Hệ thống|
+:Hiển thị lại chi tiết đơn kèm thông báo kết quả;
+|Quản trị viên|
+:Xem kết quả thao tác;
+stop
+@enduml

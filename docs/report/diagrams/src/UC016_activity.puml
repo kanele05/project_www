@@ -1,0 +1,48 @@
+@startuml UC016_activity
+skinparam dpi 140
+skinparam defaultFontName "Liberation Sans"
+skinparam defaultFontSize 14
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam RoundCorner 24
+skinparam ArrowColor black
+skinparam ArrowThickness 1.1
+skinparam ConditionStyle diamond
+skinparam ConditionEndStyle diamond
+skinparam style strictuml
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+  BorderThickness 1
+  DiamondBackgroundColor white
+  DiamondBorderColor black
+  StartColor black
+  EndColor black
+}
+skinparam swimlane {
+  BorderColor black
+  BorderThickness 2
+  TitleFontStyle bold
+  TitleFontSize 16
+}
+skinparam wrapWidth 600
+mainframe act [UC016_Gửi liên hệ]
+|Khách vãng lai|
+start
+:Mở trang “Liên hệ” trực tiếp, hoặc bấm “Liên hệ về\ntour này” từ trang chi tiết một tour;
+|Hệ thống|
+:Hiển thị biểu mẫu liên hệ (nếu mở từ một tour cụ thể\nthì tên tour đang hỏi hiện sẵn phía trên biểu mẫu);
+repeat
+  |Khách vãng lai|
+  :Nhập họ tên, email, số điện thoại (tuỳ chọn),\ntiêu đề, nội dung, bấm “Gửi”;
+  |Hệ thống|
+  :Kiểm tra dữ liệu: họ tên, email, tiêu đề, nội dung\nbắt buộc, email đúng định dạng;
+  backward :Trả lại biểu mẫu kèm thông báo lỗi tại đúng\nô nhập, giữ nguyên tour đang hỏi (nếu có);
+repeat while (Dữ liệu hợp lệ?) is (Không)
+->Có;
+:Ghi nhận liên hệ mới ở trạng thái “Mới”,\ngắn kèm tour đang hỏi nếu có;
+:Hiển thị lại trang liên hệ kèm thông báo\n“Đã gửi liên hệ thành công”;
+|Khách vãng lai|
+:Xem thông báo gửi thành công;
+stop
+@enduml
