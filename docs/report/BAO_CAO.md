@@ -194,6 +194,8 @@ Khu vực quản trị toàn diện: quản lý danh mục, tour, ảnh, đợt 
 
 [[HINH: 01. Biểu đồ Use Case tổng quát]]
 
+(Hình 2.2 đặt trên một trang ngang để chữ đủ lớn; ảnh do `docs/report/diagrams/src/UseCase_TongQuat.py` vẽ và được `check_layout.py` kiểm tra: không đường nào xuyên oval, không nhãn nào đè lên hình hay đường.)
+
 Quan hệ chính trên biểu đồ use case: tác nhân **Khách hàng** kế thừa (generalization) toàn bộ use case của **Khách vãng lai**, **Quản trị viên** kế thừa **Khách hàng**; use case **UC006 Đặt tour** có hai use case mở rộng («extend») là **UC007 Áp dụng mã giảm giá** và **UC008 Huỷ đơn đặt tour**; **UC009 Xem lịch sử đơn đặt** được mở rộng bởi **UC010 Đánh giá tour đã đi**; **Đăng xuất** là use case mở rộng của **UC005 Đăng nhập**, còn mọi chức năng cần đăng nhập đều «include» UC005; **UC004 Quản lý giỏ hàng** và các use case quản lý của quản trị viên có các use case mở rộng Thêm, Sửa, Xóa (riêng **UC016 Quản lý đơn đặt tour** chỉ có «extend» Sửa vì hệ thống không tạo hay xoá đơn thủ công).
 
 ### 2.6.2 Danh sách các tác nhân và mô tả
@@ -1142,7 +1144,13 @@ Sơ đồ thực thể và mối kết hợp (ERD):
 
 [[HINH: 03. Biểu đồ ERD - TourBookingDB]]
 
-Cơ sở dữ liệu của hệ thống chạy trên Microsoft SQL Server, có hỗ trợ tiếng Việt, gồm đúng **17 bảng**: `users`, `tour_categories`, `tours`, `tour_images`, `tour_departures`, `tour_itineraries`, `bookings`, `booking_details`, `booking_passengers`, `booking_status_history`, `payments`, `promotions`, `coupon_usages`, `reviews`, `contact_messages`, `password_reset_tokens`. Cấu trúc các bảng được thiết kế và kiểm soát thủ công theo đúng mô hình lớp thực thể ở mục 3.1-3.2, đảm bảo chương trình chỉ khởi động được khi cấu trúc dữ liệu khớp đúng với thiết kế.
+Sơ đồ trên máy chủ CSDL (Database Diagram):
+
+[[HINH: 03b. Biểu đồ Database Diagram - TourBookingDB]]
+
+Hai sơ đồ trên (Hình 3.4.1.1 và 3.4.1.2) đã được vẽ lại từ chính tệp `database/02_schema.sql` bằng `docs/report/diagrams/src/ERD.py` và `DatabaseDiagram.py`, đủ 17 bảng và 21 khoá ngoại, kể cả bảng `user_events`. Bảng này không có khoá ngoại nên ở ERD được vẽ riêng kèm ghi chú (`user_id`, `tour_id`, `departure_id` chỉ là tham chiếu logic, không vẽ đường nối để không gợi ý một ràng buộc không tồn tại), còn ở Database Diagram không có đường nối nào. Bố cục (hộp, đường nối, nhãn) được `check_layout.py` kiểm tra hình học: không đường nào xuyên hộp, không hai đường chồng đoạn, không nhãn nào đè, và 0 điểm cắt nhau.
+
+Cơ sở dữ liệu của hệ thống chạy trên Microsoft SQL Server, có hỗ trợ tiếng Việt, gồm đúng **17 bảng**: `users`, `tour_categories`, `tours`, `tour_images`, `tour_departures`, `tour_itineraries`, `bookings`, `booking_details`, `booking_passengers`, `booking_status_history`, `payments`, `promotions`, `coupon_usages`, `reviews`, `contact_messages`, `password_reset_tokens`, `user_events`. Cấu trúc các bảng được thiết kế và kiểm soát thủ công theo đúng mô hình lớp thực thể ở mục 3.1-3.2, đảm bảo chương trình chỉ khởi động được khi cấu trúc dữ liệu khớp đúng với thiết kế.
 
 ### 3.4.2 Các ràng buộc toàn vẹn trong CSDL
 
