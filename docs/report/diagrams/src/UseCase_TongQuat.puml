@@ -1,5 +1,5 @@
 @startuml UseCase_TongQuat_auto
-' Nguồn ngữ nghĩa (PlantUML tự bố trí nên không đẹp). Ảnh Hình 2.2 (png/UseCase_TongQuat.png) do UseCase_TongQuat.py vẽ theo bố cục của biểu đồ gốc.
+' Nguồn ngữ nghĩa (PlantUML tự bố trí nên không đẹp). Ảnh Hình 2.2 (png/UseCase_TongQuat.png, đặt trên trang ngang) do UseCase_TongQuat.py vẽ với toạ độ tường minh và được check_layout.py kiểm tra.
 left to right direction
 skinparam dpi 140
 skinparam defaultFontName "Liberation Sans"
@@ -69,9 +69,7 @@ rectangle "Website đặt tour du lịch trực tuyến" {
   usecase "Thêm" as a6
   usecase "Sửa" as b6
   usecase "Xóa" as c6
-  usecase "Cập nhật\ntrạng thái đơn" as o1
-  usecase "Sửa số khách" as o2
-  usecase "Ghi nhận\nthanh toán" as o3
+  usecase "Sửa" as b4
 }
 
 KVL -- tk
@@ -127,9 +125,7 @@ c2 .> q2 : <<extend>>
 a3 .> q3 : <<extend>>
 b3 .> q3 : <<extend>>
 c3 .> q3 : <<extend>>
-o1 .> q4 : <<extend>>
-o2 .> q4 : <<extend>>
-o3 .> q4 : <<extend>>
+b4 .> q4 : <<extend>>
 a5 .> q5 : <<extend>>
 b5 .> q5 : <<extend>>
 c5 .> q5 : <<extend>>
