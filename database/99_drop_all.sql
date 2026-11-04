@@ -1,6 +1,5 @@
 -- Xoá sạch toàn bộ bảng của TourBookingDB để dựng lại từ đầu (chỉ chạy trên máy phát triển).
 USE TourBookingDB;
-GO
 
 DROP TABLE IF EXISTS user_events;
 DROP TABLE IF EXISTS booking_passengers;
@@ -20,9 +19,6 @@ DROP TABLE IF EXISTS tour_images;
 DROP TABLE IF EXISTS tours;
 DROP TABLE IF EXISTS tour_categories;
 DROP TABLE IF EXISTS users;
-GO
-
-SELECT COUNT(*) AS remaining_tables      FROM sys.tables;
-SELECT COUNT(*) AS remaining_checks      FROM sys.check_constraints;
-SELECT COUNT(*) AS remaining_procedures  FROM sys.procedures;
-GO
+SELECT COUNT(*) AS remaining_tables     FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE();
+SELECT COUNT(*) AS remaining_checks     FROM information_schema.CHECK_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE();
+SELECT COUNT(*) AS remaining_procedures FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE();

@@ -5,7 +5,7 @@
 > đặt trong chính thư mục project để không mất lần nữa. Nội dung lấy từ lịch sử phiên làm việc và
 > **đã đối chiếu với mã nguồn / CSDL hiện tại**. Chỗ nào không chắc đều ghi rõ.
 >
-> Cập nhật lần cuối: 2026-10-30 (Phase 15 - AI + theo dõi hành vi; chat chuyển sang SDK Gemini gốc, xem gotcha #80-81). Các phase trước giữ nguyên.
+> Cập nhật lần cuối: 2026-11-05 (Phase 16 - chuyển CSDL từ SQL Server sang MariaDB, gotcha #82-86). Các phase trước giữ nguyên làm lịch sử.
 
 ## Bối cảnh
 
@@ -19,7 +19,7 @@ Spring Data + Spring MVC → Spring Security + hoàn thiện) và 6 CLO.
 | Hạng mục | Lựa chọn |
 |---|---|
 | Kiến trúc | Spring Boot 3.5.16 + Spring MVC + **Thymeleaf** SSR + REST controller cho AJAX |
-| Database | **SQL Server** (2025 Developer Ed.) |
+| Database | **MariaDB 12.2** (từ Phase 16, collation `utf8mb4_uca1400_ai_ci`; Phase 0-15 chạy SQL Server 2025 Developer Ed.) |
 | Java | target **21** (compile bằng Corretto 23 với `--release 21`) |
 | Tính năng nâng cao | Upload ảnh tour · Spring Security · i18n VI/EN |
 | Email | `EmailService` interface + hai bản cài đặt (`ConsoleEmailService` ghi console, `SmtpEmailService` gửi thật qua `JavaMailSender`), chọn bằng `app.mail.mode=console\|smtp` (mặc định `console`, không cần tài khoản SMTP). Gửi thư xác nhận đặt tour **và** thư chào mừng đăng ký, cả hai qua `@TransactionalEventListener(AFTER_COMMIT)` (Phase 9). |
@@ -55,6 +55,7 @@ toàn vì Initializr nay chỉ sinh được Boot 4.x với các artifact không
 | **12** — Nghiệp vụ đợt C: nhập hành khách khi thanh toán, giữ bất biến khi admin sửa số khách, ba trang chi tiết CHỈ XEM cho admin (SPEC_CHUNG.md mục 12.7, 12.8) | ✅ xong 2/2, verify bằng lệnh thật + `curl` + **trình duyệt thật** (đặt tour thật qua UI) + dựng lại từ CSDL thật (chi tiết bên dưới) |
 | **13** — Sửa 7 lỗi do agent rà lần ba (1 nghiêm trọng khoá bi quan, 2 vừa, 4 nhẹ) | ✅ 7/7, verify bằng khoá SQL Server thật nới khe đua + hai request `curl` song song thật + dựng lại DB tạm bằng login sysadmin Windows Auth (chi tiết bên dưới) |
 | **15** — AI (Spring AI 1.1.8 + Gemini, tìm kiếm ngữ nghĩa, tour tương tự, chatbot RAG + tool) và theo dõi hành vi người dùng (bảng `user_events`, trang thống kê, gợi ý) | ✅ code + 86 kiểm thử tự động xanh, **chạy trọn vẹn trên H2 + máy chủ Gemini giả có ép luật `thought_signature`**; 🔶 **chưa thử với SQL Server thật và chưa gọi Gemini thật** (chi tiết ở Phase 15 bên dưới) |
+| **16** — Chuyển CSDL từ SQL Server sang MariaDB (script, driver, cấu hình, `Tour` dùng `@Lob`) | ✅ 6 script chạy lặp lại được, app `validate` sạch, đặt tour + admin thao tác thật trên MariaDB; 84/86 kiểm thử (2 lỗi do môi trường, xem Phase 16) |
 
 ### 🎨 Bảng màu & hệ thống thiết kế *(user đã chọn, đừng tự đổi)*
 
@@ -100,7 +101,7 @@ tiếng Việt nên dấu thanh không chồng lên dấu mũ.
 cd "C:/Users/Khangg/Downloads/www/project_www"
 export JAVA_HOME="/c/Users/Khangg/.jdks/corretto-23.0.2"
 export PATH="$JAVA_HOME/bin:$PATH"
-export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+export MARIADB="/c/Program Files/MariaDB 12.2/bin/mariadb.exe"
 
 ./mvnw -o spring-boot:run          # -> http://localhost:8081
 ```
@@ -108,18 +109,22 @@ export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/B
 **Cổng 8081**, không phải 8080 (8080 bị Apache/XAMPP chiếm). Còn tiến trình cũ thì:
 `netstat -ano | grep :8081` rồi `taskkill //PID <pid> //F`.
 
-Thao tác cần quyền admin (bật TCP cho SQL Server, restart service) **user phải tự chạy** — shell
-của agent không elevated.
+Thao tác cần quyền root của MariaDB (tạo database và tài khoản `tourapp` bằng `01_create_database.sql`)
+**user phải tự chạy** — agent không có mật khẩu root. Muốn thử script mà không đụng dịch vụ thật thì dựng
+instance tạm như Phase 16 (`mariadb-install-db --datadir=... --port=3307`, root không mật khẩu) rồi đặt
+`DB_URL=jdbc:mariadb://localhost:3307/TourBookingDB`.
 
 ### Dựng lại CSDL từ số không
 
 ```bash
-"$SQLCMD" -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' -d TourBookingDB -C -f 65001 -i database/99_drop_all.sql
-"$SQLCMD" -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' -d TourBookingDB -C -f 65001 -i database/02_schema.sql
-"$SQLCMD" -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' -d TourBookingDB -C -f 65001 -i database/03_seed_data.sql
+"$MARIADB" -uroot -p --default-character-set=utf8mb4 < database/01_create_database.sql   # lần đầu, user tự chạy
+"$MARIADB" -utourapp -p'Tour@2026#IUH' --default-character-set=utf8mb4 TourBookingDB < database/99_drop_all.sql
+"$MARIADB" -utourapp -p'Tour@2026#IUH' --default-character-set=utf8mb4 TourBookingDB < database/02_schema.sql
+"$MARIADB" -utourapp -p'Tour@2026#IUH' --default-character-set=utf8mb4 TourBookingDB < database/03_seed_data.sql
 ```
 
-> Đọc đầu ra tìm chữ `Msg` — **đừng dùng `| tail`**, thông báo lỗi nằm giữa output (#9).
+> **Bắt buộc `--default-character-set=utf8mb4`**, thiếu là tiếng Việt trong script bị hỏng. Client dừng ở
+> câu lỗi đầu tiên và trả mã thoát khác 0 — kiểm mã thoát chứ đừng chỉ nhìn `| tail`.
 
 ### Tài khoản mẫu (mật khẩu đều `123456`)
 
@@ -211,7 +216,10 @@ thật bằng `hello2026`: 5.990.000 → giảm 500.000 (10% bị chặn trần)
 
 ---
 
-## ⚠️ Gotchas — 62 cái, phần lớn là lỗi đã thực sự vấp phải
+## ⚠️ Gotchas — phần lớn là lỗi đã thực sự vấp phải
+
+> Từ Phase 16 CSDL là MariaDB. Các gotcha nói về SQL Server/`sqlcmd` (#7, #9, #41, #58, #66, …) giữ lại
+> làm lịch sử; gotcha riêng của MariaDB ở mục Phase 16 (#82-86).
 
 1. **`encrypt=true;trustServerCertificate=true` là bắt buộc** trong JDBC URL. Driver 10.x+ mặc định
    `encrypt=true`, SQL Server local dùng self-signed cert → thiếu là gặp `PKIX path building failed`.
@@ -1162,6 +1170,30 @@ Bộ nhớ hội thoại giữ trong RAM theo phiên (không giới hạn số p
 81. **SDK Gemini gốc không thừa hưởng cấu hình của Spring AI:** (a) `RetryTemplate`/`spring.ai.retry.*` chỉ thử lại `TransientAiException`, còn lỗi 429 của SDK là `ApiException` nên **không** được thử lại → `GenAiClientFactory` đặt `HttpRetryOptions` (3 lần, giãn cách luỹ thừa, mã 429/503) và timeout; (b) autoconfig không có thuộc tính base-url/timeout nên `AiConfig` tự khai bean `Client` (autoconfig lùi lại); (c) có hai `ChatClient` (`tourAssistant` `@Primary` + `tourAssistantRagOnly` có `@Qualifier`) nên chỗ nào chỉ cần "ChatClient" mặc định vẫn lấy được bản có tool; (d) thông báo lỗi OpenAI-compat dạng `400 - [...]` (hoặc `HTTP 400 - [...]` khi có `on-http-codes`), còn SDK ném `com.google.genai.errors.ApiException` mang `code()` — `AiChatService.clientErrorStatus` đọc cả hai; (e) lần đầu build sau khi pull phải **có mạng** (thêm ~25 jar: `google-genai`, `okhttp`, `google-auth-library`, `protobuf-java`, `guava`...), chạy `./mvnw clean ...` không `-o`; (f) nhiệt độ 0.3 là của bản cũ — Google khuyến nghị giữ mặc định cho Gemini 3 (chưa xác minh được tài liệu), nếu thấy trả lời lặp/kém thì thử bỏ `spring.ai.google.genai.chat.options.temperature`.
 
 ---
+
+## Phase 16 — Chuyển CSDL từ SQL Server sang MariaDB (2026-11-05)
+
+Làm trên nhánh `mariadb`. Đề bài cho phép "MariaDB/SQL Server"; MariaDB 12.2 đã cài sẵn trên máy (dịch vụ cổng 3306).
+
+### Đã đổi
+- `pom.xml`: `mssql-jdbc` → `mariadb-java-client` (Boot quản lý bản 3.5.8). Dialect để Hibernate tự nhận (khai báo `MariaDBDialect` bị cảnh báo HHH90000025).
+- `application.properties`: URL `${DB_URL:jdbc:mariadb://localhost:3306/TourBookingDB}`, driver MariaDB, bỏ `use_nationalized_character_data` (MariaDB dùng `VARCHAR` utf8mb4, không có `NVARCHAR` thật).
+- `Tour.description`/`itinerary`: bỏ `columnDefinition = "NVARCHAR(MAX)"` (vi phạm quy tắc 2 của CLAUDE.md), thay bằng `@Lob @Column(length = Integer.MAX_VALUE)` → `LONGTEXT` (#82).
+- 6 script `database/`: `IDENTITY` → `AUTO_INCREMENT`, `NVARCHAR` → `VARCHAR`, `NVARCHAR(MAX)` → `LONGTEXT`, `DATETIME2(6)` → `DATETIME(6)`, `BIT` → `BIT(1)`, bỏ `GO`/`SET IDENTITY_INSERT`/`DBCC CHECKIDENT` (thay bằng `ALTER TABLE … AUTO_INCREMENT = 1`), `sys.*` → `information_schema`, `05_user_events.sql` dùng `CREATE TABLE/INDEX IF NOT EXISTS`. Phần khó của `03_seed_data.sql` xem #85.
+- H2 kiểm thử: `MODE=MSSQLServer` → `MODE=MariaDB`. Câu "lưu trên SQL Server" trong 3 file messages đổi sang MariaDB.
+
+### Đã kiểm bằng gì
+- Instance MariaDB 12.2 **tạm** ở cổng 3307 (`.tmp_ref/mariadb-dev`, không đụng dịch vụ thật của user): chạy 01 → 02 → 03 → 04 → 05, rồi 99 → 02 → 03 → 03 → 05 — mã thoát 0, 0 lỗi. Kết quả: 17 bảng, 0 CHECK/function/procedure/trigger; số dòng dữ liệu mẫu khớp bản SQL Server (4 user, 20 tour, 60 lịch, 5 đơn, 19 hành khách, 8 thanh toán…); tổng tiền, giảm giá, chỗ còn, `tour_id` của đánh giá đều tính đúng.
+- App chạy thật trên instance đó (`DB_URL=...:3307`, cổng 8083): `ddl-auto=validate` sạch sau #82. Trang công khai và 11 trang admin trả 200 có `</html>`; tìm "da lat" ra Đà Lạt; khách An đăng nhập → thêm giỏ lịch 5 (2 NL + 1 TE) → mã HELLO2026 bị chặn "1 lần/tài khoản", SUMMER500 trừ 500.000 → đặt thành công `TB20261105YK99C4`; CSDL: chỗ 25 → 22, `version` 0 → 1, 3 hành khách tiếng Việt đúng dấu, `coupon_usages`, lịch sử trạng thái, 3 sự kiện tracking. Admin: PENDING → CONFIRMED được, → COMPLETED bị chặn (chưa tới ngày đi), xoá tour 2 bị chặn.
+- `./mvnw test`: 86 chạy, **84 qua**. Hai lỗi không do MariaDB: `AiWiringTest` mong `gemini-2.5-flash` nhưng bản `application.properties` trên máy user đang sửa (chưa commit) mặc định `gemini-3.5-flash-lite`; `AiDisabledSmokeTest` đòi không có `data/vector-store.json` nhưng tệp này còn từ lần chạy Gemini thật.
+- **CHƯA kiểm**: dịch vụ MariaDB thật cổng 3306 (cần user chạy `01_create_database.sql` bằng root); AI trên MariaDB (không phụ thuộc CSDL); đua khoá chống bán quá chỗ dưới tải (#86).
+
+### Gotcha mới
+82. ⚠️ **`@Lob String` không ghi `length` → Hibernate trên MariaDB chờ `tinytext`** (CLOB mặc định 255), gặp `LONGTEXT` thì `validate` báo *"found [longtext (Types#LONGVARCHAR)], but expecting [tinytext (Types#CLOB)]"*. Ghi `@Column(length = Integer.MAX_VALUE)` để Hibernate chọn `longtext`.
+83. **Windows mặc định `lower_case_table_names=1`**: `CREATE DATABASE TourBookingDB` được lưu thành `tourbookingdb`. Trên Windows URL viết hoa vẫn chạy; đưa lên Linux thì phải thống nhất chữ hoa/thường (tên bảng của dự án vốn đã viết thường).
+84. **Collation `utf8mb4_uca1400_ai_ci` coi `Đ` = `D`** (khác `Vietnamese_CI_AI` ở #7: `'Đ' = 'D'` giờ trả BẰNG NHAU). Tìm kiếm có lợi, nhưng UNIQUE trên cột chữ tiếng Việt (tên danh mục, mã…) sẽ coi "Đà" và "Da" là trùng.
+85. **Viết lại T-SQL sang MariaDB — chỗ dễ sai lặng lẽ:** `+` giữa chuỗi trong MariaDB là **cộng số** (ra 0 kèm cảnh báo, không lỗi) → phải `CONCAT`; `(VALUES …) AS x(c1, c2)` (danh sách tên cột) → đổi sang bảng dẫn xuất `SELECT … AS c1 UNION ALL SELECT …`; `UPDATE b … FROM bookings b JOIN …` → `UPDATE bookings b JOIN … SET …`; `CROSS APPLY` + `TOP 1` → truy vấn con `LIMIT 1`; `STRING_AGG … WITHIN GROUP` → `GROUP_CONCAT(… ORDER BY … SEPARATOR …)`; `CONVERT(…, 112)` → `DATE_FORMAT(…, '%Y%m%d')`; `DATEADD` → `+ INTERVAL`. Bộ chuyển phần máy móc: `.tmp_ref/conv_seed.py`.
+86. **Mức cô lập mặc định khác:** MariaDB là REPEATABLE READ, SQL Server là READ COMMITTED. Khoá bi quan (`@Lock(PESSIMISTIC_WRITE)` → `SELECT … FOR UPDATE`) vẫn đọc bản mới nhất nên logic giữ chỗ không đổi, và đặt tour thật đã tăng `version` đúng; nhưng **chưa đo đua bằng hai request song song** như Phase 13 — nên làm lại trước khi khẳng định trong báo cáo.
 
 ## Cấu trúc thư mục
 

@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
 
-// Dữ liệu và tiện ích dùng chung cho các bài kiểm thử AI (không cần SQL Server, không cần mạng).
+// Dữ liệu và tiện ích dùng chung cho các bài kiểm thử AI (không cần MariaDB, không cần mạng).
 final class AiTestSupport {
 
     private AiTestSupport() {

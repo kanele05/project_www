@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Chạy cả ứng dụng thật trên H2 (chế độ SQL Server) + máy chủ OpenAI giả: AI BẬT, kiểm trang, API, theo dõi, thống kê, chatbot.
+// Chạy cả ứng dụng thật trên H2 (chế độ MariaDB) + máy chủ OpenAI giả: AI BẬT, kiểm trang, API, theo dõi, thống kê, chatbot.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({"dev", "h2"})

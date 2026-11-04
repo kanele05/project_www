@@ -5,8 +5,8 @@ Thời lượng demo trực tiếp khoảng **10 đến 15 phút**. Mọi đư�
 `C:\Users\Khangg\Downloads\www\project_www`.
 
 > **Đọc trước khi lên lớp.** Code đã được kiểm bằng 86 kiểm thử tự động và chạy cả ứng dụng trên H2 với
-> máy chủ giả của Gemini (có ép luật `thought_signature` của Gemini 3). **Chưa ai chạy với SQL Server thật và Gemini thật trong môi trường làm bài**, và
-> giao diện chưa được nhìn bằng mắt trên trình duyệt. Hãy **chạy thử toàn bộ kịch bản một lần trước giờ trình bày**
+> máy chủ giả của Gemini (có ép luật `thought_signature` của Gemini 3). Từ Phase 16 CSDL là **MariaDB** (đã chạy thật trên MariaDB 12.2 và Gemini thật), nhưng
+> vẫn nên chạy thử toàn bộ kịch bản trên máy trình bày. Hãy **chạy thử toàn bộ kịch bản một lần trước giờ trình bày**
 > (mục 8) và chụp sẵn ảnh dự phòng (mục 7).
 
 ---
@@ -19,14 +19,14 @@ Thời lượng demo trực tiếp khoảng **10 đến 15 phút**. Mọi đư�
 | Tải thư viện Spring AI (cần mạng, **không dùng `-o`**) | `./mvnw -DskipTests compile` |
 | Tạo bảng `user_events` trong CSDL đang có | mục 3 |
 | Lấy khoá Gemini miễn phí | mục 2 |
-| Chạy kiểm thử tự động (không cần SQL Server, không cần khoá) | `./mvnw test` phải báo `Tests run: 73, Failures: 0` |
+| Chạy kiểm thử tự động (không cần MariaDB, không cần khoá) | `./mvnw test` phải báo `Tests run: 86, Failures: 0` |
 
 Biến môi trường chung (như `CLAUDE.md`):
 
 ```bash
 export JAVA_HOME="/c/Users/Khangg/.jdks/corretto-23.0.2"
 export PATH="$JAVA_HOME/bin:$PATH"
-export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+export MARIADB="/c/Program Files/MariaDB 12.2/bin/mariadb.exe"
 ```
 
 ---
@@ -98,16 +98,16 @@ Mặc định chat dùng SDK Gemini. Muốn dùng OpenAI hoặc Ollama phải th
 CSDL dựng mới từ `02_schema.sql` đã có bảng này. CSDL cũ thì chạy script idempotent (chạy lại nhiều lần vẫn an toàn):
 
 ```bash
-"$SQLCMD" -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' -d TourBookingDB -C -f 65001 -i database/05_user_events.sql
+"$MARIADB" -utourapp -p'Tour@2026#IUH' --default-character-set=utf8mb4 TourBookingDB < database/05_user_events.sql
 ```
 
 PowerShell:
 
 ```powershell
-& "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\SQLCMD.EXE" -S 127.0.0.1,1433 -U tourapp -P 'Tour@2026#IUH' -d TourBookingDB -C -f 65001 -i database\05_user_events.sql
+Get-Content database\05_user_events.sql -Encoding UTF8 | & "C:\Program Files\MariaDB 12.2\bin\mariadb.exe" -utourapp -p'Tour@2026#IUH' --default-character-set=utf8mb4 TourBookingDB
 ```
 
-Đầu ra phải có `Đã tạo bảng user_events.` (hoặc `đã tồn tại, bỏ qua`) và **không có chữ `Msg`**. Vì app chạy `ddl-auto: validate`, **thiếu bảng này app không khởi động**.
+Đầu ra phải có `so_dong_user_events` và **không có dòng `ERROR`**. Vì app chạy `ddl-auto: validate`, **thiếu bảng này app không khởi động**.
 
 ---
 
@@ -118,7 +118,7 @@ PowerShell:
    Nếu thấy lỗi gần nhất (429, 401...) xem mục 6.
 3. Thử nhanh: `/tours?q=biển yên tĩnh cho gia đình dưới 5 triệu&ai=true` phải hiện thông báo xanh *Kết quả được AI xếp theo độ phù hợp*.
 4. Mở khung chat góc phải dưới, hỏi một câu bất kỳ.
-5. Xoá dữ liệu hành vi cũ nếu muốn thống kê sạch: `DELETE FROM user_events;` (chạy bằng `sqlcmd -Q`).
+5. Xoá dữ liệu hành vi cũ nếu muốn thống kê sạch: `DELETE FROM user_events;` (chạy bằng `"$MARIADB" ... -e "DELETE FROM user_events"`).
 
 ---
 
@@ -128,7 +128,7 @@ Mở sẵn 2 cửa sổ trình duyệt: **(A)** khách chưa đăng nhập (cử
 
 | # | Thời gian | Slide | Thao tác trên màn hình | Nói gì |
 |---|---|---|---|---|
-| 0 | 1' | 16, 17 | Chỉ slide kiến trúc | "Website đặt tour vốn dùng SQL Server và giỏ trong session. Nhóm thêm ba thứ: tìm theo ý, trợ lý chat, và ghi hành vi để thống kê. SQL Server vẫn là nguồn gốc, kho vector chỉ là chỉ mục phụ lưu ra tệp." |
+| 0 | 1' | 16, 17 | Chỉ slide kiến trúc | "Website đặt tour dùng MariaDB và giỏ trong session. Nhóm thêm ba thứ: tìm theo ý, trợ lý chat, và ghi hành vi để thống kê. MariaDB vẫn là nguồn gốc, kho vector chỉ là chỉ mục phụ lưu ra tệp." |
 | 1 | 1' | 18, 19, 20 | Cửa sổ B, `/admin/ai` | "Chat dùng starter Google GenAI của Spring AI với khoá Gemini miễn phí, còn nhúng vector dùng starter OpenAI trỏ sang Gemini; đổi sang OpenAI hay Ollama chỉ cần đổi biến môi trường. Đây là Spring AI 1.1.8 vì bản 2.0 của Chương 7 nhắm tới Spring Boot 4. 20 tour đã được nhúng thành vector và lưu ra tệp, khởi động lại không phải gọi API nữa." |
 | 2 | 2' | 21, 22 | Cửa sổ A, **Tất cả tour**, bật **Tìm bằng AI**, gõ câu 1 rồi câu 2 (bảng dưới) | "Ô tìm cũ chỉ khớp chuỗi ký tự. Giờ tôi mô tả bằng lời, hệ thống tách cụm 'dưới 5 triệu' thành bộ lọc giá rồi so ý nghĩa với vector của từng tour." Tắt công tắc, gõ lại cùng câu: "Cùng câu mà tìm từ khoá thì không ra gì." |
 | 3 | 1' | 21 | Mở **Nha Trang** (hoặc **Sa Pa**), kéo xuống khối **Tour tương tự** | "Vector của tour đang xem được so với các tour còn lại, đây là tính năng 'khách xem X cũng quan tâm Y'." |
@@ -235,7 +235,7 @@ Có thể quay thêm một video 1 đến 2 phút toàn bộ kịch bản. Báo 
 ## 10. Câu hỏi giảng viên có thể hỏi
 
 - **Vì sao không dùng Spring AI 2.0.2 như bài giảng?** 2.0.x dùng Jackson 3 và nhắm tới Spring Boot 4; dự án chạy Boot 3.5.16, nên chọn bản 1.x mới nhất (1.1.8). Các khái niệm (ChatClient, advisor, tool, VectorStore) giống nhau.
-- **Vì sao không dùng PgVector như slide gốc?** Môi trường đồ án không có PostgreSQL, SQL Server không nằm trong danh sách store của Chương 7. `SimpleVectorStore` lưu tệp đủ cho vài trăm tour; đổi sang PgVector chỉ cần đổi bean, các lớp nghiệp vụ dùng giao diện `VectorStore`.
+- **Vì sao không dùng PgVector như slide gốc?** Môi trường đồ án không có PostgreSQL. Spring AI có `MariaDBVectorStore` (cần MariaDB 11.7+), nhưng nhóm giữ `SimpleVectorStore` vì dự án mới chuyển từ SQL Server và phần AI đã kiểm kỹ với cách lưu tệp. `SimpleVectorStore` lưu tệp đủ cho vài trăm tour; đổi sang PgVector chỉ cần đổi bean, các lớp nghiệp vụ dùng giao diện `VectorStore`.
 - **AI có chạm vào CSDL không?** Không. Mô hình chỉ yêu cầu chạy tool, ứng dụng chạy và kiểm tra bằng `CartService`, `TourService`. Chatbot không có công cụ thanh toán.
 - **Dữ liệu khách có gửi cho Google không?** Chỉ nội dung câu hỏi và mô tả tour. Gói miễn phí có thể được Google dùng để cải thiện sản phẩm; vì vậy không dùng dữ liệu thật khi demo.
 - **Tracking có theo dõi cá nhân không?** Mã phiên được băm SHA-256, userId do máy chủ lấy từ phiên đăng nhập, từ khoá và đường dẫn bị cắt; dữ liệu xoá sau 180 ngày; tôn trọng Do Not Track. Còn thiếu biểu ngữ xin đồng ý (nói rõ là hạn chế).

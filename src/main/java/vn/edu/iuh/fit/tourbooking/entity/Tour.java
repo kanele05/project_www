@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -65,10 +66,12 @@ public class Tour extends Auditable {
     @Column(name = "short_description", length = 500)
     private String shortDescription;
 
-    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
+    @Lob
+    @Column(name = "description", length = Integer.MAX_VALUE)
     private String description;
 
-    @Column(name = "itinerary", columnDefinition = "NVARCHAR(MAX)")
+    @Lob
+    @Column(name = "itinerary", length = Integer.MAX_VALUE)
     private String itinerary;
 
     @Column(name = "departure_location", nullable = false, length = 100)

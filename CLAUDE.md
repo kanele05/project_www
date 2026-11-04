@@ -1,17 +1,22 @@
 # TourBooking — quy ước cho agent
 
-Đồ án môn **Lập trình WWW (Java)** — IUH. Spring Boot 3.5.16 + Thymeleaf + SQL Server.
+Đồ án môn **Lập trình WWW (Java)** — IUH. Spring Boot 3.5.16 + Thymeleaf + **MariaDB** (từ Phase 16;
+trước đó là SQL Server — các gotcha riêng của SQL Server trong PLAN.md chỉ còn giá trị lịch sử).
 **Đọc [PLAN.md](PLAN.md) trước khi làm bất cứ việc gì** — nó có tiến độ từng phase, domain model,
-và **81 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
+và **86 gotcha** (phần lớn là lỗi đã thực sự vấp phải, không phải phỏng đoán).
 
 ## Chạy
 
 ```bash
 export JAVA_HOME="/c/Users/Khangg/.jdks/corretto-23.0.2"
 export PATH="$JAVA_HOME/bin:$PATH"
-export SQLCMD="/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+export MARIADB="/c/Program Files/MariaDB 12.2/bin/mariadb.exe"   # MariaDB 12.2, dịch vụ ở cổng 3306
 ./mvnw -o spring-boot:run        # http://localhost:8081  (8080 bị XAMPP chiếm)
 ```
+
+Dựng CSDL lần đầu: `01_create_database.sql` chạy bằng **root** (user tự chạy, agent không có mật khẩu root),
+rồi `02_schema.sql`, `03_seed_data.sql` bằng `tourapp` — lệnh đầy đủ ở PLAN.md mục "Môi trường".
+Đổi CSDL đích bằng biến `DB_URL` (mặc định `jdbc:mariadb://localhost:3306/TourBookingDB`).
 
 Tính năng AI (tuỳ chọn, mặc định **tắt** khi không có khoá — app vẫn chạy đủ chức năng):
 
@@ -19,7 +24,7 @@ Tính năng AI (tuỳ chọn, mặc định **tắt** khi không có khoá — a
 export GEMINI_API_KEY="..."        # khoá miễn phí ở https://aistudio.google.com/apikey ; thiếu/rỗng = AI tắt
 # AI_CHAT_MODEL đổi mô hình chat (vd. gemini-3.5-flash-lite). Chat đi qua SDK Gemini gốc (giữ thought_signature, gotcha #80);
 # chat bằng OpenAI/Ollama: AI_CHAT_PROVIDER=openai + AI_BASE_URL, AI_CHAT_PATH, AI_EMBEDDINGS_PATH, ... (xem PLAN.md Phase 15)
-bash ./mvnw test                   # 86 kiểm thử, không cần SQL Server (H2 + máy chủ Gemini giả có ép luật thought_signature)
+bash ./mvnw test                   # 86 kiểm thử, không cần MariaDB (H2 chế độ MariaDB + máy chủ Gemini giả có ép luật thought_signature)
 ```
 
 CSDL đã có sẵn muốn có bảng theo dõi hành vi: chạy `database/05_user_events.sql` (idempotent). `data/` (chỉ mục vector) bị `.gitignore`.

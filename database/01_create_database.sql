@@ -1,44 +1,14 @@
--- Tạo database TourBookingDB (collation Vietnamese_CI_AI) và tài khoản đăng nhập tourapp.
-USE master;
-GO
+-- Tạo database TourBookingDB (utf8mb4, không phân biệt dấu và hoa thường) và tài khoản tourapp. Chạy bằng root.
+CREATE DATABASE IF NOT EXISTS TourBookingDB
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_uca1400_ai_ci;
 
-IF DB_ID(N'TourBookingDB') IS NULL
-BEGIN
-    CREATE DATABASE TourBookingDB COLLATE Vietnamese_CI_AI;
-    PRINT N'[OK] Da tao database TourBookingDB';
-END
-ELSE
-    PRINT N'[SKIP] Database TourBookingDB da ton tai';
-GO
-
-IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'tourapp')
-BEGIN
-    CREATE LOGIN tourapp
-        WITH PASSWORD      = 'Tour@2026#IUH',
-             CHECK_POLICY  = ON,
-             DEFAULT_DATABASE = TourBookingDB;
-    PRINT N'[OK] Da tao login tourapp';
-END
-ELSE
-    PRINT N'[SKIP] Login tourapp da ton tai';
-GO
+CREATE USER IF NOT EXISTS 'tourapp'@'localhost' IDENTIFIED BY 'Tour@2026#IUH';
+GRANT ALL PRIVILEGES ON TourBookingDB.* TO 'tourapp'@'localhost';
+FLUSH PRIVILEGES;
 
 USE TourBookingDB;
-GO
 
-IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'tourapp')
-BEGIN
-    CREATE USER tourapp FOR LOGIN tourapp;
-    PRINT N'[OK] Da tao user tourapp trong TourBookingDB';
-END
-ELSE
-    PRINT N'[SKIP] User tourapp da ton tai';
-GO
-
-ALTER ROLE db_owner ADD MEMBER tourapp;
-GO
-
-SELECT  DB_NAME()                                   AS [Database],
-        DATABASEPROPERTYEX(DB_NAME(), 'Collation')  AS [Collation],
-        USER_NAME()                                 AS [CurrentUser];
-GO
+SELECT DATABASE()                AS `Database`,
+       @@collation_database      AS `Collation`,
+       CURRENT_USER()            AS `CurrentUser`;
