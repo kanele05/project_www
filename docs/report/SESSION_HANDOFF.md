@@ -7,7 +7,7 @@
 > `CLAUDE.md`, `docs/uml/README.md`.
 >
 > **Cập nhật 05/11/2026:** CSDL đã chuyển sang **MariaDB** (PLAN.md Phase 16). Báo cáo, slide và kịch bản đã đổi theo;
-> các chỗ nói SQL Server/`sqlcmd` bên dưới là lịch sử. Hình 3.4.1.2 (Database Diagram) vẫn là ảnh chụp từ SQL Server.
+> các chỗ nói SQL Server/`sqlcmd` bên dưới là lịch sử. Hình 3.4.1.2 (Database Diagram) đã vẽ lại kiểu DBeaver từ CSDL MariaDB thật bằng `.tmp_ref/dbdiagram/gen.py` (+ `render.py`, cần `schema.tsv` dump từ information_schema).
 
 ---
 
