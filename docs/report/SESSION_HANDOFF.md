@@ -5,6 +5,9 @@
 > `.tmp_ref/session-export-2026-09-30.zip` (bản gốc: `C:\Users\Khangg\Downloads\session-export-1790746980080.zip`).
 > Các file nguồn chân lý khác: `PLAN.md` (tiến độ + gotcha tới #70), `docs/report/SPEC_CHUNG.md` (mục 0–15),
 > `CLAUDE.md`, `docs/uml/README.md`.
+>
+> **Cập nhật 05/11/2026:** CSDL đã chuyển sang **MariaDB** (PLAN.md Phase 16). Báo cáo, slide và kịch bản đã đổi theo;
+> các chỗ nói SQL Server/`sqlcmd` bên dưới là lịch sử. Hình 3.4.1.2 (Database Diagram) vẫn là ảnh chụp từ SQL Server.
 
 ---
 
