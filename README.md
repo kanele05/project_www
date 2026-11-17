@@ -116,7 +116,6 @@ The 86 automated tests need no MariaDB and no API key: they run on in-memory H2 
 
 ```
 database/                 MariaDB scripts: create DB, schema (17 tables), seed data, sample queries, drop
-docs/                     Report and presentation material
 src/main/java/vn/edu/iuh/fit/tourbooking/
   ai/                     Embeddings, vector store, semantic search, chat service, chatbot tools
   config/                 Security, i18n, AI wiring, properties, demo data seeder
